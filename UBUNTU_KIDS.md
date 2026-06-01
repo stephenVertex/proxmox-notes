@@ -161,6 +161,18 @@ VM `jeffrey-dev` (101) is configured on `seykhl`.
 
 ---
 
+## dolt-server (VMID 100) — Ubuntu Dolt Server
+
+### Backup Configuration
+See [DOLT_SERVER.md](DOLT_SERVER.md) for full backup documentation.
+
+- **In-VM backups**: Hourly dolt dumps to `/var/backups/dolt/`
+- **NAS mirror**: Hourly rsync to Synology NAS
+- **VM snapshots**: Weekly vzdump to NAS
+- **WORM protection**: Enabled on NAS share
+
+---
+
 ## dertog (VMID 104) — Debian 13 Dashboard Server
 
 ### Creation
