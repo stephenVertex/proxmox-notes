@@ -28,7 +28,7 @@
 - **User**: `dolt` (uid=999)
 - **Working Directory**: `/var/lib/doltdb/databases/doltsvr`
 - **Port**: 3306 (MySQL-compatible)
-- **Version**: 2.0.3
+- **Version**: 2.1.0 (upgraded from 2.0.3 on 2026-06-01)
 
 ## Databases
 The following databases are stored in `/var/lib/doltdb/databases/doltsvr/`:
@@ -206,7 +206,7 @@ bash /root/sync-doltsvr-backups.sh
 ## Resources
 - Proxmox Host: `seykhl` (192.168.0.202)
 - VM Disk: `local-lvm:vm-100-disk-0`
-- Dolt Version: 2.0.3
+- Dolt Version: 2.1.0
 - Dolt Documentation: https://docs.dolthub.com/
 
 ## Notes
@@ -215,3 +215,12 @@ bash /root/sync-doltsvr-backups.sh
 - The `dolt_backup.sh` script must be run as the `dolt` user to access database files
 - `rsync` was installed on both the VM and host for backup synchronization
 - WORM protection on the NAS ensures backups are immutable once written
+
+## Upgrade History
+
+### 2.0.3 → 2.1.0 (2026-06-01)
+- **Reason**: Critical bug fix for TEXT/BLOB column encoding during ALTER TABLE
+- **Backup**: Old binary saved at `/usr/local/bin/dolt-2.0.3-backup`
+- **Downtime**: ~10 seconds (service stop + replace + start)
+- **Verification**: Service started successfully, SQL queries responsive
+- **Rollback**: `sudo cp /usr/local/bin/dolt-2.0.3-backup /usr/local/bin/dolt && sudo systemctl restart dolt-sql-server`
