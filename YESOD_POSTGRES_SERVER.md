@@ -261,16 +261,63 @@ find "$BACKUP_DIR" -name "stephen-*.sql.gz" -mtime +30 -delete
 zcat /var/backups/postgresql/stephen-20260518-1703.sql.gz | psql -U stephen -d stephen
 ```
 
-### Off-VM Backup Attempt (Status: BLOCKED)
+### Off-VM Backup via NAS (Active)
+**Status:** Active as of 2026-06-01
+**Target:** Synology NAS (`homestar.local`, 192.168.0.123) — `proxmox-backups` share (WORM enabled)
+**Mount:** `/mnt/proxmox-backups` on `seykhl` via CIFS
+
+### NAS Share Details
+- **Host:** `192.168.0.123` (Synology NAS)
+- **Share:** `proxmox-backups`
+- **User:** `proxmox-backup`
+- **WORM:** Enabled (compliance mode) — files cannot be deleted or modified after writing
+
+### Mount Configuration
+```bash
+# Mount command (also in /etc/fstab)
+mount -t cifs //192.168.0.123/proxmox-backups /mnt/proxmox-backups \
+  -o username=proxmox-backup,password=Pmxb2122!,vers=3.0,iocharset=utf8,_netdev
+```
+
+### fstab Entry
+```
+//192.168.0.123/proxmox-backups /mnt/proxmox-backups cifs username=proxmox-backup,password=Pmxb2122!,vers=3.0,iocharset=utf8,_netdev 0 0
+```
+
+### Host Backup Script
+- **Script:** `/root/sync-yesod-backups.sh`
+- **Schedule:** Every hour at `:05` via cron
+- **Action:** Pulls pg_dump backups from VM to NAS
+
+```bash
+#!/bin/bash
+rsync -avz --delete -e 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null' \
+  stephen@192.168.0.155:/var/backups/postgresql/ \
+  /mnt/proxmox-backups/yesod-postgres-server/pg_dump/ 2>/dev/null
+```
+
+### Host Crontab Entries
+```cron
+5 * * * * /root/sync-yesod-backups.sh
+0 2 * * 0 vzdump 102 --dumpdir /mnt/proxmox-backups/yesod-postgres-server/vzdump/ --compress zstd --mode snapshot --remove 1 --maxfiles 2
+```
+
+### Backup Locations on NAS
+| Type | Path | Retention |
+|------|------|-----------|
+| pg_dump | `/mnt/proxmox-backups/yesod-postgres-server/pg_dump/` | Mirrors VM (5 days hourly + 30 days daily) |
+| vzdump | `/mnt/proxmox-backups/yesod-postgres-server/vzdump/` | 2 weekly snapshots |
+
+### Why WORM Matters
+The NAS share is configured with **WORM (Write Once Read Many)** in compliance mode. This means:
+- Once a file is written, it **cannot be deleted, modified, or renamed**
+- Protection is enforced at the filesystem level, not just permissions
+- Even if the Proxmox host is compromised, the attacker cannot destroy or encrypt your backups
+- This is the gold standard for immutable backup storage
+
+### Previous Failed Attempt
 **Attempted:** 2026-05-31
-**Goal:** Mirror pg_dump backups and vzdump snapshots to a second physical disk on `seykhl`.
 **Disk:** `/dev/sda` (WDC WD5000LPLX-08ZNTT0, 500 GB)
 **Issue:** Disk failed during first write test. SMART shows `FAILED` with 2,840 reallocated sectors.
 **Action:** Disk unmounted, removed from `/etc/fstab`, and declared unusable.
-**Next Step:** Replace failing disk with a healthy drive before attempting off-VM backups again.
-
-### Recommended Future Off-VM Backup Setup
-Once a healthy secondary disk is installed:
-1. **pg_dump mirror:** Hourly rsync from VM to host disk
-2. **vzdump snapshots:** Weekly full-VM snapshot to host disk
-3. **Retention:** Keep 2 vzdump snapshots on the host disk
+**Resolution:** Switched to NAS-based off-VM backups instead of host disk.
