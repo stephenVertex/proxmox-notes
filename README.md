@@ -28,6 +28,7 @@
 | 104 | dertog | running | 6GB | 30GB | 192.168.0.138 | bc:24:11:90:a9:cc | Dashboard Server |
 | 105 | aicoe-social-runner | running | 2GB | 20GB | 192.168.0.147 | bc:24:11:a4:ce:80 | Social Media Monitor |
 | 106 | yesod-runner | running | 8GB | 20GB | 192.168.0.146 | bc:24:11:a0:58:60 | Yesod Agent Runner |
+| 107 | n8n-server | running | 4GB | 30GB | 192.168.0.145 | bc:24:11:3b:86:22 | n8n Automation |
 | 203 | test-full-201 | stopped | 4GB | 33GB | N/A | bc:24:11:67:9c:b6 | Test/Experimental |
 | 205 | opensymphony-base | stopped | 4GB | 33GB | N/A | bc:24:11:4a:19:61 | Test/Experimental |
 
@@ -50,6 +51,7 @@
 - `dertog` → 192.168.0.138
 - `aicoe-social-runner` → 192.168.0.147
 - `jeffrey-dev` → 192.168.0.132
+- `n8n-server` → 192.168.0.145
 
 ---
 
@@ -98,6 +100,7 @@ ssh root@192.168.0.202 "qm console <vmid>"
 | dertog | [DERTOG.md](DERTOG.md) |
 | aicoe-social-runner | [AICOE_SOCIAL_RUNNER.md](AICOE_SOCIAL_RUNNER.md) |
 | yesod-runner | [YESOD-RUNNER.md](YESOD-RUNNER.md) |
+| n8n-server | [N8N_SERVER.md](N8N_SERVER.md) |
 | test-full-201 | [TEST_FULL_201.md](TEST_FULL_201.md) |
 | opensymphony-base | [OPEN_SYMPHONY_BASE.md](OPEN_SYMPHONY_BASE.md) |
 
@@ -105,9 +108,9 @@ ssh root@192.168.0.202 "qm console <vmid>"
 
 ## Resource Summary
 
-- **Total Running VMs:** 7
-- **Total RAM Allocated:** 54GB (24+4+6+4+6+2+8)
-- **Total Disk Allocated:** ~230GB
+- **Total Running VMs:** 8
+- **Total RAM Allocated:** 58GB (24+4+6+4+6+2+8+4)
+- **Total Disk Allocated:** ~260GB
 - **Stopped VMs:** 2 (test-full-201, opensymphony-base)
 - **Stopped VMs RAM:** 8GB
 - **Stopped VMs Disk:** ~66GB
