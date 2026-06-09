@@ -1,6 +1,6 @@
 # Proxmox Infrastructure Overview
 
-**Document Version:** 2026-06-05
+**Document Version:** 2026-06-09
 **Proxmox Node:** seykhl (192.168.0.202)
 **PVE Version:** 9.1.1
 
@@ -21,7 +21,7 @@
 
 | VMID | Name | Status | RAM | Disk | LAN IP | MAC | Purpose |
 |------|------|--------|-----|------|--------|-----|---------|
-| 100 | dolt-server | running | 24GB | 64GB | 192.168.0.150 | bc:24:11:d0:43:5d | Dolt SQL Server |
+| 100 | doltsvr | running | 24GB | 64GB | 192.168.0.150 | bc:24:11:d0:43:5d | Dolt SQL Server |
 | 101 | jeffrey-dev | running | 4GB | 20GB | 192.168.0.132 | bc:24:11:cd:26:f7 | Development VM |
 | 102 | yesod-postgres-server | running | 6GB | 30GB | 192.168.0.155 | bc:24:11:00:88:f5 | PostgreSQL for Yesod |
 | 103 | homestar-runner | running | 4GB | 30GB | 192.168.0.154 | bc:24:11:6c:cf:b7 | GitHub Actions Runner |
@@ -43,11 +43,17 @@
 - **DNS:** Local DNS entries added to `/etc/hosts` on admin machines
 
 ### Known Hostnames
+
+All hostnames are present in both `/etc/hosts` and `~/.ssh/config` on admin machines
+(the SSH config pins `HostName` to the IP, so aliases work even without /etc/hosts).
+VM 100 was renamed from `dolt-server` to `doltsvr` in Proxmox on 2026-06-09 so all
+layers (Proxmox, /etc/hosts, SSH config, guest hostname) use the same name.
+
 - `seykhl` → 192.168.0.202 (Proxmox node)
 - `yesod-postgres-server` → 192.168.0.155
 - `yesod-runner` → 192.168.0.146
 - `homestar-runner` → 192.168.0.154
-- `dolt-server` / `doltsvr` → 192.168.0.150
+- `doltsvr` → 192.168.0.150
 - `dertog` → 192.168.0.138
 - `aicoe-social-runner` → 192.168.0.147
 - `jeffrey-dev` → 192.168.0.132
@@ -63,14 +69,17 @@
 
 ### SSH to Proxmox Host
 ```bash
-ssh root@192.168.0.202
+ssh seykhl          # alias in ~/.ssh/config (root@192.168.0.202)
 ```
 
 ### SSH to VMs
-Most VMs have passwordless SSH configured for the `stephen` user:
+All VMs have passwordless SSH via `~/.ssh/id_ed25519`; users and aliases are set
+in `~/.ssh/config`, so the hostname alone is enough:
 ```bash
-ssh stephen@192.168.0.<vm-ip>
+ssh doltsvr         # or any VM name from the table above
 ```
+User is `stephen` everywhere except `jeffrey-dev`, which only accepts the
+`jeffrey` user (root/stephen are refused by a forced-command key).
 
 ### Console Access
 ```bash
@@ -93,7 +102,7 @@ ssh root@192.168.0.202 "qm console <vmid>"
 
 | VM | Documentation File |
 |------|-------------------|
-| dolt-server | [DOLT_SERVER.md](DOLT_SERVER.md) |
+| doltsvr | [DOLT_SERVER.md](DOLT_SERVER.md) |
 | jeffrey-dev | [JEFFREY-DEV.md](JEFFREY-DEV.md) |
 | yesod-postgres-server | [YESOD_POSTGRES_SERVER.md](YESOD_POSTGRES_SERVER.md) |
 | homestar-runner | [HOMESTAR_RUNNER.md](HOMESTAR_RUNNER.md) |

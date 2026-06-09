@@ -1,13 +1,13 @@
 # Dolt Server - Backup Configuration
 
 ## Overview
-`dolt-server` (VMID 100) is an Ubuntu VM on Proxmox host `seykhl` running the Dolt SQL server. This document covers the backup setup and configuration.
+`doltsvr` (VMID 100) is an Ubuntu VM on Proxmox host `seykhl` running the Dolt SQL server. This document covers the backup setup and configuration. (Renamed in Proxmox from `dolt-server` to `doltsvr` on 2026-06-09 to match /etc/hosts, SSH config, and the guest hostname.)
 
 ## VM Specifications
 | Setting | Value |
 |---------|-------|
 | **VMID** | 100 |
-| **Name** | dolt-server |
+| **Name** | doltsvr (formerly dolt-server) |
 | **OS** | Ubuntu (latest stable) |
 | **CPU** | host (AVX passthrough) |
 | **Cores** | 2 |
