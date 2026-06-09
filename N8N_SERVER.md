@@ -22,11 +22,15 @@
 
 ## Access
 
-### n8n Web Interface (HTTPS)
-- **URL:** https://192.168.0.145
+### n8n Web Interface (HTTPS) ✅
+- **URL:** https://n8n.meshcrawler.com
 - **Basic Auth:** admin / admin
 - **Note:** The default credentials are set in the systemd service. Change these for production use.
-- **TLS:** Self-signed certificate via Caddy (internal CA). Browsers will show a warning — click "Advanced" → "Proceed" to access.
+- **TLS:** Valid certificate via Cloudflare (Let’s Encrypt)
+
+### Local Access (Alternative)
+- **URL:** https://192.168.0.145
+- **Note:** Uses self-signed Caddy certificate — browsers will show a warning
 
 ### SSH
 ```bash
@@ -51,12 +55,32 @@ ssh root@192.168.0.202 "qm console 107"
 - **Data Directory:** /home/stephen/.n8n
 - **Logs:** `sudo journalctl -u n8n -f`
 
-## Reverse Proxy (Caddy)
+## Reverse Proxy (Cloudflare Tunnel)
+- **Service:** cloudflared (systemd)
+- **Config:** /etc/cloudflared/config.yml
+- **Public Hostname:** `n8n.meshcrawler.com` → `http://localhost:5678`
+- **TLS:** Valid certificate via Cloudflare (auto-managed)
+- **Logs:** `sudo journalctl -u cloudflared -f`
+
+### Cloudflare Tunnel Configuration
+```yaml
+tunnel: 6b2b99a2-4fb1-4e88-be58-fca8b9d6fd2e
+credentials-file: /etc/cloudflared/credentials.json
+
+ingress:
+  - hostname: n8n.meshcrawler.com
+    service: http://localhost:5678
+  - service: http_status:404
+```
+
+Cloudflare Tunnel handles HTTPS termination and proxies requests to n8n on localhost:5678. No port forwarding needed.
+
+## Reverse Proxy (Caddy — Optional Local Access)
 - **Service:** caddy (systemd)
 - **Port:** 443 (HTTPS)
 - **Config:** /etc/caddy/Caddyfile
 - **TLS:** Self-signed certificate via Caddy's internal CA
-- **Logs:** `sudo journalctl -u caddy -f`
+- **Note:** Only needed for local network access; not required for public access
 
 ### Caddy Configuration
 ```
@@ -65,8 +89,6 @@ ssh root@192.168.0.202 "qm console 107"
     reverse_proxy localhost:5678
 }
 ```
-
-Caddy handles HTTPS termination and proxies requests to n8n on localhost:5678. n8n is not directly accessible from the network — only via Caddy.
 
 ## Maintenance
 ```bash
