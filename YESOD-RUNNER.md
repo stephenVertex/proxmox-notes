@@ -9,12 +9,21 @@
 
 The **yesod-runner** is a Debian 13 virtual machine (VMID 106) running on Proxmox node `seykhl`, designed to serve as a secondary agent dispatch runner alongside the primary `pompom` macOS runner. It enables parallel task execution and provides Linux-based execution capabilities.
 
+### Runner Fleet
+
+| VM ID | Name | IP | Status | Purpose |
+|-------|------|-----|--------|---------|
+| 106 | yesod-runner | 192.168.0.152 | Active | Primary runner |
+| 108 | yesod-runner-2 | 192.168.0.148 | Active | Secondary runner |
+| 109 | yesod-runner-base | N/A | Template | Template for new runners |
+| 110 | yesod-runner-3 | 192.168.0.136 | Active | Tertiary runner (from template) |
+
 ---
 
 ## Access Information
 
-### Network Details
-- **IP Address:** `192.168.0.146`
+### Network Details (Primary Runner)
+- **IP Address:** `192.168.0.152` (was 192.168.0.146 before network reservation fix)
 - **Hostname:** `yesod-runner`
 - **MAC Address:** `bc:24:11:a0:58:60`
 - **Proxmox Node:** `seykhl` (192.168.0.202)
@@ -22,15 +31,23 @@ The **yesod-runner** is a Debian 13 virtual machine (VMID 106) running on Proxmo
 
 ### SSH Access (Passwordless)
 
-The runner is configured for passwordless SSH access using the same SSH key as your other machines:
+All runners are configured for passwordless SSH access using the same SSH key as your other machines:
 
 ```bash
-# From any host with your SSH key
-ssh stephen@192.168.0.146
+# Primary runner
+ssh stephen@yesod-runner        # alias in ~/.ssh/config
+ssh stephen@192.168.0.152
+
+# Runner 2
+ssh stephen@yesod-runner-2      # alias in ~/.ssh/config
+ssh stephen@192.168.0.148
+
+# Runner 3
+ssh stephen@yesod-runner-3      # alias in ~/.ssh/config
+ssh stephen@192.168.0.136
 
 # Or via Proxmox host
 ssh stephen@seykhl
-ssh stephen@192.168.0.146
 ```
 
 **Note:** The SSH key was installed via cloud-init during VM creation. The public key is located in `/var/lib/vz/snippets/106-cloudinit.yaml` on the Proxmox host.
@@ -49,11 +66,34 @@ ssh root@192.168.0.202 "qm console 106"
 
 ## Hardware Specifications
 
-- **CPU:** 2 cores
+All runners (106, 108, 110) and the template (109) use identical specs:
+
+- **CPU:** 4 cores
 - **RAM:** 8GB (7.8Gi available)
 - **Disk:** 20GB
 - **OS:** Debian 13 (Linux 6.12.88+deb13-amd64)
 - **Architecture:** x86_64
+
+## Template (VM 109)
+
+The `yesod-runner-base` template contains pre-installed software for rapid deployment:
+
+- uv 0.11.20
+- cargo 1.96.0 / rustc 1.96.0
+- gh CLI 2.94.0
+- opencode 0.0.55
+- ripgrep 14.1.1
+- fzf 0.60.3
+- git 2.47.3
+- /etc/hosts configured for yesod infrastructure
+- Generic runner.yaml (with placeholder values)
+
+**To create a new runner from template:**
+```bash
+# On Proxmox host
+qm clone 109 <new_id> --name yesod-runner-N --full
+# Then configure: set hostname, generate SSH keys, update runner.yaml
+```
 
 ---
 
@@ -268,10 +308,13 @@ sudo ln -sf /home/stephen /Users/stephen
 ## Current Status
 
 ### Runner Status
-- **State:** Active and registered
-- **Models:** `opencode-kimi`, `opencode-claude`, `opencode-qwen`
-- **Tasks:** 0 (ready to accept work)
-- **Last Heartbeat:** 2026-06-05T17:4x
+All three runners are active and registered in the database:
+
+| Runner | Status | Models | Max Concurrent |
+|--------|--------|--------|----------------|
+| yesod-runner | active | claude-fable-5, opencode-kimi, opencode-claude, opencode-qwen | 3 |
+| yesod-runner-2 | active | claude-fable-5, opencode-kimi, opencode-claude, opencode-qwen | 3 |
+| yesod-runner-3 | active | claude-fable-5, opencode-kimi, opencode-claude, opencode-qwen | 3 |
 
 ### Service Status
 ```bash
@@ -280,6 +323,9 @@ systemctl status yesod-codefactory-dispatch.service
 
 ### Verification Commands
 ```bash
+# Check all runners
+psql $YESOD_POSTGRES_DSN -c "SELECT id, status, current_tasks FROM runners;"
+
 # Check runner status
 yesod codefactory-dispatch status
 
@@ -397,8 +443,10 @@ sudo tail -f /tmp/yesod-codefactory-dispatch.err
 ## Quick Reference
 
 ```bash
-# SSH to runner
-ssh stephen@192.168.0.146
+# SSH to any runner
+ssh stephen@yesod-runner        # 192.168.0.152
+ssh stephen@yesod-runner-2      # 192.168.0.148
+ssh stephen@yesod-runner-3      # 192.168.0.136
 
 # Check status
 export YESOD_POSTGRES_DSN=postgresql://stephen:lj*123NM@yesod-postgres-server:5432/stephen
@@ -408,8 +456,11 @@ yesod codefactory-dispatch status
 sudo systemctl restart yesod-codefactory-dispatch.service
 
 # Check all runners
-yesod codefactory-dispatch runner list
+psql $YESOD_POSTGRES_DSN -c "SELECT id, status, current_tasks, max_concurrent FROM runners;"
 
 # Test opencode
 opencode -p "Say hello" -q
+
+# Create new runner from template
+ssh seykhl "qm clone 109 <new_id> --name yesod-runner-N --full"
 ```

@@ -27,8 +27,11 @@
 | 103 | homestar-runner | running | 4GB | 30GB | 192.168.0.154 | bc:24:11:6c:cf:b7 | GitHub Actions Runner |
 | 104 | dertog | running | 6GB | 30GB | 192.168.0.138 | bc:24:11:90:a9:cc | Dashboard Server |
 | 105 | aicoe-social-runner | running | 2GB | 20GB | 192.168.0.147 | bc:24:11:a4:ce:80 | Social Media Monitor |
-| 106 | yesod-runner | running | 8GB | 20GB | 192.168.0.146 | bc:24:11:a0:58:60 | Yesod Agent Runner |
+| 106 | yesod-runner | running | 8GB | 20GB | 192.168.0.152 | bc:24:11:a0:58:60 | Yesod Agent Runner |
 | 107 | n8n-server | running | 4GB | 30GB | 192.168.0.145 | bc:24:11:3b:86:22 | n8n Automation |
+| 108 | yesod-runner-2 | running | 8GB | 20GB | 192.168.0.148 | bc:24:11:3f:86:eb | Yesod Agent Runner |
+| 109 | yesod-runner-base | stopped | 8GB | 20GB | N/A | bc:24:11:b3:bd:df | Yesod Runner Template |
+| 110 | yesod-runner-3 | running | 8GB | 20GB | 192.168.0.136 | bc:24:11:68:88:b3 | Yesod Agent Runner |
 | 203 | test-full-201 | stopped | 4GB | 33GB | N/A | bc:24:11:67:9c:b6 | Test/Experimental |
 | 205 | opensymphony-base | stopped | 4GB | 33GB | N/A | bc:24:11:4a:19:61 | Test/Experimental |
 
@@ -51,7 +54,9 @@ layers (Proxmox, /etc/hosts, SSH config, guest hostname) use the same name.
 
 - `seykhl` → 192.168.0.202 (Proxmox node)
 - `yesod-postgres-server` → 192.168.0.155
-- `yesod-runner` → 192.168.0.146
+- `yesod-runner` → 192.168.0.152
+- `yesod-runner-2` → 192.168.0.148
+- `yesod-runner-3` → 192.168.0.136
 - `homestar-runner` → 192.168.0.154
 - `doltsvr` → 192.168.0.150
 - `dertog` → 192.168.0.138
@@ -109,6 +114,8 @@ ssh root@192.168.0.202 "qm console <vmid>"
 | dertog | [DERTOG.md](DERTOG.md) |
 | aicoe-social-runner | [AICOE_SOCIAL_RUNNER.md](AICOE_SOCIAL_RUNNER.md) |
 | yesod-runner | [YESOD-RUNNER.md](YESOD-RUNNER.md) |
+| yesod-runner-2 | [YESOD-RUNNER.md](YESOD-RUNNER.md) |
+| yesod-runner-3 | [YESOD-RUNNER.md](YESOD-RUNNER.md) |
 | n8n-server | [N8N_SERVER.md](N8N_SERVER.md) |
 | test-full-201 | [TEST_FULL_201.md](TEST_FULL_201.md) |
 | opensymphony-base | [OPEN_SYMPHONY_BASE.md](OPEN_SYMPHONY_BASE.md) |
@@ -117,12 +124,12 @@ ssh root@192.168.0.202 "qm console <vmid>"
 
 ## Resource Summary
 
-- **Total Running VMs:** 8
-- **Total RAM Allocated:** 58GB (24+4+6+4+6+2+8+4)
-- **Total Disk Allocated:** ~260GB
-- **Stopped VMs:** 2 (test-full-201, opensymphony-base)
-- **Stopped VMs RAM:** 8GB
-- **Stopped VMs Disk:** ~66GB
+- **Total Running VMs:** 10
+- **Total RAM Allocated:** 74GB (24+4+6+4+6+2+8+4+8+8)
+- **Total Disk Allocated:** ~320GB
+- **Stopped VMs:** 3 (test-full-201, opensymphony-base, yesod-runner-base)
+- **Stopped VMs RAM:** 16GB
+- **Stopped VMs Disk:** ~86GB
 
 ---
 
@@ -160,6 +167,9 @@ ssh root@192.168.0.202 "qm restart <vmid>"
 - Cloud-init is used for initial configuration on Debian-based VMs
 - SSH keys are installed via cloud-init for passwordless access
 - The `yesod-runner` (VM 106) was created from a copy of the yesod-aicoe repo and configured to run the codefactory dispatch service
+- `yesod-runner-base` (VM 109) is a template VM with pre-installed software (uv, cargo, opencode, gh) for rapid runner deployment
+- `yesod-runner-2` (VM 108) and `yesod-runner-3` (VM 110) are cloned from the template and configured as active runners
+- VM 106 IP changed from 192.168.0.146 to 192.168.0.152 after network reservation fix
 
 ---
 
@@ -170,4 +180,6 @@ ssh root@192.168.0.202 "qm restart <vmid>"
 - [ ] Document test VMs (203, 205) if they are needed for production
 - [ ] Create monitoring dashboard for VM resource usage
 - [ ] Add firewall rules for VM network isolation
+- [ ] Install 512GB SATA drive (arriving 2026-06-11) for additional storage
+- [ ] Create runner self-update mechanism (system packages, uv, cargo, opencode)
 
