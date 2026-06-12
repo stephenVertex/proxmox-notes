@@ -146,7 +146,19 @@ worktree_base_dir: /tmp/yesod-workdir
 opencode_path: opencode
 postgres_dsn: postgresql://stephen:lj*123NM@yesod-postgres-server:5432/stephen
 fireworks_api_key: fw_GDwAQVjo2JwrupnfcF6LpS
+model_map:
+  opencode-kimi: "fireworks-custom/accounts/fireworks/routers/kimi-k2p6-turbo"
+  opencode-qwen: "fireworks/accounts/fireworks/models/qwen3p6-plus"
+  opencode-deepseek: "fireworks/accounts/fireworks/models/deepseek-v4-pro"
 ```
+
+> **CRITICAL — model_map is mandatory for every opencode-* lane.** Without it,
+> opencode resolves `opencode-kimi` / `opencode-qwen` / `opencode-deepseek` to
+> opencode.ai-hosted models and hits their billing quota → "Insufficient balance",
+> 0-byte agent log, instant abort with exit=None. The failure signature is
+> indistinguishable from a binary-startup crash. Observed twice: runner-2
+> (2026-06-10) and sjbmbp (2026-06-11). Verify by running the model directly in
+> the runner env before enabling the daemon.
 
 ### 2. Environment Variables
 
@@ -155,9 +167,25 @@ fireworks_api_key: fw_GDwAQVjo2JwrupnfcF6LpS
 ```
 YESOD_POSTGRES_DSN=postgresql://stephen:lj*123NM@yesod-postgres-server:5432/stephen
 FIREWORKS_API_KEY=fw_GDwAQVjo2JwrupnfcF6LpS
+# Claude lane only (hosts with the claude CLI installed — see below):
+ANTHROPIC_BASE_URL=https://tfy.promptlens.trilogy.com
+ANTHROPIC_AUTH_TOKEN=<JWT — copy current value from the env block of ~/.claude/settings.json on sjbmbp>
 ```
 
 These are loaded by the systemd service via `EnvironmentFile=/etc/yesod/runner.env`.
+
+#### Claude lane auth — LLM gateway (since 2026-06-11)
+
+The claude CLI authenticates through the Trilogy promptlens gateway, **not** Anthropic OAuth:
+
+- `ANTHROPIC_BASE_URL` + `ANTHROPIC_AUTH_TOKEN` in `runner.env` (above). Source of truth for the token is the `env` block of `~/.claude/settings.json` on Stephen's Mac (sjbmbp).
+- **Do NOT set `CLAUDE_CODE_OAUTH_TOKEN`** — it was removed fleet-wide on 2026-06-11 to avoid auth ambiguity. If provisioning from an old image, delete that line.
+- Also check for and remove cached OAuth credentials on the host (`~/.claude/.credentials.json` and friends) — a cached cred can silently take over from the gateway.
+- Only hosts running the `claude` / `claude-fable-5` lane need the claude CLI installed (as of 2026-06-11: yesod-runner and sjbmbp). The opencode-* lanes (kimi/deepseek/qwen) use OpenCode→Fireworks and need only `FIREWORKS_API_KEY`.
+- **Verify after provisioning** (two-way, in a shell with runner.env sourced):
+  1. `claude -p "Reply with exactly: GATEWAY-OK"` succeeds;
+  2. the same command **fails** with `ANTHROPIC_BASE_URL`/`ANTHROPIC_AUTH_TOKEN` unset — proving traffic actually goes through the gateway rather than a leftover credential.
+- After env changes: `sudo systemctl restart yesod-codefactory-dispatch.service` (only when the runner has no live run — check http://dertog:8090/api/runs first).
 
 ### 3. Systemd Service
 
@@ -346,7 +374,11 @@ opencode -d
 
 ## Known Limitations
 
-1. **No Native Claude Binary:** The `claude` model requires macOS Claude.app. Only opencode-* models are fully functional on this Linux VM.
+1. **opencode binary must be on the LaunchAgent PATH (Mac runners):** opencode installs to `~/.opencode/bin/opencode`, which is NOT in the default LaunchAgent PATH. The dispatch daemon inherits the LaunchAgent PATH via `os.environ.copy()` — if `opencode` isn't findable, every claim fails with exit 127 → 0-byte agent log → exit=None (indistinguishable from model or binary errors). Fix: `ln -sf ~/.opencode/bin/opencode ~/.local/bin/opencode` AND set `opencode_path: /Users/stephen/.opencode/bin/opencode` in runner.yaml. Verify with `env -i PATH=<LaunchAgent-PATH> ... opencode run --dir <worktree> -m <model> 'say yes'` before enabling the daemon. Observed: sjbmbp (2026-06-11, 5 aborts).
+
+2. **model_map is mandatory for opencode-* lanes:** EVERY runner serving opencode-* lanes MUST have an explicit `model_map` to `fireworks/...` in `runner.yaml`. Without it, opencode resolves to opencode.ai-hosted models and hits their billing (Insufficient balance, 0-byte log, instant abort). See the runner.yaml example above. Observed gap: runner-2 (2026-06-10), sjbmbp (2026-06-11).
+
+3. **Claude CLI is optional per host:** ~~The `claude` model requires macOS Claude.app~~ — OUTDATED. The claude CLI runs fine on Linux (yesod-runner serves the claude-fable-5 lane). Install it only on hosts meant to serve that lane, and configure gateway auth per the "Claude lane auth" section above. Hosts without it should not list claude/claude-fable-5 in their runner.yaml `models`.
 2. **Path Compatibility:** `/Users/stephen` is symlinked to `/home/stephen` to match macOS paths.
 3. **Beads Backup:** Backup git repo is at `/var/tmp/yesod-aicoe-beads-autobackup` (not a persistent remote).
 
