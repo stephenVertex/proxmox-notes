@@ -96,7 +96,13 @@ ssh root@192.168.0.202 "qm console <vmid>"
 
 ## Storage
 
-- **Primary Storage:** local-lvm (LVM thin pool on local SSD)
+- **Primary Storage:** local-lvm (LVM thin pool on NVMe SSD + SATA SSD)
+- **Physical Volumes:**
+  - `/dev/nvme0n1p3` — 237GB (original NVMe)
+  - `/dev/sda` — 512GB Fanxiang S101 SATA SSD (added 2026-06-11)
+- **Total LVM Thin Pool:** ~634GB (was ~141GB)
+- **Used:** ~108GB (16.3%)
+- **Available:** ~556GB
 - **ISOs:** /var/lib/vz/template/iso/
 - **VM Disks:** local-lvm (thin-provisioned)
 - **Backups:** Configured on NAS (see individual VM docs)
@@ -180,6 +186,6 @@ ssh root@192.168.0.202 "qm restart <vmid>"
 - [ ] Document test VMs (203, 205) if they are needed for production
 - [ ] Create monitoring dashboard for VM resource usage
 - [ ] Add firewall rules for VM network isolation
-- [ ] Install 512GB SATA drive (arriving 2026-06-11) for additional storage
+- [x] Install 512GB SATA drive (added 2026-06-11) — expanded LVM thin pool to ~634GB
 - [ ] Create runner self-update mechanism (system packages, uv, cargo, opencode)
 
