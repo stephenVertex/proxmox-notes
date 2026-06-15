@@ -17,6 +17,7 @@ The **yesod-runner** is a Debian 13 virtual machine (VMID 106) running on Proxmo
 | 108 | yesod-runner-2 | 192.168.0.148 | Active | Secondary runner |
 | 109 | yesod-runner-base | N/A | Template | Template for new runners |
 | 110 | yesod-runner-3 | 192.168.0.136 | Active | Tertiary runner (from template) |
+| 111 | sb-edge | 192.168.0.137 | Active | Supabase Edge Runtime (sjbgtd migration) — see SUPABASE_EDGE_RUNTIME.md |
 
 ---
 
@@ -379,6 +380,11 @@ opencode -d
 2. **model_map is mandatory for opencode-* lanes:** EVERY runner serving opencode-* lanes MUST have an explicit `model_map` to `fireworks/...` in `runner.yaml`. Without it, opencode resolves to opencode.ai-hosted models and hits their billing (Insufficient balance, 0-byte log, instant abort). See the runner.yaml example above. Observed gap: runner-2 (2026-06-10), sjbmbp (2026-06-11).
 
 3. **Claude CLI is optional per host:** ~~The `claude` model requires macOS Claude.app~~ — OUTDATED. The claude CLI runs fine on Linux (yesod-runner serves the claude-fable-5 lane). Install it only on hosts meant to serve that lane, and configure gateway auth per the "Claude lane auth" section above. Hosts without it should not list claude/claude-fable-5 in their runner.yaml `models`.
+
+4. **ALWAYS pin postgres DSN to the LAN IP — never use hostname form:** Use `postgresql://stephen:lj*123NM@192.168.0.155:5432/stephen` in BOTH `runner.yaml` (postgres_dsn field) AND `/etc/yesod/runner.env` (YESOD_POSTGRES_DSN). **Never use `@yesod-postgres-server:5432`** — on reboot, libpq resolves the hostname using the system resolver (systemd-resolved / mDNS / avahi). If the resolver returns an IPv6 address (fe80 link-local or fd60 ULA) for `yesod-postgres-server`, libpq tries IPv6 first and fails with `Invalid argument` or `server closed the connection unexpectedly`. The daemon gets exit=1, systemd restarts it, it crashes again — repeat 40+ times. `systemctl is-active` returns `active` between crashes, masking the loop. **Failure signature:** `is-active` = active, no claims, err log contains `connection to server at "fe80:...` or `fd60:...` — pin the DSN. For Mac runners (sjbmbp), pin in runner.yaml and in the LaunchAgent plist `YESOD_POSTGRES_DSN` env key. Observed: runner-3 and sjbmbp post-seykhl-reboot (2026-06-12, 40+ restarts).
+
+5. **Pulse health check: `is-active` lies — check restart counter:** A daemon crash-looping gets `is-active = active` between systemd restarts. True health check: `journalctl -u yesod-codefactory-dispatch --since '5 minutes ago' | grep 'restart counter'` — any nonzero counter means crash-looping. On Mac: `launchctl list | grep codefactory` — PID column should be a positive number (not `-`) and exit code should be `0`.
+
 2. **Path Compatibility:** `/Users/stephen` is symlinked to `/home/stephen` to match macOS paths.
 3. **Beads Backup:** Backup git repo is at `/var/tmp/yesod-aicoe-beads-autobackup` (not a persistent remote).
 

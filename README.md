@@ -32,6 +32,7 @@
 | 108 | yesod-runner-2 | running | 8GB | 20GB | 192.168.0.148 | bc:24:11:3f:86:eb | Yesod Agent Runner |
 | 109 | yesod-runner-base | stopped | 8GB | 20GB | N/A | bc:24:11:b3:bd:df | Yesod Runner Template |
 | 110 | yesod-runner-3 | running | 8GB | 20GB | 192.168.0.136 | bc:24:11:68:88:b3 | Yesod Agent Runner |
+| 111 | sb-edge | running | 4GB | 20GB | 192.168.0.137 | bc:24:11:5e:d5:a8 | Supabase Edge Runtime |
 | 203 | test-full-201 | stopped | 4GB | 33GB | N/A | bc:24:11:67:9c:b6 | Test/Experimental |
 | 205 | opensymphony-base | stopped | 4GB | 33GB | N/A | bc:24:11:4a:19:61 | Test/Experimental |
 
@@ -57,6 +58,7 @@ layers (Proxmox, /etc/hosts, SSH config, guest hostname) use the same name.
 - `yesod-runner` → 192.168.0.152
 - `yesod-runner-2` → 192.168.0.148
 - `yesod-runner-3` → 192.168.0.136
+- `sb-edge` → 192.168.0.137 (Tailscale: 100.115.156.68)
 - `homestar-runner` → 192.168.0.154
 - `doltsvr` → 192.168.0.150
 - `dertog` → 192.168.0.138
@@ -122,6 +124,7 @@ ssh root@192.168.0.202 "qm console <vmid>"
 | yesod-runner | [YESOD-RUNNER.md](YESOD-RUNNER.md) |
 | yesod-runner-2 | [YESOD-RUNNER.md](YESOD-RUNNER.md) |
 | yesod-runner-3 | [YESOD-RUNNER.md](YESOD-RUNNER.md) |
+| sb-edge | [SB_EDGE.md](SB_EDGE.md) |
 | n8n-server | [N8N_SERVER.md](N8N_SERVER.md) |
 | test-full-201 | [TEST_FULL_201.md](TEST_FULL_201.md) |
 | opensymphony-base | [OPEN_SYMPHONY_BASE.md](OPEN_SYMPHONY_BASE.md) |
@@ -130,9 +133,9 @@ ssh root@192.168.0.202 "qm console <vmid>"
 
 ## Resource Summary
 
-- **Total Running VMs:** 10
-- **Total RAM Allocated:** 74GB (24+4+6+4+6+2+8+4+8+8)
-- **Total Disk Allocated:** ~320GB
+- **Total Running VMs:** 11
+- **Total RAM Allocated:** 78GB (24+4+6+4+6+2+8+4+8+8+4)
+- **Total Disk Allocated:** ~340GB
 - **Stopped VMs:** 3 (test-full-201, opensymphony-base, yesod-runner-base)
 - **Stopped VMs RAM:** 16GB
 - **Stopped VMs Disk:** ~86GB
@@ -176,6 +179,7 @@ ssh root@192.168.0.202 "qm restart <vmid>"
 - `yesod-runner-base` (VM 109) is a template VM with pre-installed software (uv, cargo, opencode, gh) for rapid runner deployment
 - `yesod-runner-2` (VM 108) and `yesod-runner-3` (VM 110) are cloned from the template and configured as active runners
 - VM 106 IP changed from 192.168.0.146 to 192.168.0.152 after network reservation fix
+- `sb-edge` (VM 111) runs a complete Supabase stack (PostgREST + Edge Runtime + nginx) with Tailscale HTTPS access
 
 ---
 
