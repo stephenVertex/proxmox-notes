@@ -89,22 +89,26 @@ qm start 104
 
 ## Services
 
-### Cluster Services Index (port 8092)
+### Cluster Services Index (port 8092 / HTTPS 443)
 
 A self-hosted index page that lists all services running on the cluster, with links to accessible ones.
 
-- **URL**: `http://dertog:8092`
+- **HTTP URL**: `http://dertog:8092`
+- **HTTPS URL**: `https://dertog.tailb4b58.ts.net/` (Tailscale, port 443)
 - **Server**: Python static server
 - **Systemd unit**: `cluster-services.service` (user unit)
+- **Tailscale serve**: `tailscale-serve-cluster.service` (system unit, exposes 8092 on HTTPS/443)
 - **Files**: `~/cluster-services/index.html`, `~/cluster-services-serve.py`
 - **Purpose**: Single entry point to discover all cluster services
 
 ```bash
 # Check status
 systemctl --user status cluster-services
+sudo systemctl status tailscale-serve-cluster
 
 # Restart
 systemctl --user restart cluster-services
+sudo systemctl restart tailscale-serve-cluster
 ```
 
 ### clip-together Frontend (port 8091)

@@ -71,7 +71,8 @@ layers (Proxmox, /etc/hosts, SSH config, guest hostname) use the same name.
 ## Access Methods
 
 ### Cluster Services Index
-- **URL:** http://dertog:8092
+- **HTTP:** http://dertog:8092
+- **HTTPS:** https://dertog.tailb4b58.ts.net/ (Tailscale, port 443)
 - **Description:** Self-hosted index page listing all services on the cluster with links
 
 ### Proxmox Web UI
