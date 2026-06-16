@@ -70,6 +70,10 @@ layers (Proxmox, /etc/hosts, SSH config, guest hostname) use the same name.
 
 ## Access Methods
 
+### Cluster Services Index
+- **URL:** http://dertog:8092
+- **Description:** Self-hosted index page listing all services on the cluster with links
+
 ### Proxmox Web UI
 - **URL:** https://192.168.0.202:8006
 - **Credentials:** Root credentials (stored in password manager)
