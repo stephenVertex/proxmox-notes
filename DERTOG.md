@@ -170,6 +170,12 @@ systemctl --user status db-details
 systemctl --user restart db-details
 ```
 
+### SJBIS (port 7878)
+
+- **URL**: `http://dertog:7878`
+- **Process**: `/home/stephen/sjbis/sjbis daemon start --port 7878`
+- **Purpose**: Information surfacer dashboard
+
 ### Performance Dashboard (port 8080)
 
 - **URL**: `http://dertog:8080`
@@ -185,6 +191,7 @@ systemctl --user restart db-details
 - **seykhl-health**: ✅ Active on port 8093
 - **db-details**: ✅ Active on port 8094
 - **clip-together-web**: ✅ Active on port 8091
+- **sjbis**: ✅ Active on port 7878
 - **perf-dashboard**: ✅ Active on port 8080
 
 ## Deploy Files on dertog
