@@ -420,6 +420,7 @@ class HealthHandler(http.server.BaseHTTPRequestHandler):
 
 if __name__ == '__main__':
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
+    socketserver.TCPServer.allow_reuse_address = True
     with socketserver.TCPServer(("0.0.0.0", PORT), HealthHandler) as httpd:
         print(f"Serving seykhl health dashboard at http://0.0.0.0:{PORT}")
         httpd.serve_forever()

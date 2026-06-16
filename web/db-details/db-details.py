@@ -170,11 +170,20 @@ def read_config():
     """Read database credentials from existing config files."""
     config = {}
     
+    def strip_quotes(value):
+        """Strip surrounding quotes from TOML-style config values."""
+        if value:
+            value = value.strip()
+            if (value.startswith('"') and value.endswith('"')) or \
+               (value.startswith("'") and value.endswith("'")):
+                value = value[1:-1]
+        return value
+    
     # PostgreSQL from ~/.config/yesod/database.toml
     pg_config = configparser.ConfigParser()
     pg_config.read(os.path.expanduser('~/.config/yesod/database.toml'))
     if pg_config.has_section('database'):
-        dsn = pg_config.get('database', 'dsn', fallback='')
+        dsn = strip_quotes(pg_config.get('database', 'dsn', fallback=''))
         if dsn:
             parsed = urllib.parse.urlparse(dsn)
             config['postgres'] = {
@@ -190,10 +199,10 @@ def read_config():
     dolt_config.read(os.path.expanduser('~/.config/yesod/dolt.toml'))
     if dolt_config.has_section('server'):
         config['dolt'] = {
-            'host': dolt_config.get('server', 'host', fallback='192.168.0.150'),
+            'host': strip_quotes(dolt_config.get('server', 'host', fallback='192.168.0.150')),
             'port': dolt_config.getint('server', 'port', fallback=3306),
-            'user': dolt_config.get('server', 'user', fallback='yesoduser'),
-            'password': dolt_config.get('server', 'password', fallback=''),
+            'user': strip_quotes(dolt_config.get('server', 'user', fallback='yesoduser')),
+            'password': strip_quotes(dolt_config.get('server', 'password', fallback='')),
         }
     
     return config
@@ -583,6 +592,7 @@ class DBHandler(http.server.BaseHTTPRequestHandler):
 
 if __name__ == '__main__':
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
+    socketserver.TCPServer.allow_reuse_address = True
     with socketserver.TCPServer(("0.0.0.0", PORT), DBHandler) as httpd:
         print(f"Serving database details at http://0.0.0.0:{PORT}")
         httpd.serve_forever()
