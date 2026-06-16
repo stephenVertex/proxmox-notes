@@ -126,6 +126,25 @@ systemctl --user status clip-together-web
 systemctl --user restart clip-together-web
 ```
 
+### Seykhl Health Dashboard (port 8093)
+
+Live cluster health and performance metrics fetched from the Proxmox host via SSH.
+
+- **URL**: `http://dertog:8093`
+- **Server**: Python dynamic server (fetches live data from seykhl)
+- **Systemd unit**: `seykhl-health.service` (user unit)
+- **File**: `~/seykhl-health.py`
+- **Features**: Node status, load/memory, storage, VM summary, auto-refresh (30s)
+- **Data source**: `pvesh` commands via SSH to root@seykhl
+
+```bash
+# Check status
+systemctl --user status seykhl-health
+
+# Restart
+systemctl --user restart seykhl-health
+```
+
 ### Performance Dashboard (port 8080)
 
 - **URL**: `http://dertog:8080`
@@ -138,11 +157,17 @@ systemctl --user restart clip-together-web
 - **Memory**: Ballooning enabled (2GB current, up to 6GB max)
 - **Disk**: 30GB total, 28GB free
 - **cluster-services**: ✅ Active on port 8092
+- **seykhl-health**: ✅ Active on port 8093
 - **clip-together-web**: ✅ Active on port 8091
 - **perf-dashboard**: ✅ Active on port 8080
 
 ## Deploy Files on dertog
 
+- `~/cluster-services/index.html` — Cluster services index page (version-controlled)
+- `~/cluster-services-serve.py` — Python static server for cluster-services
+- `~/.config/systemd/user/cluster-services.service` — systemd user unit
+- `~/seykhl-health.py` — Seykhl health dashboard server (version-controlled)
+- `~/.config/systemd/user/seykhl-health.service` — systemd user unit
 - `~/clip-together-web/` — Static SPA files (index.html, assets/)
 - `~/clip-together-serve.py` — Python static server with SPA fallback
 - `~/.config/systemd/user/clip-together-web.service` — systemd user unit

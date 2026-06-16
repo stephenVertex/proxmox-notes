@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cluster Services</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #1a1a1a;
+            margin-bottom: 8px;
+            font-size: 2.5rem;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+        .timestamp {
+            color: #999;
+            font-size: 0.85rem;
+            margin-bottom: 30px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-left: 4px solid #ddd;
+        }
+        .card.web {
+            border-left-color: #4CAF50;
+        }
+        .card.api {
+            border-left-color: #2196F3;
+        }
+        .card.infra {
+            border-left-color: #FF9800;
+        }
+        .card.runner {
+            border-left-color: #9C27B0;
+        }
+        .card h2 {
+            font-size: 1.2rem;
+            margin-bottom: 12px;
+            color: #1a1a1a;
+        }
+        .service {
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #eee;
+        }
+        .service:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+        .service-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+        .service-desc {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 6px;
+        }
+        .service-link {
+            display: inline-block;
+            color: #2196F3;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        .service-link:hover {
+            text-decoration: underline;
+        }
+        .service-meta {
+            color: #999;
+            font-size: 0.8rem;
+            margin-top: 4px;
+        }
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin-left: 8px;
+        }
+        .badge.web {
+            background: #E8F5E9;
+            color: #2E7D32;
+        }
+        .badge.api {
+            background: #E3F2FD;
+            color: #1565C0;
+        }
+        .badge.internal {
+            background: #FFF3E0;
+            color: #E65100;
+        }
+        .section-header {
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        .section-header h2 {
+            font-size: 1.5rem;
+            color: #333;
+        }
+        .section-header p {
+            color: #666;
+            font-size: 0.95rem;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+        .status-active {
+            background: #4CAF50;
+        }
+        .status-unknown {
+            background: #FFC107;
+        }
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            color: #999;
+            font-size: 0.85rem;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Cluster Services</h1>
+        <p class="subtitle">Self-hosted infrastructure on seykhl Proxmox cluster</p>
+        <p class="timestamp" id="timestamp"></p>
+
+        <div class="section-header">
+            <h2>Web Applications</h2>
+            <p>Browser-accessible dashboards and frontends</p>
+        </div>
+        <div class="grid">
+            <div class="card web">
+                <h2>clip-together</h2>
+                <div class="service">
+                    <div class="service-name">
+                        <span class="status-indicator status-active"></span>
+                        clip-together Frontend
+                        <span class="badge web">Web</span>
+                    </div>
+                    <div class="service-desc">React/Vite SPA for the clip-together application</div>
+                    <a class="service-link" href="http://dertog:8091">http://dertog:8091</a>
+                    <div class="service-meta">Built on homestar-runner, deployed to dertog</div>
+                </div>
+            </div>
+
+            <div class="card web">
+                <h2>Yesod</h2>
+                <div class="service">
+                    <div class="service-name">
+                        <span class="status-indicator status-active"></span>
+                        Yesod API Server
+                        <span class="badge api">API</span>
+                    </div>
+                    <div class="service-desc">HTTP API + site for Yesod platform</div>
+                    <a class="service-link" href="http://dertog:8090">http://dertog:8090</a>
+                    <div class="service-meta">Python/uv, serves on port 8090</div>
+                </div>
+                <div class="service">
+                    <div class="service-name">
+                        <span class="status-indicator status-active"></span>
+                        Yesod Live Viz WebSocket
+                        <span class="badge api">WebSocket</span>
+                    </div>
+                    <div class="service-desc">Live visualization and watcher</div>
+                    <a class="service-link" href="http://dertog:8765">http://dertog:8765</a>
+                    <div class="service-meta">WebSocket + watcher with 5s interval</div>
+                </div>
+            </div>
+
+            <div class="card web">
+                <h2>Proxmox</h2>
+                <div class="service">
+                    <div class="service-name">
+                        <span class="status-indicator status-active"></span>
+                        Proxmox Web UI
+                        <span class="badge web">Web</span>
+                    </div>
+                    <div class="service-desc">Proxmox VE management interface</div>
+                    <a class="service-link" href="https://seykhl:8006">https://seykhl:8006</a>
+                    <div class="service-meta">HTTPS, requires root credentials</div>
+                </div>
+                <div class="service">
+                    <div class="service-name">
+                        <span class="status-indicator status-active"></span>
+                        Seykhl Health Dashboard
+                        <span class="badge web">Web</span>
+                    </div>
+                    <div class="service-desc">Live cluster health and performance metrics</div>
+                    <a class="service-link" href="http://dertog:8093">http://dertog:8093</a>
+                    <div class="service-meta">Auto-refreshes every 30s</div>
+                </div>
+            </div>
+
+            <div class="card web">
+                <h2>n8n</h2>
+                <div class="service">
+                    <div class="service-name">
+                        <span class="status-indicator status-active"></span>
+                        n8n Automation
+                        <span class="badge web">Web</span>
+                    </div>
+                    <div class="service-desc">Workflow automation platform</div>
+                    <a class="service-link" href="http://n8n-server:5678">http://n8n-server:5678</a>
+                    <div class="service-meta">Automation workflows and integrations</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-header">
+            <h2>Backend Services</h2>
+            <p>APIs, databases, and runtime infrastructure</p>
+        </div>
+        <div class="grid">
+            <div class="card api">
+                <h2>Supabase (sb-edge)</h2>
+                <div class="service">
+                    <div class="service-name">
+                        <span class="status-indicator status-active"></span>
+                        Supabase Backend
+                        <span class="badge api">API</span>
+                    </div>
+                    <div class="service-desc">Self-hosted Supabase stack (PostgREST + Edge Runtime + Storage)</div>
+                    <a class="service-link" href="http://sb-edge:8001">http://sb-edge:8001</a>
+                    <div class="service-meta">VM 111, Tailscale IP: 100.115.156.68</div>
+                </div>
+                <div class="service">
+                    <div class="service-name">
+                        <span class="status-indicator status-active"></span>
+                        Tailscale HTTPS
+                        <span class="badge web">Web</span>
+                    </div>
+                    <div class="service-desc">HTTPS access via Tailscale Serve</div>
+                    <a class="service-link" href="https://sb-edge.tailb4b58.ts.net">https://sb-edge.tailb4b58.ts.net</a>
+                    <div class="service-meta">Tailscale serve on port 8000</div>
+                </div>
+            </div>
+
+            <div class="card api">
+                <h2>Databases</h2>
+                <div class="service">
+                    <div class="service-name">
+                        <span class="status-indicator status-active"></span>
+                        PostgreSQL (Yesod)
+                        <span class="badge internal">Internal</span>
+                    </div>
+                    <div class="service-desc">PostgreSQL for Yesod platform</div>
+                    <div class="service-meta">yesod-postgres-server:5432 (VM 102)</div>
+                </div>
+                <div class="service">
+                    <div class="service-name">
+                        <span class="status-indicator status-active"></span>
+                        Dolt SQL Server
+                        <span class="badge internal">Internal</span>
+                    </div>
+                    <div class="service-desc">Dolt SQL server for versioned data</div>
+                    <div class="service-meta">doltsvr:3306 (VM 100)</div>
+                </div>
+            </div>
+
+            <div class="card api">
+                <h2>Performance Monitor</h2>
+                <div class="service">
+                    <div class="service-name">
+                        <span class="status-indicator status-active"></span>
+                        Performance Dashboard
+                        <span class="badge web">Web</span>
+                    </div>
+                    <div class="service-desc">System performance monitoring</div>
+                    <a class="service-link" href="http://dertog:8080">http://dertog:8080</a>
+                    <div class="service-meta">Python dashboard server</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-header">
+            <h2>Runners & Agents</h2>
+            <p>GitHub Actions runners and Yesod agent dispatchers</p>
+        </div>
+        <div class="grid">
+            <div class="card runner">
+                <h2>GitHub Actions</h2>
+                <div class="service">
+                    <div class="service-name">
+                        <span class="status-indicator status-active"></span>
+                        homestar-runner
+                        <span class="badge internal">Runner</span>
+                    </div>
+                    <div class="service-desc">GitHub Actions runner for clip-together</div>
+                    <div class="service-meta">VM 103, IP: 192.168.0.154</div>
+                    <div class="service-meta">Labels: dertog-deploy, self-hosted</div>
+                </div>
+                <div class="service">
+                    <div class="service-name">
+                        <span class="status-indicator status-active"></span>
+                        yesod-runner (VM 106)
+                        <span class="badge internal">Runner</span>
+                    </div>
+                    <div class="service-desc">Yesod agent dispatcher</div>
+                    <div class="service-meta">IP: 192.168.0.152, models: claude-fable-5</div>
+                </div>
+                <div class="service">
+                    <div class="service-name">
+                        <span class="status-indicator status-active"></span>
+                        yesod-runner-2 (VM 108)
+                        <span class="badge internal">Runner</span>
+                    </div>
+                    <div class="service-desc">Yesod agent dispatcher</div>
+                    <div class="service-meta">IP: 192.168.0.148, models: opencode-kimi, opencode-claude</div>
+                </div>
+                <div class="service">
+                    <div class="service-name">
+                        <span class="status-indicator status-active"></span>
+                        yesod-runner-3 (VM 110)
+                        <span class="badge internal">Runner</span>
+                    </div>
+                    <div class="service-desc">Yesod agent dispatcher</div>
+                    <div class="service-meta">IP: 192.168.0.136, models: opencode-qwen</div>
+                </div>
+            </div>
+
+            <div class="card runner">
+                <h2>Other Services</h2>
+                <div class="service">
+                    <div class="service-name">
+                        <span class="status-indicator status-active"></span>
+                        aicoe-social-runner
+                        <span class="badge internal">Service</span>
+                    </div>
+                    <div class="service-desc">Social media monitoring</div>
+                    <div class="service-meta">VM 105, IP: 192.168.0.147</div>
+                </div>
+                <div class="service">
+                    <div class="service-name">
+                        <span class="status-indicator status-active"></span>
+                        jeffrey-dev
+                        <span class="badge internal">Dev</span>
+                    </div>
+                    <div class="service-desc">Development VM</div>
+                    <div class="service-meta">VM 101, IP: 192.168.0.132</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Cluster Services Index | Self-hosted on dertog | Proxmox cluster: seykhl (192.168.0.202)</p>
+            <p>Generated: <span id="footer-time"></span></p>
+        </div>
+    </div>
+
+    <script>
+        function updateTimestamp() {
+            const now = new Date();
+            document.getElementById('timestamp').textContent = 'Last updated: ' + now.toLocaleString();
+            document.getElementById('footer-time').textContent = now.toLocaleString();
+        }
+        updateTimestamp();
+    </script>
+</body>
+</html>
