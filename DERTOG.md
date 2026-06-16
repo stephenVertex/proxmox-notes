@@ -149,6 +149,27 @@ systemctl --user status seykhl-health
 systemctl --user restart seykhl-health
 ```
 
+### Database Details (port 8094)
+
+Database details dashboard for PostgreSQL (yesod-postgres-server) and Dolt (doltsvr).
+
+- **URL**: `http://dertog:8094`
+- **Server**: Python dynamic server
+- **Systemd unit**: `db-details.service` (user unit)
+- **File**: `~/db-details.py` (version-controlled)
+- **Features**:
+  - PostgreSQL: database list, sizes, recent activity (commits/inserts/updates/deletes), active connections
+  - Dolt: database list, table counts, recent commits
+- **Credentials**: Read from existing `~/.config/yesod/database.toml` and `~/.config/yesod/dolt.toml`
+
+```bash
+# Check status
+systemctl --user status db-details
+
+# Restart
+systemctl --user restart db-details
+```
+
 ### Performance Dashboard (port 8080)
 
 - **URL**: `http://dertog:8080`
@@ -162,6 +183,7 @@ systemctl --user restart seykhl-health
 - **Disk**: 30GB total, 28GB free
 - **cluster-services**: ✅ Active on port 8092
 - **seykhl-health**: ✅ Active on port 8093
+- **db-details**: ✅ Active on port 8094
 - **clip-together-web**: ✅ Active on port 8091
 - **perf-dashboard**: ✅ Active on port 8080
 
@@ -172,6 +194,8 @@ systemctl --user restart seykhl-health
 - `~/.config/systemd/user/cluster-services.service` — systemd user unit
 - `~/seykhl-health.py` — Seykhl health dashboard server (version-controlled)
 - `~/.config/systemd/user/seykhl-health.service` — systemd user unit
+- `~/db-details.py` — Database details dashboard server (version-controlled)
+- `~/.config/systemd/user/db-details.service` — systemd user unit
 - `~/clip-together-web/` — Static SPA files (index.html, assets/)
 - `~/clip-together-serve.py` — Python static server with SPA fallback
 - `~/.config/systemd/user/clip-together-web.service` — systemd user unit

@@ -75,6 +75,10 @@ layers (Proxmox, /etc/hosts, SSH config, guest hostname) use the same name.
 - **HTTPS:** https://dertog.tailb4b58.ts.net/ (Tailscale, port 443)
 - **Description:** Self-hosted index page listing all services on the cluster with links
 
+### Database Details Dashboard
+- **URL:** http://dertog:8094
+- **Description:** PostgreSQL and Dolt database sizes, counts, and recent activity
+
 ### Proxmox Web UI
 - **URL:** https://192.168.0.202:8006
 - **Credentials:** Root credentials (stored in password manager)
