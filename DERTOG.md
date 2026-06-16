@@ -89,6 +89,24 @@ qm start 104
 
 ## Services
 
+### Cluster Services Index (port 8092)
+
+A self-hosted index page that lists all services running on the cluster, with links to accessible ones.
+
+- **URL**: `http://dertog:8092`
+- **Server**: Python static server
+- **Systemd unit**: `cluster-services.service` (user unit)
+- **Files**: `~/cluster-services/index.html`, `~/cluster-services-serve.py`
+- **Purpose**: Single entry point to discover all cluster services
+
+```bash
+# Check status
+systemctl --user status cluster-services
+
+# Restart
+systemctl --user restart cluster-services
+```
+
 ### clip-together Frontend (port 8091)
 
 Static SPA serving the clip-together React/Vite frontend, built elsewhere (homestar-runner) and deployed via rsync.
@@ -108,12 +126,20 @@ systemctl --user status clip-together-web
 systemctl --user restart clip-together-web
 ```
 
+### Performance Dashboard (port 8080)
+
+- **URL**: `http://dertog:8080`
+- **Process**: `/opt/perf-dashboard/dashboard_server.py` (root)
+- **Purpose**: System performance monitoring dashboard
+
 ## Current Status
 - **SSH**: ✅ `ssh stephen@192.168.0.138` works with key auth
 - **Sudo**: ✅ Passwordless sudo configured
 - **Memory**: Ballooning enabled (2GB current, up to 6GB max)
 - **Disk**: 30GB total, 28GB free
+- **cluster-services**: ✅ Active on port 8092
 - **clip-together-web**: ✅ Active on port 8091
+- **perf-dashboard**: ✅ Active on port 8080
 
 ## Deploy Files on dertog
 
