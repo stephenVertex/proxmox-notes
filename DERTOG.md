@@ -27,6 +27,7 @@
 - Host dashboards at various ports
 - Receive distilled data uploads from workstation
 - Serve as a central visualization hub
+- Serve the **clip-together** React/Vite frontend as a static SPA (port 8091)
 
 ## SSH Access
 ```bash
@@ -86,15 +87,43 @@ qm start 104
 - **Issue**: Passwordless sudo not configured for `stephen` user
 - **Fix**: Added `/etc/sudoers.d/stephen` via offline disk mount
 
+## Services
+
+### clip-together Frontend (port 8091)
+
+Static SPA serving the clip-together React/Vite frontend, built elsewhere (homestar-runner) and deployed via rsync.
+
+- **URL**: `http://dertog:8091`
+- **Server**: Python static SPA server with `index.html` fallback
+- **Systemd unit**: `clip-together-web.service` (user unit)
+- **Deploy source**: `~/clip-together-web/` (rsync'd from homestar-runner)
+- **Build host**: `homestar-runner` (192.168.0.154) via GitHub Actions
+- **API backend**: `sb-edge` (192.168.0.137:8001) with CORS enabled
+
+```bash
+# Check status
+systemctl --user status clip-together-web
+
+# Restart after manual deploy
+systemctl --user restart clip-together-web
+```
+
 ## Current Status
 - **SSH**: ✅ `ssh stephen@192.168.0.138` works with key auth
 - **Sudo**: ✅ Passwordless sudo configured
 - **Memory**: Ballooning enabled (2GB current, up to 6GB max)
 - **Disk**: 30GB total, 28GB free
-- **Packages**: Stock Debian 13, ready for dashboard installation
+- **clip-together-web**: ✅ Active on port 8091
+
+## Deploy Files on dertog
+
+- `~/clip-together-web/` — Static SPA files (index.html, assets/)
+- `~/clip-together-serve.py` — Python static server with SPA fallback
+- `~/.config/systemd/user/clip-together-web.service` — systemd user unit
 
 ## Notes
 - CPU type `host` for modern tool compatibility
 - Ballooning enabled for memory efficiency
-- Currently stock Debian — dashboards will be added as needed
 - `qemu-guest-agent` not available in default Debian 13 repos (not critical for basic operation)
+- **Do not install node/npm** on dertog — the frontend is built on homestar-runner and copied as static files
+- To change `VITE_*` env vars, the frontend must be **rebuilt** (env vars are baked into the bundle at build time)
