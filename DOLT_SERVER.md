@@ -20,8 +20,16 @@
 ## Network Details
 - **MAC Address**: BC:24:11:D0:43:5D
 - **LAN IP**: 192.168.0.150 (DHCP)
+- **Tailscale IP**: 100.101.145.38
+- **Tailscale Hostname**: `doltsvr`
 - **Hostname**: `doltsvr`
 - **DNS**: Added to local `/etc/hosts` on admin machines
+
+## Tailscale Access
+- **Status**: ✅ Joined to tailnet `tailb4b58.ts.net`
+- **Joined**: 2026-06-16
+- **URL**: `https://login.tailscale.com/admin/machines` (admin console)
+- **CLI check**: `tailscale status` on any tailnet node shows `100.101.145.38 doltsvr ... linux -`
 
 ## Dolt Server Configuration
 - **Service**: `dolt-server` (systemd)

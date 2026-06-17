@@ -21,7 +21,7 @@
 
 | VMID | Name | Status | RAM | Disk | LAN IP | MAC | Purpose |
 |------|------|--------|-----|------|--------|-----|---------|
-| 100 | doltsvr | running | 24GB | 64GB | 192.168.0.150 | bc:24:11:d0:43:5d | Dolt SQL Server |
+| 100 | doltsvr | running | 24GB | 64GB | 192.168.0.150 / 100.101.145.38 (TS) | bc:24:11:d0:43:5d | Dolt SQL Server |
 | 101 | jeffrey-dev | running | 4GB | 20GB | 192.168.0.132 | bc:24:11:cd:26:f7 | Development VM |
 | 102 | yesod-postgres-server | running | 6GB | 30GB | 192.168.0.155 | bc:24:11:00:88:f5 | PostgreSQL for Yesod |
 | 103 | homestar-runner | running | 4GB | 30GB | 192.168.0.154 | bc:24:11:6c:cf:b7 | GitHub Actions Runner |
@@ -60,7 +60,7 @@ layers (Proxmox, /etc/hosts, SSH config, guest hostname) use the same name.
 - `yesod-runner-3` → 192.168.0.136
 - `sb-edge` → 192.168.0.137 (Tailscale: 100.115.156.68)
 - `homestar-runner` → 192.168.0.154
-- `doltsvr` → 192.168.0.150
+- `doltsvr` → 192.168.0.150 (Tailscale: 100.101.145.38)
 - `dertog` → 192.168.0.138
 - `aicoe-social-runner` → 192.168.0.147
 - `jeffrey-dev` → 192.168.0.132
@@ -194,7 +194,8 @@ ssh root@192.168.0.202 "qm restart <vmid>"
 
 ## To Do
 
-- [ ] Set up Tailscale on all VMs for secure remote access
+- [x] Set up Tailscale on doltsvr (100.101.145.38) — joined 2026-06-16
+- [ ] Set up Tailscale on remaining VMs for secure remote access
 - [ ] Configure automated backups for all VMs
 - [ ] Document test VMs (203, 205) if they are needed for production
 - [ ] Create monitoring dashboard for VM resource usage
