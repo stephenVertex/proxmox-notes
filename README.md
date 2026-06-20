@@ -23,7 +23,7 @@
 |------|------|--------|-----|------|--------|-----|---------|
 | 100 | doltsvr | running | 24GB | 64GB | 192.168.0.150 / 100.101.145.38 (TS) | bc:24:11:d0:43:5d | Dolt SQL Server |
 | 101 | jeffrey-dev | running | 4GB | 20GB | 192.168.0.132 | bc:24:11:cd:26:f7 | Development VM |
-| 102 | yesod-postgres-server | running | 6GB | 30GB | 192.168.0.155 | bc:24:11:00:88:f5 | PostgreSQL for Yesod |
+| 102 | yesod-postgres-server | running | 6GB | 30GB | 192.168.0.155 / 100.115.10.68 (TS) | bc:24:11:00:88:f5 | PostgreSQL for Yesod |
 | 103 | homestar-runner | running | 4GB | 30GB | 192.168.0.154 | bc:24:11:6c:cf:b7 | GitHub Actions Runner |
 | 104 | dertog | running | 6GB | 30GB | 192.168.0.138 | bc:24:11:90:a9:cc | Dashboard Server |
 | 105 | aicoe-social-runner | running | 2GB | 20GB | 192.168.0.147 | bc:24:11:a4:ce:80 | Social Media Monitor |
@@ -54,7 +54,7 @@ VM 100 was renamed from `dolt-server` to `doltsvr` in Proxmox on 2026-06-09 so a
 layers (Proxmox, /etc/hosts, SSH config, guest hostname) use the same name.
 
 - `seykhl` → 192.168.0.202 (Proxmox node)
-- `yesod-postgres-server` → 192.168.0.155
+- `yesod-postgres-server` → 192.168.0.155 (Tailscale: 100.115.10.68)
 - `yesod-runner` → 192.168.0.152
 - `yesod-runner-2` → 192.168.0.148
 - `yesod-runner-3` → 192.168.0.136
@@ -195,6 +195,7 @@ ssh root@192.168.0.202 "qm restart <vmid>"
 ## To Do
 
 - [x] Set up Tailscale on doltsvr (100.101.145.38) — joined 2026-06-16
+- [x] Set up Tailscale on yesod-postgres-server (100.115.10.68) — joined
 - [ ] Set up Tailscale on remaining VMs for secure remote access
 - [ ] Configure automated backups for all VMs
 - [ ] Document test VMs (203, 205) if they are needed for production

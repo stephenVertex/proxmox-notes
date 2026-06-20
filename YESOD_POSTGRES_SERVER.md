@@ -147,9 +147,15 @@ sudo systemctl restart sshd
 - **MAC Address**: BC:24:11:00:88:F5
 - **LAN IP**: 192.168.0.155 (DHCP)
 - **Tailscale IP**: 100.115.10.68
+- **Tailscale Hostname**: `yesod-postgres-server`
 - **Hostname**: `yesod-postgres-server`
 - **IP Assignment**: DHCP from LAN router
-- **DNS**: Will be added to local `/etc/hosts` on admin machines
+- **DNS**: Added to local `/etc/hosts` on admin machines
+
+## Tailscale Access
+- **Status**: ✅ Joined to tailnet `tailb4b58.ts.net`
+- **URL**: `https://login.tailscale.com/admin/machines` (admin console)
+- **CLI check**: `tailscale status` on any tailnet node shows `100.115.10.68 yesod-postgres-server ... linux -`
 
 ## PostgreSQL Connection
 
