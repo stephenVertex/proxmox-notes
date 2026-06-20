@@ -11,29 +11,135 @@
             margin: 0;
             padding: 0;
         }
+
+        /* ── THEME: Totogi Dark (default) ──────────────────────────────── */
+        .app {
+            --bg:        #08080d;
+            --bg2:       #0b0b13;
+            --panel:     #121219;
+            --panel2:    #16161f;
+            --mono-bg:   rgba(255,255,255,.045);
+            --line:       rgba(255,255,255,.06);
+            --panel-line: rgba(255,255,255,.09);
+            --text:       #e9e9f2;
+            --text-dim:   #9a9aab;
+            --text-faint: #5f5f6d;
+            --accent:   #b75eff;
+            --accent2:  #ef50ff;
+            --glow:     rgba(183,94,255,.45);
+            --hair:     rgba(128,45,200,.40);
+            --c-ok:     #3ddc84;
+            --c-info:   #34d6ef;
+            --c-warn:   #f5b54c;
+            --c-bad:    #ff5d67;
+            --c-queued: #9a7bff;
+            --c-muted:  #6b6b7a;
+        }
+        .app[data-theme="dracula"] {
+            --bg:        #1a1b24;
+            --bg2:       #21222c;
+            --panel:     #282a36;
+            --panel2:    #2d2f3d;
+            --mono-bg:   rgba(255,255,255,.05);
+            --line:       rgba(255,255,255,.06);
+            --panel-line: #44475a;
+            --text:       #f8f8f2;
+            --text-dim:   #9aa0c0;
+            --text-faint: #6272a4;
+            --accent:   #bd93f9;
+            --accent2:  #ff79c6;
+            --glow:     rgba(189,147,249,.4);
+            --hair:     rgba(189,147,249,.35);
+            --c-ok:     #50fa7b;
+            --c-info:   #8be9fd;
+            --c-warn:   #f1fa8c;
+            --c-bad:    #ff5555;
+            --c-queued: #bd93f9;
+            --c-muted:  #6272a4;
+        }
+        .app[data-theme="solarized"] {
+            --bg:        #002028;
+            --bg2:       #002b36;
+            --panel:     #073642;
+            --panel2:    #0a3f4c;
+            --mono-bg:   rgba(255,255,255,.05);
+            --line:       rgba(255,255,255,.05);
+            --panel-line: #0e4a59;
+            --text:       #d2dbdb;
+            --text-dim:   #8aa1a1;
+            --text-faint: #5d7375;
+            --accent:   #6c71c4;
+            --accent2:  #d33682;
+            --glow:     rgba(42,161,152,.4);
+            --hair:     rgba(108,113,196,.35);
+            --c-ok:     #9bb000;
+            --c-info:   #2aa198;
+            --c-warn:   #b58900;
+            --c-bad:    #dc322f;
+            --c-queued: #268bd2;
+            --c-muted:  #586e75;
+        }
+        .app[data-theme="paper"] {
+            --bg:        #f3f1ea;
+            --bg2:       #ece9e0;
+            --panel:     #ffffff;
+            --panel2:    #faf9f5;
+            --mono-bg:   rgba(43,38,32,.05);
+            --line:       rgba(43,38,32,.08);
+            --panel-line: #e6e0d3;
+            --text:       #241f18;
+            --text-dim:   #6f685c;
+            --text-faint: #a39b8c;
+            --accent:   #802DC8;
+            --accent2:  #c026a8;
+            --glow:     rgba(128,45,200,.22);
+            --hair:     rgba(128,45,200,.26);
+            --c-ok:     #1f8a4c;
+            --c-info:   #0e8aa3;
+            --c-warn:   #b8770e;
+            --c-bad:    #c0392b;
+            --c-queued: #6d4ad6;
+            --c-muted:  #9a9182;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: #1a1a2e;
-            color: #eee;
+            background: linear-gradient(180deg, var(--bg), var(--bg2));
+            color: var(--text);
             line-height: 1.6;
             padding: 20px;
+            min-height: 100vh;
+        }
+        .app::after {
+            content: '';
+            position: fixed;
+            top: -200px;
+            right: -200px;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle, var(--glow) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
         }
         .container {
             max-width: 1200px;
             margin: 0 auto;
+            position: relative;
+            z-index: 1;
         }
         h1 {
-            color: #fff;
+            color: var(--text);
             margin-bottom: 8px;
             font-size: 2.5rem;
         }
         .subtitle {
-            color: #888;
+            color: var(--text-dim);
             margin-bottom: 30px;
             font-size: 1.1rem;
         }
         .timestamp {
-            color: #666;
+            color: var(--text-faint);
             font-size: 0.85rem;
             margin-bottom: 30px;
         }
@@ -43,33 +149,33 @@
             gap: 20px;
         }
         .card {
-            background: #16213e;
+            background: var(--panel);
             border-radius: 8px;
             padding: 20px;
-            border: 1px solid #0f3460;
-            border-left: 4px solid #0f3460;
+            border: 1px solid var(--panel-line);
+            border-left: 4px solid var(--panel-line);
         }
         .card.web {
-            border-left-color: #4CAF50;
+            border-left-color: var(--c-ok);
         }
         .card.api {
-            border-left-color: #2196F3;
+            border-left-color: var(--c-info);
         }
         .card.infra {
-            border-left-color: #FF9800;
+            border-left-color: var(--c-warn);
         }
         .card.runner {
-            border-left-color: #e94560;
+            border-left-color: var(--accent2);
         }
         .card h2 {
             font-size: 1.2rem;
             margin-bottom: 12px;
-            color: #e94560;
+            color: var(--accent);
         }
         .service {
             margin-bottom: 12px;
             padding-bottom: 12px;
-            border-bottom: 1px solid #1a1a3e;
+            border-bottom: 1px solid var(--line);
         }
         .service:last-child {
             margin-bottom: 0;
@@ -78,26 +184,91 @@
         }
         .service-name {
             font-weight: 600;
-            color: #fff;
+            color: var(--text);
             margin-bottom: 4px;
         }
         .service-desc {
-            color: #888;
+            color: var(--text-dim);
             font-size: 0.9rem;
             margin-bottom: 6px;
         }
+        .service-links {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            margin-top: 6px;
+        }
+        .link-row {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            font-size: 0.85rem;
+            font-family: 'Courier New', monospace;
+        }
+        .link-label {
+            color: var(--text-faint);
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            min-width: 28px;
+            flex-shrink: 0;
+        }
         .service-link {
-            display: inline-block;
-            color: #e94560;
             text-decoration: none;
-            font-size: 0.9rem;
             font-weight: 500;
+            word-break: break-all;
         }
         .service-link:hover {
             text-decoration: underline;
         }
+        .service-link.ts {
+            color: var(--c-ok);
+        }
+        .service-link.ts-https {
+            color: var(--c-ok);
+        }
+        .service-link.lan {
+            color: var(--accent);
+        }
+        .service-link.cf {
+            color: var(--c-warn);
+        }
+        .service-link.none {
+            color: var(--text-faint);
+            font-style: italic;
+            cursor: default;
+        }
+        .service-link.none:hover {
+            text-decoration: none;
+        }
+        .copy-btn {
+            background: transparent;
+            border: 1px solid var(--panel-line);
+            color: var(--text-faint);
+            border-radius: 4px;
+            padding: 1px 6px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+            font-family: inherit;
+            line-height: 1.4;
+            flex-shrink: 0;
+        }
+        .link-row:hover .copy-btn {
+            opacity: 1;
+        }
+        .copy-btn:hover {
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+        .copy-btn.copied {
+            color: var(--c-ok);
+            border-color: var(--c-ok);
+            opacity: 1;
+        }
         .service-meta {
-            color: #666;
+            color: var(--text-faint);
             font-size: 0.8rem;
             margin-top: 4px;
         }
@@ -108,30 +279,28 @@
             font-size: 0.75rem;
             font-weight: 500;
             margin-left: 8px;
+            background: var(--mono-bg);
         }
         .badge.web {
-            background: #1a3a1a;
-            color: #4CAF50;
+            color: var(--c-ok);
         }
         .badge.api {
-            background: #1a2a3a;
-            color: #2196F3;
+            color: var(--c-info);
         }
         .badge.internal {
-            background: #3a2a1a;
-            color: #FF9800;
+            color: var(--c-warn);
         }
         .section-header {
             margin-bottom: 20px;
             padding-bottom: 10px;
-            border-bottom: 2px solid #0f3460;
+            border-bottom: 2px solid var(--panel-line);
         }
         .section-header h2 {
             font-size: 1.5rem;
-            color: #fff;
+            color: var(--text);
         }
         .section-header p {
-            color: #888;
+            color: var(--text-dim);
             font-size: 0.95rem;
         }
         .status-indicator {
@@ -142,22 +311,22 @@
             margin-right: 6px;
         }
         .status-active {
-            background: #4CAF50;
+            background: var(--c-ok);
         }
         .status-unknown {
-            background: #FFC107;
+            background: var(--c-warn);
         }
         .footer {
             margin-top: 40px;
             padding-top: 20px;
-            border-top: 1px solid #0f3460;
-            color: #666;
+            border-top: 1px solid var(--panel-line);
+            color: var(--text-faint);
             font-size: 0.85rem;
             text-align: center;
         }
         .secure-url {
-            background: #1a3a1a;
-            border: 1px solid #2e5a2e;
+            background: var(--mono-bg);
+            border: 1px solid var(--line);
             border-radius: 8px;
             padding: 12px 16px;
             margin-bottom: 20px;
@@ -168,7 +337,7 @@
             font-size: 0.95rem;
         }
         .secure-url a {
-            color: #4CAF50;
+            color: var(--c-ok);
             text-decoration: none;
             font-weight: 600;
         }
@@ -179,12 +348,68 @@
             font-size: 1.1rem;
         }
         .secure-port {
-            color: #888;
+            color: var(--text-dim);
             font-size: 0.85rem;
+        }
+        .legend {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 24px;
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            flex-wrap: wrap;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .legend-swatch {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+        }
+        .legend-swatch.ts { background: var(--c-ok); }
+        .legend-swatch.lan { background: var(--accent); }
+        .legend-swatch.cf { background: var(--c-warn); }
+
+        .theme-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        .theme-bar label {
+            font-size: 0.8rem;
+            color: var(--text-faint);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .theme-btn {
+            background: var(--panel2);
+            border: 1px solid var(--panel-line);
+            color: var(--text-dim);
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            font-family: inherit;
+        }
+        .theme-btn:hover {
+            color: var(--text);
+            border-color: var(--accent);
+        }
+        .theme-btn.active {
+            background: var(--accent);
+            color: var(--bg);
+            border-color: var(--accent);
+            font-weight: 600;
         }
     </style>
 </head>
-<body>
+<body class="app">
     <div class="container">
         <h1>Cluster Services</h1>
         <p class="subtitle">Self-hosted infrastructure on seykhl Proxmox cluster</p>
@@ -192,6 +417,18 @@
             <span class="secure-lock">🔒</span>
             <a href="https://dertog.tailb4b58.ts.net/">https://dertog.tailb4b58.ts.net/</a>
             <span class="secure-port">(HTTPS port 443)</span>
+        </div>
+        <div class="theme-bar">
+            <label>Theme</label>
+            <button class="theme-btn active" data-theme-set="">Totogi</button>
+            <button class="theme-btn" data-theme-set="dracula">Dracula</button>
+            <button class="theme-btn" data-theme-set="solarized">Solarized</button>
+            <button class="theme-btn" data-theme-set="paper">Paper</button>
+        </div>
+        <div class="legend">
+            <div class="legend-item"><span class="legend-swatch ts"></span> Tailscale</div>
+            <div class="legend-item"><span class="legend-swatch lan"></span> LAN IP</div>
+            <div class="legend-item"><span class="legend-swatch cf"></span> Cloudflare Tunnel</div>
         </div>
         <p class="timestamp" id="timestamp"></p>
 
@@ -209,8 +446,17 @@
                         <span class="badge web">Web</span>
                     </div>
                     <div class="service-desc">React/Vite SPA for the clip-together application</div>
-                    <a class="service-link" href="http://dertog:8091">http://dertog:8091</a>
-                    <div class="service-meta">Built on homestar-runner, deployed to dertog</div>
+                    <div class="service-links">
+                        <div class="link-row">
+                            <span class="link-label">TS</span>
+                            <a class="service-link ts" href="http://dertog.tailb4b58.ts.net:8091">dertog.tailb4b58.ts.net:8091</a>
+                        </div>
+                        <div class="link-row">
+                            <span class="link-label">LAN</span>
+                            <a class="service-link lan" href="http://192.168.0.138:8091">192.168.0.138:8091</a>
+                        </div>
+                    </div>
+                    <div class="service-meta">Built on homestar-runner, deployed to dertog (VM 104)</div>
                 </div>
             </div>
 
@@ -223,7 +469,16 @@
                         <span class="badge api">API</span>
                     </div>
                     <div class="service-desc">HTTP API + site for Yesod platform</div>
-                    <a class="service-link" href="http://dertog:8090">http://dertog:8090</a>
+                    <div class="service-links">
+                        <div class="link-row">
+                            <span class="link-label">TS</span>
+                            <a class="service-link ts" href="http://dertog.tailb4b58.ts.net:8090">dertog.tailb4b58.ts.net:8090</a>
+                        </div>
+                        <div class="link-row">
+                            <span class="link-label">LAN</span>
+                            <a class="service-link lan" href="http://192.168.0.138:8090">192.168.0.138:8090</a>
+                        </div>
+                    </div>
                     <div class="service-meta">Python/uv, serves on port 8090</div>
                 </div>
                 <div class="service">
@@ -233,7 +488,16 @@
                         <span class="badge api">WebSocket</span>
                     </div>
                     <div class="service-desc">Live visualization and watcher</div>
-                    <a class="service-link" href="http://dertog:8765">http://dertog:8765</a>
+                    <div class="service-links">
+                        <div class="link-row">
+                            <span class="link-label">TS</span>
+                            <a class="service-link ts" href="http://dertog.tailb4b58.ts.net:8765">dertog.tailb4b58.ts.net:8765</a>
+                        </div>
+                        <div class="link-row">
+                            <span class="link-label">LAN</span>
+                            <a class="service-link lan" href="http://192.168.0.138:8765">192.168.0.138:8765</a>
+                        </div>
+                    </div>
                     <div class="service-meta">WebSocket + watcher with 5s interval</div>
                 </div>
             </div>
@@ -247,7 +511,16 @@
                         <span class="badge web">Web</span>
                     </div>
                     <div class="service-desc">Proxmox VE management interface</div>
-                    <a class="service-link" href="https://seykhl:8006">https://seykhl:8006</a>
+                    <div class="service-links">
+                        <div class="link-row">
+                            <span class="link-label">TS</span>
+                            <span class="service-link none">not configured</span>
+                        </div>
+                        <div class="link-row">
+                            <span class="link-label">LAN</span>
+                            <a class="service-link lan" href="https://192.168.0.202:8006">https://192.168.0.202:8006</a>
+                        </div>
+                    </div>
                     <div class="service-meta">HTTPS, requires root credentials</div>
                 </div>
                 <div class="service">
@@ -257,7 +530,16 @@
                         <span class="badge web">Web</span>
                     </div>
                     <div class="service-desc">Live cluster health and performance metrics</div>
-                    <a class="service-link" href="http://dertog:8093">http://dertog:8093</a>
+                    <div class="service-links">
+                        <div class="link-row">
+                            <span class="link-label">TS</span>
+                            <a class="service-link ts" href="http://dertog.tailb4b58.ts.net:8093">dertog.tailb4b58.ts.net:8093</a>
+                        </div>
+                        <div class="link-row">
+                            <span class="link-label">LAN</span>
+                            <a class="service-link lan" href="http://192.168.0.138:8093">192.168.0.138:8093</a>
+                        </div>
+                    </div>
                     <div class="service-meta">Auto-refreshes every 30s</div>
                 </div>
             </div>
@@ -271,7 +553,16 @@
                         <span class="badge api">Details</span>
                     </div>
                     <div class="service-desc">PostgreSQL and Dolt database sizes, counts, and activity</div>
-                    <a class="service-link" href="http://dertog:8094">http://dertog:8094</a>
+                    <div class="service-links">
+                        <div class="link-row">
+                            <span class="link-label">TS</span>
+                            <a class="service-link ts" href="http://dertog.tailb4b58.ts.net:8094">dertog.tailb4b58.ts.net:8094</a>
+                        </div>
+                        <div class="link-row">
+                            <span class="link-label">LAN</span>
+                            <a class="service-link lan" href="http://192.168.0.138:8094">192.168.0.138:8094</a>
+                        </div>
+                    </div>
                     <div class="service-meta">yesod-postgres-server + doltsvr</div>
                 </div>
             </div>
@@ -285,8 +576,17 @@
                         <span class="badge web">Web</span>
                     </div>
                     <div class="service-desc">Workflow automation platform</div>
-                    <a class="service-link" href="http://n8n-server:5678">http://n8n-server:5678</a>
-                    <div class="service-meta">Automation workflows and integrations</div>
+                    <div class="service-links">
+                        <div class="link-row">
+                            <span class="link-label">CF</span>
+                            <a class="service-link cf" href="https://n8n.meshcrawler.com">n8n.meshcrawler.com</a>
+                        </div>
+                        <div class="link-row">
+                            <span class="link-label">LAN</span>
+                            <a class="service-link lan" href="http://192.168.0.145:5678">192.168.0.145:5678</a>
+                        </div>
+                    </div>
+                    <div class="service-meta">Cloudflare Tunnel (no Tailscale on this node)</div>
                 </div>
             </div>
 
@@ -299,7 +599,16 @@
                         <span class="badge web">Web</span>
                     </div>
                     <div class="service-desc">Information surfacer dashboard</div>
-                    <a class="service-link" href="http://dertog:7878">http://dertog:7878</a>
+                    <div class="service-links">
+                        <div class="link-row">
+                            <span class="link-label">TS</span>
+                            <a class="service-link ts" href="http://dertog.tailb4b58.ts.net:7878">dertog.tailb4b58.ts.net:7878</a>
+                        </div>
+                        <div class="link-row">
+                            <span class="link-label">LAN</span>
+                            <a class="service-link lan" href="http://192.168.0.138:7878">192.168.0.138:7878</a>
+                        </div>
+                    </div>
                     <div class="service-meta">Process: /home/stephen/sjbis/sjbis daemon start --port 7878</div>
                 </div>
             </div>
@@ -318,19 +627,18 @@
                         Supabase Backend
                         <span class="badge api">API</span>
                     </div>
-                    <div class="service-desc">Self-hosted Supabase stack (PostgREST + Edge Runtime + Storage)</div>
-                    <a class="service-link" href="http://sb-edge:8001">http://sb-edge:8001</a>
-                    <div class="service-meta">VM 111, Tailscale IP: 100.115.156.68</div>
-                </div>
-                <div class="service">
-                    <div class="service-name">
-                        <span class="status-indicator status-active"></span>
-                        Tailscale HTTPS
-                        <span class="badge web">Web</span>
+                    <div class="service-desc">Self-hosted Supabase stack (PostgREST + Edge Runtime)</div>
+                    <div class="service-links">
+                        <div class="link-row">
+                            <span class="link-label">TS</span>
+                            <a class="service-link ts-https" href="https://sb-edge.tailb4b58.ts.net">https://sb-edge.tailb4b58.ts.net</a>
+                        </div>
+                        <div class="link-row">
+                            <span class="link-label">LAN</span>
+                            <a class="service-link lan" href="http://192.168.0.137:8000">192.168.0.137:8000</a>
+                        </div>
                     </div>
-                    <div class="service-desc">HTTPS access via Tailscale Serve</div>
-                    <a class="service-link" href="https://sb-edge.tailb4b58.ts.net">https://sb-edge.tailb4b58.ts.net</a>
-                    <div class="service-meta">Tailscale serve on port 8000</div>
+                    <div class="service-meta">VM 111 · nginx port 8000 · Tailscale IP 100.115.156.68</div>
                 </div>
             </div>
 
@@ -343,7 +651,17 @@
                         <span class="badge internal">Internal</span>
                     </div>
                     <div class="service-desc">PostgreSQL for Yesod platform</div>
-                    <div class="service-meta">yesod-postgres-server:5432 (VM 102)</div>
+                    <div class="service-links">
+                        <div class="link-row">
+                            <span class="link-label">TS</span>
+                            <a class="service-link ts" href="http://yesod-postgres-server.tailb4b58.ts.net:5432">yesod-postgres-server.tailb4b58.ts.net:5432</a>
+                        </div>
+                        <div class="link-row">
+                            <span class="link-label">LAN</span>
+                            <a class="service-link lan" href="http://192.168.0.155:5432">192.168.0.155:5432</a>
+                        </div>
+                    </div>
+                    <div class="service-meta">VM 102 · Tailscale IP 100.115.10.68</div>
                 </div>
                 <div class="service">
                     <div class="service-name">
@@ -352,8 +670,17 @@
                         <span class="badge internal">Internal</span>
                     </div>
                     <div class="service-desc">Dolt SQL server for versioned data</div>
-                    <div class="service-meta">doltsvr:3306 (VM 100)</div>
-                    <div class="service-meta">Tailscale: 100.101.145.38</div>
+                    <div class="service-links">
+                        <div class="link-row">
+                            <span class="link-label">TS</span>
+                            <a class="service-link ts" href="http://doltsvr.tailb4b58.ts.net:3306">doltsvr.tailb4b58.ts.net:3306</a>
+                        </div>
+                        <div class="link-row">
+                            <span class="link-label">LAN</span>
+                            <a class="service-link lan" href="http://192.168.0.150:3306">192.168.0.150:3306</a>
+                        </div>
+                    </div>
+                    <div class="service-meta">VM 100 · Tailscale IP 100.101.145.38</div>
                 </div>
             </div>
 
@@ -366,7 +693,16 @@
                         <span class="badge web">Web</span>
                     </div>
                     <div class="service-desc">System performance monitoring</div>
-                    <a class="service-link" href="http://dertog:8080">http://dertog:8080</a>
+                    <div class="service-links">
+                        <div class="link-row">
+                            <span class="link-label">TS</span>
+                            <a class="service-link ts" href="http://dertog.tailb4b58.ts.net:8080">dertog.tailb4b58.ts.net:8080</a>
+                        </div>
+                        <div class="link-row">
+                            <span class="link-label">LAN</span>
+                            <a class="service-link lan" href="http://192.168.0.138:8080">192.168.0.138:8080</a>
+                        </div>
+                    </div>
                     <div class="service-meta">Python dashboard server</div>
                 </div>
             </div>
@@ -386,7 +722,7 @@
                         <span class="badge internal">Runner</span>
                     </div>
                     <div class="service-desc">GitHub Actions runner for clip-together</div>
-                    <div class="service-meta">VM 103, IP: 192.168.0.154</div>
+                    <div class="service-meta">VM 103 · LAN 192.168.0.154</div>
                     <div class="service-meta">Labels: dertog-deploy, self-hosted</div>
                 </div>
                 <div class="service">
@@ -396,7 +732,7 @@
                         <span class="badge internal">Runner</span>
                     </div>
                     <div class="service-desc">Yesod agent dispatcher</div>
-                    <div class="service-meta">IP: 192.168.0.152, models: claude-fable-5</div>
+                    <div class="service-meta">LAN 192.168.0.152 · models: claude-fable-5</div>
                 </div>
                 <div class="service">
                     <div class="service-name">
@@ -405,7 +741,7 @@
                         <span class="badge internal">Runner</span>
                     </div>
                     <div class="service-desc">Yesod agent dispatcher</div>
-                    <div class="service-meta">IP: 192.168.0.148, models: opencode-kimi, opencode-claude</div>
+                    <div class="service-meta">LAN 192.168.0.148 · models: opencode-kimi, opencode-claude</div>
                 </div>
                 <div class="service">
                     <div class="service-name">
@@ -414,7 +750,7 @@
                         <span class="badge internal">Runner</span>
                     </div>
                     <div class="service-desc">Yesod agent dispatcher</div>
-                    <div class="service-meta">IP: 192.168.0.136, models: opencode-qwen</div>
+                    <div class="service-meta">LAN 192.168.0.136 · models: opencode-qwen</div>
                 </div>
             </div>
 
@@ -427,7 +763,7 @@
                         <span class="badge internal">Service</span>
                     </div>
                     <div class="service-desc">Social media monitoring</div>
-                    <div class="service-meta">VM 105, IP: 192.168.0.147</div>
+                    <div class="service-meta">VM 105 · LAN 192.168.0.147</div>
                 </div>
                 <div class="service">
                     <div class="service-name">
@@ -436,13 +772,13 @@
                         <span class="badge internal">Dev</span>
                     </div>
                     <div class="service-desc">Development VM</div>
-                    <div class="service-meta">VM 101, IP: 192.168.0.132</div>
+                    <div class="service-meta">VM 101 · LAN 192.168.0.132</div>
                 </div>
             </div>
         </div>
 
         <div class="footer">
-            <p>Cluster Services Index | Self-hosted on dertog | Proxmox cluster: seykhl (192.168.0.202)</p>
+            <p>Cluster Services Index | Self-hosted on dertog (192.168.0.138) | Proxmox cluster: seykhl (192.168.0.202)</p>
             <p>Generated: <span id="footer-time"></span></p>
         </div>
     </div>
@@ -454,6 +790,44 @@
             document.getElementById('footer-time').textContent = now.toLocaleString();
         }
         updateTimestamp();
+
+        document.querySelectorAll('.service-link:not(.none)').forEach(link => {
+            const btn = document.createElement('button');
+            btn.className = 'copy-btn';
+            btn.textContent = 'copy';
+            btn.title = 'Copy to clipboard';
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                navigator.clipboard.writeText(link.href).then(() => {
+                    btn.textContent = 'copied';
+                    btn.classList.add('copied');
+                    setTimeout(() => {
+                        btn.textContent = 'copy';
+                        btn.classList.remove('copied');
+                    }, 1500);
+                });
+            });
+            link.insertAdjacentElement('afterend', btn);
+        });
+
+        const themeBtns = document.querySelectorAll('.theme-btn');
+        const saved = localStorage.getItem('cluster-services-theme');
+        if (saved !== null) {
+            document.body.setAttribute('data-theme', saved);
+            themeBtns.forEach(b => b.classList.toggle('active', b.dataset.themeSet === saved));
+        }
+        themeBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const val = btn.dataset.themeSet;
+                if (val) {
+                    document.body.setAttribute('data-theme', val);
+                } else {
+                    document.body.removeAttribute('data-theme');
+                }
+                localStorage.setItem('cluster-services-theme', val);
+                themeBtns.forEach(b => b.classList.toggle('active', b === btn));
+            });
+        });
     </script>
 </body>
 </html>
