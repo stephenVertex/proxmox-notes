@@ -32,14 +32,33 @@
 - **CLI check**: `tailscale status` on any tailnet node shows `100.101.145.38 doltsvr ... linux -`
 
 ## Dolt Server Configuration
-- **Service**: `dolt-server` (systemd)
+- **Service**: `dolt-sql-server` (systemd)
 - **User**: `dolt` (uid=999)
-- **Working Directory**: `/var/lib/doltdb/databases/doltsvr`
+- **Working Directory**: `/home/doltdb/databases/doltsvr`
 - **Port**: 3306 (MySQL-compatible)
-- **Version**: 2.1.0 (upgraded from 2.0.3 on 2026-06-01)
+- **Version**: 2.1.10 (upgraded from 2.1.0 on 2026-06-26)
+
+## Data Location
+
+Dolt data was moved from `/var/lib/doltdb/` to `/home/doltdb/` on 2026-06-25 after
+the `/var` partition (2.9GB) filled up and crashed the service. `/home` has 44GB
+available. A symlink exists at `/var/lib/doltdb -> /home/doltdb` for compatibility,
+but all config files reference `/home/doltdb` directly.
+
+**Partition layout (problematic):**
+| Partition | Size | Mount | Notes |
+|-----------|------|-------|-------|
+| sda1 | 9.1GB | `/` | |
+| sda5 | 2.9GB | `/var` | Too small — Dolt data and autobackups moved off |
+| sda7 | 987MB | `/tmp` | |
+| sda8 | 47GB | `/home` | Dolt data + autobackup tmp live here now |
+
+**Symlinks on `/var`:**
+- `/var/lib/doltdb` → `/home/doltdb` (Dolt databases)
+- `/var/tmp` → `/home/tmp` (beads autobackup output)
 
 ## Databases
-The following databases are stored in `/var/lib/doltdb/databases/doltsvr/`:
+The following databases are stored in `/home/doltdb/databases/doltsvr/`:
 - `beads_als`
 - `beads_amplifier`
 - `beads_aysp`
@@ -63,7 +82,7 @@ The following databases are stored in `/var/lib/doltdb/databases/doltsvr/`:
 ## Backup Configuration
 
 ### Tier 1: In-VM Dolt Dumps (Hourly)
-- **Script**: `/var/lib/doltdb/databases/doltsvr/dolt_backup.sh`
+- **Script**: `/home/doltdb/databases/doltsvr/dolt_backup.sh`
 - **Schedule**: Every hour at `:00` via cron (dolt user)
 - **Location**: `/var/backups/dolt/`
 - **Format**: SQL dumps compressed with gzip
@@ -76,7 +95,7 @@ The following databases are stored in `/var/lib/doltdb/databases/doltsvr/`:
 # Dumps all databases in /var/lib/doltdb/databases/doltsvr/ to SQL files
 
 BACKUP_DIR="/var/backups/dolt"
-DATA_DIR="/var/lib/doltdb/databases/doltsvr"
+DATA_DIR="/home/doltdb/databases/doltsvr"
 TIMESTAMP=$(date +%Y%m%d-%H%M)
 
 mkdir -p "$BACKUP_DIR"
@@ -112,7 +131,21 @@ echo "Backup complete. Total backups: $(ls -1 "$BACKUP_DIR"/*.sql.gz 2>/dev/null
 
 ### Crontab Entry (dolt user)
 ```cron
-0 * * * * cd /var/lib/doltdb/databases/doltsvr && bash dolt_backup.sh
+0 * * * * cd /home/doltdb/databases/doltsvr && bash dolt_backup.sh
+```
+
+### Beads Autobackup Cleanup (Every 6 Hours)
+Beads clients create temporary Dolt backup snapshots in `/home/tmp/*beads-autobackup/`
+during `bd dolt push` operations. These grow continuously and can fill the disk.
+A cleanup script wipes them every 6 hours; they are recreated automatically on the
+next push from each client.
+
+- **Script**: `/home/doltdb/cleanup_autobackups.sh`
+- **Schedule**: Every 6 hours via cron (root)
+- **Action**: `find /home/tmp -maxdepth 1 -name "*beads-autobackup" -type d -exec rm -rf {} +`
+
+```cron
+0 */6 * * * /home/doltdb/cleanup_autobackups.sh
 ```
 
 ### Tier 2: NAS Mirror (Hourly)
@@ -214,12 +247,13 @@ bash /root/sync-doltsvr-backups.sh
 ## Resources
 - Proxmox Host: `seykhl` (192.168.0.202)
 - VM Disk: `local-lvm:vm-100-disk-0`
-- Dolt Version: 2.1.0
+- Data Directory: `/home/doltdb/databases/doltsvr/` (symlinked from `/var/lib/doltdb/`)
+- Dolt Version: 2.1.10
 - Dolt Documentation: https://docs.dolthub.com/
 
 ## Notes
 - CPU type `host` is critical for modern tool compatibility
-- Dolt SQL server runs as user `dolt` with working directory at `/var/lib/doltdb/databases/doltsvr`
+- Dolt SQL server runs as user `dolt` with working directory at `/home/doltdb/databases/doltsvr`
 - The `dolt_backup.sh` script must be run as the `dolt` user to access database files
 - `rsync` was installed on both the VM and host for backup synchronization
 - WORM protection on the NAS ensures backups are immutable once written
@@ -232,3 +266,36 @@ bash /root/sync-doltsvr-backups.sh
 - **Downtime**: ~10 seconds (service stop + replace + start)
 - **Verification**: Service started successfully, SQL queries responsive
 - **Rollback**: `sudo cp /usr/local/bin/dolt-2.0.3-backup /usr/local/bin/dolt && sudo systemctl restart dolt-sql-server`
+
+### 2.1.0 → 2.1.10 (2026-06-26)
+- **Reason**: Routine upgrade (2.1.0 → 2.1.9 → 2.1.10); 9 patch releases with bug fixes
+- **Backup**: Old binary saved at `/usr/local/bin/dolt-2.1.0-backup`
+- **Downtime**: ~2 minutes (service stop + download + install + start)
+- **Verification**: All 25 databases visible, `yesod_aicoe` has 12,055 issues, service healthy at 453MB
+- **Rollback**: `sudo cp /usr/local/bin/dolt-2.1.0-backup /usr/local/bin/dolt && sudo systemctl restart dolt-sql-server`
+
+## Incident: Disk Full Crash (2026-06-25)
+
+- **Cause**: `/var` partition (2.9GB) filled to 100%. Dolt panicked with
+  `no space left on device` while committing to `yesod_aicoe` database.
+  Systemd restarted 5 times in rapid succession, all failed for same reason,
+  then gave up.
+- **Contributing factors**: `/var/tmp/` had ~1.1GB of beads autobackup dirs
+  from Dolt clients; `/var` partition was only 2.9GB while `/home` had 47GB.
+- **Fix**: Moved `/var/lib/doltdb/` to `/home/doltdb/` (44GB free), created
+  symlink at `/var/lib/doltdb -> /home/doltdb`, updated systemd service
+  `WorkingDirectory`, backup script `DATA_DIR`, and crontab to reference
+  `/home/doltdb` directly. Cleaned `/var/tmp` autobackups and apt cache.
+- **Downtime**: ~12 minutes (17:26 PDT crash to 17:38 PDT recovery)
+- **Data loss**: None — all 19 databases verified intact
+
+## Incident: /var/tmp Filled Again (2026-06-26)
+
+- **Cause**: Beads autobackup feature wrote 2.2GB to `/var/tmp/` (on the 2.9GB
+  `/var` partition), filling it to 100% again. The Dolt service was technically
+  running but completely blocked — memory ballooned to 10GB, CPU pinned at 171%,
+  all queries failing with `no space left on device`.
+- **Fix**: Stopped service, relocated `/var/tmp` to `/home/tmp` via symlink
+  (`/var/tmp -> /home/tmp`, 42GB free), cleaned stale autobackups, restarted.
+- **Downtime**: ~2 minutes
+- **Data loss**: None — `yesod_aicoe` had 11,735 issues verified after restart

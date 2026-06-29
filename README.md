@@ -23,15 +23,15 @@
 |------|------|--------|-----|------|--------|-----|---------|
 | 100 | doltsvr | running | 24GB | 64GB | 192.168.0.150 / 100.101.145.38 (TS) | bc:24:11:d0:43:5d | Dolt SQL Server |
 | 101 | jeffrey-dev | running | 4GB | 20GB | 192.168.0.132 | bc:24:11:cd:26:f7 | Development VM |
-| 102 | yesod-postgres-server | running | 6GB | 30GB | 192.168.0.155 / 100.115.10.68 (TS) | bc:24:11:00:88:f5 | PostgreSQL for Yesod |
+| 102 | yesod-postgres-server | running | 6GB | 60GB | 192.168.0.155 / 100.115.10.68 (TS) | bc:24:11:00:88:f5 | PostgreSQL for Yesod |
 | 103 | homestar-runner | running | 4GB | 30GB | 192.168.0.154 | bc:24:11:6c:cf:b7 | GitHub Actions Runner |
 | 104 | dertog | running | 6GB | 30GB | 192.168.0.138 | bc:24:11:90:a9:cc | Dashboard Server |
 | 105 | aicoe-social-runner | running | 2GB | 20GB | 192.168.0.147 | bc:24:11:a4:ce:80 | Social Media Monitor |
-| 106 | yesod-runner | running | 8GB | 20GB | 192.168.0.152 | bc:24:11:a0:58:60 | Yesod Agent Runner |
+| 106 | yesod-runner | running | 8GB | 40GB | 192.168.0.152 | bc:24:11:a0:58:60 | Yesod Agent Runner |
 | 107 | n8n-server | running | 4GB | 30GB | 192.168.0.145 | bc:24:11:3b:86:22 | n8n Automation |
-| 108 | yesod-runner-2 | running | 8GB | 20GB | 192.168.0.148 | bc:24:11:3f:86:eb | Yesod Agent Runner |
+| 108 | yesod-runner-2 | running | 8GB | 56GB | 192.168.0.148 | bc:24:11:3f:86:eb | Yesod Agent Runner |
 | 109 | yesod-runner-base | stopped | 8GB | 20GB | N/A | bc:24:11:b3:bd:df | Yesod Runner Template |
-| 110 | yesod-runner-3 | running | 8GB | 20GB | 192.168.0.136 | bc:24:11:68:88:b3 | Yesod Agent Runner |
+| 110 | yesod-runner-3 | running | 8GB | 60GB | 192.168.0.136 | bc:24:11:68:88:b3 | Yesod Agent Runner |
 | 111 | sb-edge | running | 4GB | 20GB | 192.168.0.137 | bc:24:11:5e:d5:a8 | Supabase Edge Runtime |
 | 203 | test-full-201 | stopped | 4GB | 33GB | N/A | bc:24:11:67:9c:b6 | Test/Experimental |
 | 205 | opensymphony-base | stopped | 4GB | 33GB | N/A | bc:24:11:4a:19:61 | Test/Experimental |
@@ -144,7 +144,7 @@ ssh root@192.168.0.202 "qm console <vmid>"
 
 - **Total Running VMs:** 11
 - **Total RAM Allocated:** 78GB (24+4+6+4+6+2+8+4+8+8+4)
-- **Total Disk Allocated:** ~340GB
+- **Total Disk Allocated:** ~430GB (was ~340GB; VMs 102/106/108/110 expanded 2026-06-29)
 - **Stopped VMs:** 3 (test-full-201, opensymphony-base, yesod-runner-base)
 - **Stopped VMs RAM:** 16GB
 - **Stopped VMs Disk:** ~86GB

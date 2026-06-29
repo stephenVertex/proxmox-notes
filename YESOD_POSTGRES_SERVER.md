@@ -12,7 +12,7 @@ Create `yesod-postgres-server` on Proxmox host `seykhl` as a Debian 13 VM runnin
 | **CPU** | host (AVX passthrough required for modern tools) |
 | **Cores** | 2 |
 | **Memory** | 6GB |
-| **Disk** | 30GB (raw on local-lvm) |
+| **Disk** | 60GB (raw on local-lvm; resized from 30GB on 2026-06-29) |
 | **Network** | vmbr0 (bridge to LAN) |
 | **Net Model** | virtio |
 | **Display** | none (headless server) |
@@ -232,8 +232,8 @@ DATABASE_URL = "postgresql://stephen:lj*123NM@yesod-postgres-server:5432/stephen
 - **Retention:**
   - **Hourly:** kept for the last 5 days (120 backups)
   - **Daily:** midnight backups kept for the last 30 days
-- **Size:** ~8.7 MB per backup (compressed)
-- **Total estimated:** ~1.5 GB for a full 30-day window
+- **Size:** ~170 MB per backup (compressed; database is ~2.3 GB as of 2026-06-29)
+- **Total estimated:** ~20 GB for a full 30-day window (30 daily × 170 MB)
 
 ### Backup Script Contents
 ```bash
@@ -293,11 +293,17 @@ mount -t cifs //192.168.0.123/proxmox-backups /mnt/proxmox-backups \
 ### Host Backup Script
 - **Script:** `/root/sync-yesod-backups.sh`
 - **Schedule:** Every hour at `:05` via cron
-- **Action:** Pulls pg_dump backups from VM to NAS
+- **Action:** Pulls daily (midnight) pg_dump backups from VM to NAS
+- **Note:** Only syncs `*-0000.sql.gz` files. Hourly backups are NOT synced to NAS
+  to avoid WORM accumulation. `--delete` removed because WORM prevents deletion.
 
 ```bash
 #!/bin/bash
-rsync -avz --delete -e 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null' \
+# Pull daily pg_dump backups from yesod-postgres-server to NAS share
+# Only syncs midnight (00:00) backups to reduce WORM accumulation
+# --delete removed: WORM compliance mode prevents file deletion
+rsync -avz -e 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null' \
+  --include='*-0000.sql.gz' --exclude='*' \
   stephen@192.168.0.155:/var/backups/postgresql/ \
   /mnt/proxmox-backups/yesod-postgres-server/pg_dump/ 2>/dev/null
 ```
@@ -305,14 +311,30 @@ rsync -avz --delete -e 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/d
 ### Host Crontab Entries
 ```cron
 5 * * * * /root/sync-yesod-backups.sh
-0 2 * * 0 vzdump 102 --dumpdir /mnt/proxmox-backups/yesod-postgres-server/vzdump/ --compress zstd --mode snapshot --remove 1 --maxfiles 2
+0 2 1 * * vzdump 102 --dumpdir /mnt/proxmox-backups/yesod-postgres-server/vzdump/ --compress zstd --mode snapshot --remove 1 --maxfiles 2
 ```
 
 ### Backup Locations on NAS
 | Type | Path | Retention |
 |------|------|-----------|
-| pg_dump | `/mnt/proxmox-backups/yesod-postgres-server/pg_dump/` | Mirrors VM (5 days hourly + 30 days daily) |
-| vzdump | `/mnt/proxmox-backups/yesod-postgres-server/vzdump/` | 2 weekly snapshots |
+| pg_dump | `/mnt/proxmox-backups/yesod-postgres-server/pg_dump/` | Daily midnight backups only (~170 MB each, accumulates on WORM) |
+| vzdump | `/mnt/proxmox-backups/yesod-postgres-server/vzdump/` | Monthly snapshots (WORM prevents `--maxfiles` rotation) |
+
+### WORM Limitation and Rotation Failure (Fixed 2026-06-29)
+The NAS WORM compliance mode prevents all file deletion, which caused both rotation
+mechanisms to silently fail:
+- **rsync `--delete`** had no effect — 195 hourly backups accumulated over 7 days (23 GB)
+- **vzdump `--maxfiles 2`** had no effect — 4 weekly snapshots accumulated (42 GB)
+
+**Fix applied:**
+1. rsync now only syncs daily midnight backups (`*-0000.sql.gz`), reducing growth from
+   ~4 GB/day to ~170 MB/day. `--delete` flag removed.
+2. vzdump changed from weekly to monthly (1st of month at 02:00), reducing accumulation
+   to ~1 snapshot/month (~15-20 GB each).
+
+**Note:** Old WORM-locked files on the NAS cannot be removed. They will remain until
+the WORM retention period expires (check Synology DSM settings for the WORM quota/retention
+configuration on the `proxmox-backups` share).
 
 ### Why WORM Matters
 The NAS share is configured with **WORM (Write Once Read Many)** in compliance mode. This means:
