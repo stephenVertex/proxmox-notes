@@ -1,6 +1,6 @@
 # Proxmox Infrastructure Overview
 
-**Document Version:** 2026-06-09
+**Document Version:** 2026-07-02
 **Proxmox Node:** seykhl (192.168.0.202)
 **PVE Version:** 9.1.1
 
@@ -22,7 +22,7 @@
 | VMID | Name | Status | RAM | Disk | LAN IP | MAC | Purpose |
 |------|------|--------|-----|------|--------|-----|---------|
 | 100 | doltsvr | running | 24GB | 64GB | 192.168.0.150 / 100.101.145.38 (TS) | bc:24:11:d0:43:5d | Dolt SQL Server |
-| 101 | jeffrey-dev | running | 4GB | 20GB | 192.168.0.132 | bc:24:11:cd:26:f7 | Development VM |
+| 101 | jeffrey-dev | stopped | 4GB | 20GB | 192.168.0.132 | bc:24:11:cd:26:f7 | Development VM |
 | 102 | yesod-postgres-server | running | 6GB | 60GB | 192.168.0.155 / 100.115.10.68 (TS) | bc:24:11:00:88:f5 | PostgreSQL for Yesod |
 | 103 | homestar-runner | running | 4GB | 30GB | 192.168.0.154 | bc:24:11:6c:cf:b7 | GitHub Actions Runner |
 | 104 | dertog | running | 6GB | 30GB | 192.168.0.138 | bc:24:11:90:a9:cc | Dashboard Server |
@@ -31,8 +31,9 @@
 | 107 | n8n-server | running | 4GB | 30GB | 192.168.0.145 | bc:24:11:3b:86:22 | n8n Automation |
 | 108 | yesod-runner-2 | running | 16GB | 56GB | 192.168.0.148 | bc:24:11:3f:86:eb | Yesod Agent Runner |
 | 109 | yesod-runner-base | stopped | 8GB | 20GB | N/A | bc:24:11:b3:bd:df | Yesod Runner Template |
-| 110 | yesod-runner-3 | stopped | 8GB | 60GB | 192.168.0.136 | bc:24:11:68:88:b3 | Yesod Agent Runner |
+| 110 | yesod-runner-3 | running | 16GB | 60GB | 192.168.0.136 | bc:24:11:68:88:b3 | Yesod Agent Runner |
 | 111 | sb-edge | running | 4GB | 20GB | 192.168.0.137 | bc:24:11:5e:d5:a8 | Supabase Edge Runtime |
+| 112 | yesod-dispatch | running | 4GB | 20GB | 192.168.0.140 / 100.123.34.77 (TS) | bc:24:11:e3:c0:cf | Yesod Dispatch |
 | 203 | test-full-201 | stopped | 4GB | 33GB | N/A | bc:24:11:67:9c:b6 | Test/Experimental |
 | 205 | opensymphony-base | stopped | 4GB | 33GB | N/A | bc:24:11:4a:19:61 | Test/Experimental |
 
@@ -58,6 +59,7 @@ layers (Proxmox, /etc/hosts, SSH config, guest hostname) use the same name.
 - `yesod-runner` → 192.168.0.152
 - `yesod-runner-2` → 192.168.0.148
 - `yesod-runner-3` → 192.168.0.136
+- `yesod-dispatch` → 192.168.0.140 (Tailscale: 100.123.34.77)
 - `sb-edge` → 192.168.0.137 (Tailscale: 100.115.156.68)
 - `homestar-runner` → 192.168.0.154
 - `doltsvr` → 192.168.0.150 (Tailscale: 100.101.145.38)
@@ -142,11 +144,11 @@ ssh root@192.168.0.202 "qm console <vmid>"
 
 ## Resource Summary
 
-- **Total Running VMs:** 10
-- **Total RAM Allocated:** 78GB (24+4+6+4+6+2+16+4+16+4)
-- **Total Disk Allocated:** ~430GB (was ~340GB; VMs 102/106/108/110 expanded 2026-06-29)
-- **Stopped VMs:** 4 (test-full-201, opensymphony-base, yesod-runner-base, yesod-runner-3)
-- **Stopped VMs RAM:** 24GB
+- **Total Running VMs:** 11
+- **Total RAM Allocated:** 94GB (24+6+4+6+2+16+4+16+16+4+4)
+- **Total Disk Allocated:** ~450GB (was ~340GB; VMs 102/106/108/110 expanded 2026-06-29)
+- **Stopped VMs:** 4 (jeffrey-dev, test-full-201, opensymphony-base, yesod-runner-base)
+- **Stopped VMs RAM:** 20GB
 - **Stopped VMs Disk:** ~86GB
 
 ---

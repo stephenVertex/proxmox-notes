@@ -16,7 +16,7 @@ The **yesod-runner** is a Debian 13 virtual machine (VMID 106) running on Proxmo
 | 106 | yesod-runner | 192.168.0.152 | Active | Primary runner |
 | 108 | yesod-runner-2 | 192.168.0.148 | Active | Secondary runner |
 | 109 | yesod-runner-base | N/A | Template | Template for new runners |
-| 110 | yesod-runner-3 | 192.168.0.136 | Active | Tertiary runner (from template) |
+| 110 | yesod-runner-3 | 192.168.0.136 | Active | Tertiary runner (16GB RAM) |
 | 111 | sb-edge | 192.168.0.137 | Active | Supabase Edge Runtime (sjbgtd migration) — see SUPABASE_EDGE_RUNTIME.md |
 
 ---
