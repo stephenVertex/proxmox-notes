@@ -89,33 +89,72 @@ qm start 104
 
 ## Services
 
-### Cluster Services Index (port 8092 / HTTPS 443)
+### HTTPS Routing (Tailscale + nginx)
+
+All services are available over HTTPS via Tailscale, routed through nginx on port 8088.
+
+**Architecture:** Tailscale TLS (443) → nginx (8088, prefix-stripping proxy) → backend apps
+
+| HTTPS path | Proxies to | Prefix stripped | Backend |
+|------------|-----------|-----------------|---------|
+| `/` | `127.0.0.1:8092` | — | Cluster services index |
+| `/yesod/` | `127.0.0.1:8090` | `/yesod` | Yesod API server |
+| `/clip/` | `127.0.0.1:8091` | `/clip` | clip-together frontend |
+| `/health/` | `127.0.0.1:8093` | `/health` | Seykhl health dashboard |
+| `/db/` | `127.0.0.1:8094` | `/db` | Database details |
+| `/sjbis/` | `127.0.0.1:7878` | `/sjbis` | SJBIS dashboard |
+| `/perf/` | `127.0.0.1:8080` | `/perf` | Performance dashboard |
+
+- **nginx config**: `/etc/nginx/sites-available/dertog-router`
+- **Tailscale serve**: `tailscale serve --bg 8088` (background, port 443)
+- **Old `tailscale-serve-cluster.service`**: Removed (was foreground, only proxied 8092)
+
+**Direct HTTP access is unchanged** — all ports (8090, 8091, 8092, 8093, 8094, 7878, 8080) still work as before.
+
+```bash
+# Check nginx
+sudo systemctl status nginx
+sudo nginx -t
+
+# Check tailscale serve
+sudo tailscale serve status
+
+# Reload nginx after config change
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+### Cluster Services Index (port 8092 / HTTPS /)
 
 A self-hosted index page that lists all services running on the cluster, with links to accessible ones.
 
 - **HTTP URL**: `http://dertog:8092`
-- **HTTPS URL**: `https://dertog.tailb4b58.ts.net/` (Tailscale, port 443)
+- **HTTPS URL**: `https://dertog.tailb4b58.ts.net/` (via nginx → 8092)
 - **Server**: Python static server
 - **Systemd unit**: `cluster-services.service` (user unit)
-- **Tailscale serve**: `tailscale-serve-cluster.service` (system unit, exposes 8092 on HTTPS/443)
 - **Files**: `~/cluster-services/index.html`, `~/cluster-services-serve.py`
 - **Purpose**: Single entry point to discover all cluster services
 
 ```bash
 # Check status
 systemctl --user status cluster-services
-sudo systemctl status tailscale-serve-cluster
 
 # Restart
 systemctl --user restart cluster-services
-sudo systemctl restart tailscale-serve-cluster
 ```
 
-### clip-together Frontend (port 8091)
+### Yesod API Server (port 8090 / HTTPS /yesod/)
+
+- **HTTP URL**: `http://dertog:8090`
+- **HTTPS URL**: `https://dertog.tailb4b58.ts.net/yesod/`
+- **Process**: `yesod` binary (port 8090)
+- **Purpose**: HTTP API + site for Yesod platform
+
+### clip-together Frontend (port 8091 / HTTPS /clip/)
 
 Static SPA serving the clip-together React/Vite frontend, built elsewhere (homestar-runner) and deployed via rsync.
 
-- **URL**: `http://dertog:8091`
+- **HTTP URL**: `http://dertog:8091`
+- **HTTPS URL**: `https://dertog.tailb4b58.ts.net/clip/` (via nginx → 8091)
 - **Server**: Python static SPA server with `index.html` fallback
 - **Systemd unit**: `clip-together-web.service` (user unit)
 - **Deploy source**: `~/clip-together-web/` (rsync'd from homestar-runner)
@@ -130,11 +169,12 @@ systemctl --user status clip-together-web
 systemctl --user restart clip-together-web
 ```
 
-### Seykhl Health Dashboard (port 8093)
+### Seykhl Health Dashboard (port 8093 / HTTPS /health/)
 
 Live cluster health and performance metrics fetched from the Proxmox host via SSH.
 
-- **URL**: `http://dertog:8093`
+- **HTTP URL**: `http://dertog:8093`
+- **HTTPS URL**: `https://dertog.tailb4b58.ts.net/health/` (via nginx → 8093)
 - **Server**: Python dynamic server (fetches live data from seykhl)
 - **Systemd unit**: `seykhl-health.service` (user unit)
 - **File**: `~/seykhl-health.py`
@@ -149,11 +189,12 @@ systemctl --user status seykhl-health
 systemctl --user restart seykhl-health
 ```
 
-### Database Details (port 8094)
+### Database Details (port 8094 / HTTPS /db/)
 
 Database details dashboard for PostgreSQL (yesod-postgres-server) and Dolt (doltsvr).
 
-- **URL**: `http://dertog:8094`
+- **HTTP URL**: `http://dertog:8094`
+- **HTTPS URL**: `https://dertog.tailb4b58.ts.net/db/` (via nginx → 8094)
 - **Server**: Python dynamic server
 - **Systemd unit**: `db-details.service` (user unit)
 - **File**: `~/db-details.py` (version-controlled)
@@ -170,15 +211,17 @@ systemctl --user status db-details
 systemctl --user restart db-details
 ```
 
-### SJBIS (port 7878)
+### SJBIS (port 7878 / HTTPS /sjbis/)
 
-- **URL**: `http://dertog:7878`
+- **HTTP URL**: `http://dertog:7878`
+- **HTTPS URL**: `https://dertog.tailb4b58.ts.net/sjbis/` (via nginx → 7878)
 - **Process**: `/home/stephen/sjbis/sjbis daemon start --port 7878`
 - **Purpose**: Information surfacer dashboard
 
-### Performance Dashboard (port 8080)
+### Performance Dashboard (port 8080 / HTTPS /perf/)
 
-- **URL**: `http://dertog:8080`
+- **HTTP URL**: `http://dertog:8080`
+- **HTTPS URL**: `https://dertog.tailb4b58.ts.net/perf/` (via nginx → 8080)
 - **Process**: `/opt/perf-dashboard/dashboard_server.py` (root)
 - **Purpose**: System performance monitoring dashboard
 
@@ -187,7 +230,10 @@ systemctl --user restart db-details
 - **Sudo**: ✅ Passwordless sudo configured
 - **Memory**: Ballooning enabled (2GB current, up to 6GB max)
 - **Disk**: 30GB total, 28GB free
+- **nginx**: ✅ Active on port 8088 (reverse proxy for HTTPS routing)
+- **tailscale serve**: ✅ Background, 443 → 8088
 - **cluster-services**: ✅ Active on port 8092
+- **yesod**: ✅ Active on port 8090
 - **seykhl-health**: ✅ Active on port 8093
 - **db-details**: ✅ Active on port 8094
 - **clip-together-web**: ✅ Active on port 8091
@@ -206,10 +252,12 @@ systemctl --user restart db-details
 - `~/clip-together-web/` — Static SPA files (index.html, assets/)
 - `~/clip-together-serve.py` — Python static server with SPA fallback
 - `~/.config/systemd/user/clip-together-web.service` — systemd user unit
+- `/etc/nginx/sites-available/dertog-router` — nginx reverse proxy config (HTTPS routing)
 
 ## Notes
 - CPU type `host` for modern tool compatibility
 - Ballooning enabled for memory efficiency
 - `qemu-guest-agent` not available in default Debian 13 repos (not critical for basic operation)
 - **Do not install node/npm** on dertog — the frontend is built on homestar-runner and copied as static files
+- **HTTPS routing**: nginx strips path prefixes via `proxy_pass` trailing-slash syntax. Direct HTTP access to all ports is unchanged.
 - To change `VITE_*` env vars, the frontend must be **rebuilt** (env vars are baked into the bundle at build time)
