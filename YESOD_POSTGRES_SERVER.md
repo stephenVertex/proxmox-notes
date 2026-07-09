@@ -212,6 +212,18 @@ DATABASE_URL = "postgresql://stephen:lj*123NM@yesod-postgres-server:5432/stephen
 "host=yesod-postgres-server port=5432 user=stephen password=lj*123NM dbname=stephen sslmode=disable"
 ```
 
+### Other Databases
+
+#### sjb_social
+| Parameter | Value |
+|-----------|-------|
+| **Database** | `sjb_social` |
+| **Username** | `sjb_social_owner` |
+| **Password** | `SjbSocial2026!` |
+| **Connection string** | `postgres://sjb_social_owner:SjbSocial2026!@yesod-postgres-server:5432/sjb_social` |
+
+> **Note:** The `sjb_social` database has row-level security (RLS) policies. The backup script uses the `postgres` superuser to dump it, bypassing RLS. The `sjb_social_owner` role cannot dump all tables directly.
+
 ## Resources
 - Proxmox Host: `seykhl` (192.168.0.202)
 - Cloud Image: `/var/lib/vz/template/iso/debian-13-generic-amd64.qcow2`
@@ -228,12 +240,15 @@ DATABASE_URL = "postgresql://stephen:lj*123NM@yesod-postgres-server:5432/stephen
 ### Tiered pg_dump Backup (Inside VM)
 - **Script:** `/home/stephen/pg_backup.sh`
 - **Schedule:** Every hour at `:00` via cron
-- **Location:** `/var/backups/postgresql/stephen-YYYYMMDD-HHMM.sql.gz`
+- **Databases backed up:** `stephen`, `sjb_social`
+- **Location:** `/var/backups/postgresql/{stephen,sjb_social}-YYYYMMDD-HHMM.sql.gz`
+- **sjb_social dump method:** `sudo -u postgres pg_dump sjb_social` (superuser, to bypass RLS policies)
 - **Retention:**
-  - **Hourly:** kept for the last 5 days (120 backups)
+  - **Hourly:** kept for the last 5 days (120 backups per database)
   - **Daily:** midnight backups kept for the last 30 days
-- **Size:** ~170 MB per backup (compressed; database is ~2.3 GB as of 2026-06-29)
-- **Total estimated:** ~20 GB for a full 30-day window (30 daily × 170 MB)
+- **Size (stephen):** ~170 MB per backup (compressed; database is ~2.3 GB as of 2026-06-29)
+- **Size (sjb_social):** ~11 MB per backup (compressed as of 2026-07-09)
+- **Total estimated:** ~21 GB for a full 30-day window (30 daily × ~180 MB combined)
 
 ### Backup Script Contents
 ```bash
@@ -241,20 +256,24 @@ DATABASE_URL = "postgresql://stephen:lj*123NM@yesod-postgres-server:5432/stephen
 # PostgreSQL tiered backup
 # - Hourly backups for the last 5 days
 # - Daily (midnight) backups for the last 30 days
+# - Backs up: stephen, sjb_social
 
 BACKUP_DIR="/var/backups/postgresql"
 TIMESTAMP=$(date +%Y%m%d-%H%M)
-BACKUP_FILE="$BACKUP_DIR/stephen-${TIMESTAMP}.sql.gz"
 
-# Create backup
-pg_dump -U stephen stephen | gzip > "$BACKUP_FILE" 2>/dev/null
+# --- Backup stephen database ---
+STEPHEN_FILE="$BACKUP_DIR/stephen-${TIMESTAMP}.sql.gz"
+pg_dump -U stephen stephen | gzip > "$STEPHEN_FILE" 2>/dev/null
 
-# Delete any backup older than 5 days that is NOT a midnight (00:00) backup
-# This keeps hourly backups for the last 5 days
+# --- Backup sjb_social database (via postgres superuser to bypass RLS) ---
+SJB_FILE="$BACKUP_DIR/sjb_social-${TIMESTAMP}.sql.gz"
+sudo -u postgres pg_dump sjb_social | gzip > "$SJB_FILE" 2>/dev/null
+
+# --- Retention: keep hourly for 5 days, daily (midnight) for 30 days ---
 find "$BACKUP_DIR" -name "stephen-*.sql.gz" -mtime +5 ! -name "*-0000.sql.gz" -delete
-
-# Delete any backup older than 30 days (keeps daily backups for 30 days)
 find "$BACKUP_DIR" -name "stephen-*.sql.gz" -mtime +30 -delete
+find "$BACKUP_DIR" -name "sjb_social-*.sql.gz" -mtime +5 ! -name "*-0000.sql.gz" -delete
+find "$BACKUP_DIR" -name "sjb_social-*.sql.gz" -mtime +30 -delete
 ```
 
 ### Crontab Entry
@@ -264,7 +283,11 @@ find "$BACKUP_DIR" -name "stephen-*.sql.gz" -mtime +30 -delete
 
 ### Restore Command
 ```bash
+# Restore stephen database
 zcat /var/backups/postgresql/stephen-20260518-1703.sql.gz | psql -U stephen -d stephen
+
+# Restore sjb_social database
+zcat /var/backups/postgresql/sjb_social-20260709-1721.sql.gz | sudo -u postgres psql -d sjb_social
 ```
 
 ### Off-VM Backup via NAS (Active)
@@ -293,8 +316,8 @@ mount -t cifs //192.168.0.123/proxmox-backups /mnt/proxmox-backups \
 ### Host Backup Script
 - **Script:** `/root/sync-yesod-backups.sh`
 - **Schedule:** Every hour at `:05` via cron
-- **Action:** Pulls daily (midnight) pg_dump backups from VM to NAS
-- **Note:** Only syncs `*-0000.sql.gz` files. Hourly backups are NOT synced to NAS
+- **Action:** Pulls daily (midnight) pg_dump backups from VM to NAS (both `stephen` and `sjb_social` databases)
+- **Note:** Only syncs `*-0000.sql.gz` files (matches both `stephen-*-0000.sql.gz` and `sjb_social-*-0000.sql.gz`). Hourly backups are NOT synced to NAS
   to avoid WORM accumulation. `--delete` removed because WORM prevents deletion.
 
 ```bash
