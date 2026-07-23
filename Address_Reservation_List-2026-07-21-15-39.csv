@@ -1,0 +1,30 @@
+Network Name,MAC,IP,Status,Export to IP-MAC Binding,Description
+LAN,EC-71-DB-71-D6-51,192.168.0.101,Enabled,TRUE,North
+LAN,E0-46-EE-14-5F-C9,192.168.0.102,Enabled,TRUE,GS305EP Office POE Switch
+LAN,DC-62-79-F5-10-B7,192.168.0.103,Enabled,TRUE,ArcherA8 Office
+LAN,A4-FC-14-34-F1-39,192.168.0.110,Enabled,TRUE,pompom
+LAN,DC-62-79-F5-10-3C,192.168.0.112,Enabled,TRUE,ArcherA8 patio
+LAN,38-FC-98-78-97-13,192.168.0.113,Enabled,TRUE,Surface Pro Laptop
+LAN,EC-71-DB-C0-A0-69,192.168.0.114,Enabled,TRUE,Garage
+LAN,E0-46-EE-22-E4-F4,192.168.0.115,Enabled,TRUE,GS308EPP Garage PoE Switch
+LAN,EC-71-DB-01-C6-89,192.168.0.116,Enabled,TRUE,Pool
+LAN,EC-71-DB-47-B6-04,192.168.0.117,Enabled,TRUE,CAM Patio-1
+LAN,EC-71-DB-BF-D6-71,192.168.0.118,Enabled,TRUE,Garage Cam RLC-510a
+LAN,90-09-D0-42-D6-0E,192.168.0.123,Enabled,TRUE,homestar
+LAN,00-11-32-82-C0-1F,192.168.0.125,Enabled,TRUE,strongsad
+LAN,BC-24-11-CD-26-F7,192.168.0.132,Enabled,TRUE,jeffrey-dev
+LAN,AC-04-0B-CB-97-C1,192.168.0.134,Enabled,TRUE,peloton
+LAN,BC-24-11-68-88-B3,192.168.0.136,Enabled,TRUE,yesod-runner-3
+LAN,BC-24-11-5E-D5-A8,192.168.0.137,Enabled,TRUE,sb-edge
+LAN,BC-24-11-90-A9-CC,192.168.0.138,Enabled,TRUE,dertog
+LAN,BC-24-11-E3-C0-CF,192.168.0.140,Enabled,TRUE,yesod-dispatch
+LAN,BC-24-11-3B-86-22,192.168.0.145,Enabled,TRUE,n8n
+LAN,BC-24-11-A4-CE-80,192.168.0.147,Enabled,TRUE,aicoe-social-runner
+LAN,BC-24-11-3F-86-EB,192.168.0.148,Enabled,TRUE,yesod-runner-2
+LAN,BC-24-11-D0-43-5D,192.168.0.150,Enabled,TRUE,doltsvr
+LAN,BC-24-11-A0-58-60,192.168.0.152,Enabled,TRUE,yesod-runner
+LAN,BC-24-11-6C-CF-B7,192.168.0.154,Enabled,TRUE,homestar-runner
+LAN,BC-24-11-00-88-F5,192.168.0.155,Enabled,TRUE,yesod-postgres-server
+LAN,7C-2E-0D-13-1F-6D,192.168.0.173,Enabled,TRUE,Atem Extreme ISO
+LAN,F8-73-DF-11-0A-4B,192.168.0.190,Enabled,TRUE,neelix
+LAN,BC-24-11-7A-9E-42,192.168.0.139,Enabled,TRUE,docuseal

@@ -34,6 +34,7 @@
 | 110 | yesod-runner-3 | running | 16GB | 60GB | 192.168.0.136 | bc:24:11:68:88:b3 | Yesod Agent Runner |
 | 111 | sb-edge | running | 4GB | 20GB | 192.168.0.137 | bc:24:11:5e:d5:a8 | Supabase Edge Runtime |
 | 112 | yesod-dispatch | running | 4GB | 20GB | 192.168.0.140 / 100.123.34.77 (TS) | bc:24:11:e3:c0:cf | Yesod Dispatch |
+| 113 | docuseal | running | 2GB | 20GB | 192.168.0.139 / 100.117.77.67 (TS) | bc:24:11:7a:9e:42 | DocuSeal Document Signing |
 | 203 | test-full-201 | stopped | 4GB | 33GB | N/A | bc:24:11:67:9c:b6 | Test/Experimental |
 | 205 | opensymphony-base | stopped | 4GB | 33GB | N/A | bc:24:11:4a:19:61 | Test/Experimental |
 
@@ -67,6 +68,7 @@ layers (Proxmox, /etc/hosts, SSH config, guest hostname) use the same name.
 - `aicoe-social-runner` → 192.168.0.147
 - `jeffrey-dev` → 192.168.0.132
 - `n8n-server` → 192.168.0.145
+- `docuseal` → 192.168.0.139 (Tailscale: 100.117.77.67)
 
 ---
 
@@ -138,6 +140,7 @@ ssh root@192.168.0.202 "qm console <vmid>"
 | sb-edge | [SB_EDGE.md](SB_EDGE.md) |
 | n8n-server | [N8N_SERVER.md](N8N_SERVER.md) |
 | test-full-201 | [TEST_FULL_201.md](TEST_FULL_201.md) |
+| docuseal | [DOCUSEAL.md](DOCUSEAL.md) |
 | opensymphony-base | [OPEN_SYMPHONY_BASE.md](OPEN_SYMPHONY_BASE.md) |
 
 ---
