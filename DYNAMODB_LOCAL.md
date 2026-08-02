@@ -17,13 +17,13 @@ values are accepted.
 | **Cores** | 1 |
 | **Memory** | 1GB (+512MB swap) — actual usage ~220MB |
 | **Disk** | 8GB (local-lvm) |
-| **Network** | vmbr0, static IP |
-| **LAN IP** | 192.168.0.141 |
+| **Network** | vmbr0, DHCP |
+| **LAN IP** | 192.168.0.144 |
 | **Status** | Running (`--onboot 1`) |
 
 ## Endpoint
 
-- **URL:** `http://192.168.0.141:8000`
+- **URL:** `http://192.168.0.144:8000`
 - **Auth:** any dummy credentials work (e.g. `AWS_ACCESS_KEY_ID=fake AWS_SECRET_ACCESS_KEY=fake`)
 - **Region:** any (use `us-east-1` for consistency)
 
@@ -31,7 +31,7 @@ values are accepted.
 
 ```bash
 export AWS_ACCESS_KEY_ID=fake AWS_SECRET_ACCESS_KEY=fake AWS_REGION=us-east-1
-export AWS_ENDPOINT_URL_DYNAMODB=http://192.168.0.141:8000   # aws-cli v2.22+
+export AWS_ENDPOINT_URL_DYNAMODB=http://192.168.0.144:8000   # aws-cli v2.22+
 
 aws dynamodb list-tables
 aws dynamodb create-table \
@@ -44,10 +44,10 @@ aws dynamodb create-table \
 Or per-call without the env var:
 
 ```bash
-aws dynamodb list-tables --endpoint-url http://192.168.0.141:8000
+aws dynamodb list-tables --endpoint-url http://192.168.0.144:8000
 ```
 
-SDKs: point the DynamoDB client at `endpoint_url=http://192.168.0.141:8000`
+SDKs: point the DynamoDB client at `endpoint_url=http://192.168.0.144:8000`
 (boto3), `endpointOverride` (AWS SDK for Java v2), or `endpoint` in the
 client config (SDK for JS v3 / .NET / Go).
 
@@ -93,10 +93,11 @@ ssh seykhl "pct exec 115 -- bash -c '\
 
 ## Notes
 
-- **Router DHCP reservation:** the static IP 192.168.0.141 is configured in
-  the container itself. Add a MAC/IP reservation on the router (like the
-  other cluster entries in `Address_Reservation_List-*.csv`) to keep DHCP
-  from ever handing it out. Container MAC: check `pct config 115 | grep net0`.
-- Health check: `curl http://192.168.0.141:8000/` returning HTTP 400 with a
+- **Router DHCP reservation:** the container is a DHCP client (matches the
+  rest of the fleet). Router assigned 192.168.0.144 on 2026-08-02; add a
+  MAC/IP reservation on the router (`BC:24:11:A3:EA:0D` → 192.168.0.144,
+  like the other cluster entries in `Address_Reservation_List-*.csv`) so the
+  lease never drifts.
+- Health check: `curl http://192.168.0.144:8000/` returning HTTP 400 with a
   `MissingAuthenticationToken` JSON body means the service is up and healthy.
 - Not in Tailscale; LAN-only by design (dev/test datastore).

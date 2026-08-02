@@ -45,7 +45,7 @@
 
 | CTID | Name | Status | CPU | RAM | Disk | LAN IP | MAC | Purpose |
 |------|------|--------|-----|-----|------|--------|-----|---------|
-| 115 | dynamodb-local | running | 1 | 1GB | 8GB | 192.168.0.141 | bc:24:11:a3:ea:0d | Amazon DynamoDB Local (port 8000) |
+| 115 | dynamodb-local | running | 1 | 1GB | 8GB | 192.168.0.144 | bc:24:11:a3:ea:0d | Amazon DynamoDB Local (port 8000) |
 
 ---
 
@@ -79,7 +79,7 @@ layers (Proxmox, /etc/hosts, SSH config, guest hostname) use the same name.
 - `n8n-server` → 192.168.0.145
 - `docuseal` → 192.168.0.139 (Tailscale: 100.117.77.67)
 - `drawio` → 192.168.0.149
-- `dynamodb-local` → 192.168.0.141 (LXC; DynamoDB endpoint on port 8000)
+- `dynamodb-local` → 192.168.0.144 (LXC; DynamoDB endpoint on port 8000)
 
 ---
 
