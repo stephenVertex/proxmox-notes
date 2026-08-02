@@ -23,11 +23,11 @@
 |------|------|--------|-----|------|--------|-----|---------|
 | 100 | doltsvr | running | 24GB | 64GB | 192.168.0.150 / 100.101.145.38 (TS) | bc:24:11:d0:43:5d | Dolt SQL Server |
 | 101 | jeffrey-dev | stopped | 4GB | 20GB | 192.168.0.132 | bc:24:11:cd:26:f7 | Development VM |
-| 102 | yesod-postgres-server | running | 6GB | 60GB | 192.168.0.155 / 100.115.10.68 (TS) | bc:24:11:00:88:f5 | PostgreSQL for Yesod |
+| 102 | yesod-postgres-server | running | 6GB | 120GB | 192.168.0.155 / 100.115.10.68 (TS) | bc:24:11:00:88:f5 | PostgreSQL for Yesod |
 | 103 | homestar-runner | running | 4GB | 30GB | 192.168.0.154 | bc:24:11:6c:cf:b7 | GitHub Actions Runner |
 | 104 | dertog | running | 6GB | 30GB | 192.168.0.138 | bc:24:11:90:a9:cc | Dashboard Server |
 | 105 | aicoe-social-runner | running | 2GB | 20GB | 192.168.0.147 | bc:24:11:a4:ce:80 | Social Media Monitor |
-| 106 | yesod-runner | running | 16GB | 40GB | 192.168.0.152 | bc:24:11:a0:58:60 | Yesod Agent Runner |
+| 106 | yesod-runner-1 | running | 16GB | 40GB | 192.168.0.152 | bc:24:11:a0:58:60 | Yesod Agent Runner |
 | 107 | n8n-server | running | 4GB | 30GB | 192.168.0.145 | bc:24:11:3b:86:22 | n8n Automation |
 | 108 | yesod-runner-2 | running | 16GB | 56GB | 192.168.0.148 | bc:24:11:3f:86:eb | Yesod Agent Runner |
 | 109 | yesod-runner-base | stopped | 8GB | 20GB | N/A | bc:24:11:b3:bd:df | Yesod Runner Template |
@@ -35,8 +35,17 @@
 | 111 | sb-edge | running | 4GB | 20GB | 192.168.0.137 | bc:24:11:5e:d5:a8 | Supabase Edge Runtime |
 | 112 | yesod-dispatch | running | 4GB | 20GB | 192.168.0.140 / 100.123.34.77 (TS) | bc:24:11:e3:c0:cf | Yesod Dispatch |
 | 113 | docuseal | running | 2GB | 20GB | 192.168.0.139 / 100.117.77.67 (TS) | bc:24:11:7a:9e:42 | DocuSeal Document Signing |
+| 114 | drawio | running | 2GB | 20GB | 192.168.0.149 | bc:24:11:1a:97:34 | drawio Diagram Server |
 | 203 | test-full-201 | stopped | 4GB | 33GB | N/A | bc:24:11:67:9c:b6 | Test/Experimental |
 | 205 | opensymphony-base | stopped | 4GB | 33GB | N/A | bc:24:11:4a:19:61 | Test/Experimental |
+
+---
+
+## LXC Containers
+
+| CTID | Name | Status | CPU | RAM | Disk | LAN IP | MAC | Purpose |
+|------|------|--------|-----|-----|------|--------|-----|---------|
+| 115 | dynamodb-local | running | 1 | 1GB | 8GB | 192.168.0.141 | bc:24:11:a3:ea:0d | Amazon DynamoDB Local (port 8000) |
 
 ---
 
@@ -69,6 +78,8 @@ layers (Proxmox, /etc/hosts, SSH config, guest hostname) use the same name.
 - `jeffrey-dev` → 192.168.0.132
 - `n8n-server` → 192.168.0.145
 - `docuseal` → 192.168.0.139 (Tailscale: 100.117.77.67)
+- `drawio` → 192.168.0.149
+- `dynamodb-local` → 192.168.0.141 (LXC; DynamoDB endpoint on port 8000)
 
 ---
 
@@ -142,14 +153,17 @@ ssh root@192.168.0.202 "qm console <vmid>"
 | test-full-201 | [TEST_FULL_201.md](TEST_FULL_201.md) |
 | docuseal | [DOCUSEAL.md](DOCUSEAL.md) |
 | opensymphony-base | [OPEN_SYMPHONY_BASE.md](OPEN_SYMPHONY_BASE.md) |
+| drawio | *(undocumented)* |
+| dynamodb-local | [DYNAMODB_LOCAL.md](DYNAMODB_LOCAL.md) |
 
 ---
 
 ## Resource Summary
 
-- **Total Running VMs:** 11
-- **Total RAM Allocated:** 94GB (24+6+4+6+2+16+4+16+16+4+4)
-- **Total Disk Allocated:** ~450GB (was ~340GB; VMs 102/106/108/110 expanded 2026-06-29)
+- **Total Running VMs:** 12
+- **Total Running LXC Containers:** 1
+- **Total RAM Allocated:** 96GB VMs (24+6+4+6+2+16+4+16+16+4+4+2) + 1GB LXC
+- **Total Disk Allocated:** ~530GB VMs (~450GB + 60GB from VM 102 expansion to 120GB + 20GB drawio) + 8GB LXC
 - **Stopped VMs:** 4 (jeffrey-dev, test-full-201, opensymphony-base, yesod-runner-base)
 - **Stopped VMs RAM:** 20GB
 - **Stopped VMs Disk:** ~86GB
@@ -194,6 +208,9 @@ ssh root@192.168.0.202 "qm restart <vmid>"
 - `yesod-runner-2` (VM 108) and `yesod-runner-3` (VM 110) are cloned from the template and configured as active runners
 - VM 106 IP changed from 192.168.0.146 to 192.168.0.152 after network reservation fix
 - `sb-edge` (VM 111) runs a complete Supabase stack (PostgREST + Edge Runtime + nginx) with Tailscale HTTPS access
+- `dynamodb-local` (CTID 115) is the first LXC container on the node (created 2026-08-02); 1 core / 1GB, runs Amazon DynamoDB Local on port 8000 — see [DYNAMODB_LOCAL.md](DYNAMODB_LOCAL.md)
+- VM 106 is named `yesod-runner-1` in Proxmox; SSH alias / docs still use `yesod-runner`
+- VM 102 disk was expanded to 120GB (observed 2026-08-02)
 
 ---
 
