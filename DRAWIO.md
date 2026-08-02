@@ -1,0 +1,71 @@
+# drawio — Self-hosted drawio (diagrams.net)
+
+## Overview
+`drawio` (VMID 114) is a lightweight VM running the official
+[jgraph/drawio](https://hub.docker.com/r/jgraph/drawio) Docker image — a fully
+self-hosted instance of the drawio / diagrams.net editor. Diagrams never leave
+the LAN (no external service calls required for editing).
+
+## VM Specifications
+| Setting | Value |
+|---------|-------|
+| **VMID** | 114 |
+| **Name** | drawio |
+| **OS** | Debian 13 "Trixie" |
+| **CPU** | host |
+| **Cores** | 1 |
+| **Memory** | 2GB |
+| **Disk** | 20GB (local-lvm, scsi0) |
+| **Network** | vmbr0 (static IP via cloud-init), virtio |
+| **MAC** | BC:24:11:1A:97:34 |
+| **LAN IP** | 192.168.0.149 |
+| **mDNS** | `drawio.local` (avahi-daemon) |
+| **Created** | 2026-07-28 |
+| **Status** | Running |
+| **Cloud-Init** | Enabled (user: stephen) |
+
+## Access
+
+### Web Interface (LAN)
+- **URL:** http://drawio.local:8080 or http://192.168.0.149:8080
+- **Access:** LAN only (not on Tailscale, no public tunnel)
+
+### SSH
+```bash
+ssh drawio            # alias in ~/.ssh/config
+ssh stephen@192.168.0.149
+```
+
+## Services
+
+| Service | Port | Type | Description |
+|---------|------|------|-------------|
+| drawio (Docker) | 8080 | Web App | drawio editor (container name `drawio`, restart policy `unless-stopped`) |
+
+## Management
+
+```bash
+# Container status / logs
+ssh drawio "docker ps"
+ssh drawio "docker logs -f drawio"
+
+# Restart
+ssh drawio "sudo docker restart drawio"
+
+# Upgrade to latest drawio
+ssh drawio "sudo docker pull jgraph/drawio && sudo docker stop drawio && \
+  sudo docker rm drawio && sudo docker run -d --name drawio \
+  --restart unless-stopped -p 8080:8080 jgraph/drawio"
+```
+
+## Notes
+
+- Essentially idle when not in use (load ~0.01); 2GB is ample.
+- QEMU guest agent is enabled in the Proxmox config (`agent: enabled=1`) but
+  `qemu-guest-agent` is not installed/running in the guest — install it from
+  the guest (`sudo apt-get install qemu-guest-agent`) if you want
+  `qm guest exec` / IP reporting from the Proxmox UI.
+- The drawio container was first started 2026-07-28; no data volume is
+  mounted — diagrams live in the browser session unless the user saves
+  (download / device storage). Add a volume mount if server-side diagram
+  storage is ever wanted.

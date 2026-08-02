@@ -64,12 +64,12 @@ All hostnames are present in both `/etc/hosts` and `~/.ssh/config` on admin mach
 VM 100 was renamed from `dolt-server` to `doltsvr` in Proxmox on 2026-06-09 so all
 layers (Proxmox, /etc/hosts, SSH config, guest hostname) use the same name.
 
-**mDNS (2026-08-02):** every cluster node except docuseal and drawio now runs
+**mDNS (2026-08-02):** every cluster node except docuseal now runs
 `avahi-daemon` and is reachable as `<hostname>.local` from any Mac/Linux machine
 on the LAN — no /etc/hosts entry required. Note VM 106's guest hostname is
 `yesod-runner-1`, so it answers as `yesod-runner-1.local` (not `yesod-runner.local`).
-docuseal and drawio are pending (SSH and QEMU guest agent both unreachable on
-those VMs; avahi needs to be installed from the console).
+docuseal is pending (its sshd is down and the QEMU guest agent isn't running;
+avahi needs to be installed from the console).
 
 - `seykhl` → 192.168.0.202 (Proxmox node)
 - `yesod-postgres-server` → 192.168.0.155 (Tailscale: 100.115.10.68)
@@ -160,7 +160,7 @@ ssh root@192.168.0.202 "qm console <vmid>"
 | test-full-201 | [TEST_FULL_201.md](TEST_FULL_201.md) |
 | docuseal | [DOCUSEAL.md](DOCUSEAL.md) |
 | opensymphony-base | [OPEN_SYMPHONY_BASE.md](OPEN_SYMPHONY_BASE.md) |
-| drawio | *(undocumented)* |
+| drawio | [DRAWIO.md](DRAWIO.md) |
 | dynamodb | [DYNAMODB_LOCAL.md](DYNAMODB_LOCAL.md) |
 
 ---
