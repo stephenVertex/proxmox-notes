@@ -26,9 +26,14 @@ the LAN (no external service calls required for editing).
 
 ## Access
 
+### Web Interface (Public)
+- **URL:** https://drawio.meshcrawler.com
+- **TLS:** Cloudflare (via Cloudflare Tunnel)
+- **Access:** Public
+
 ### Web Interface (LAN)
 - **URL:** http://drawio.local:8080 or http://192.168.0.149:8080
-- **Access:** LAN only (not on Tailscale, no public tunnel)
+- **Access:** LAN only
 
 ### SSH
 ```bash
@@ -41,6 +46,40 @@ ssh stephen@192.168.0.149
 | Service | Port | Type | Description |
 |---------|------|------|-------------|
 | drawio (Docker) | 8080 | Web App | drawio editor (container name `drawio`, restart policy `unless-stopped`) |
+| cloudflared | — | Tunnel | Cloudflare Tunnel for public access (`drawio.meshcrawler.com`) |
+
+## Cloudflare Tunnel
+
+| Field | Value |
+|-------|-------|
+| **Tunnel name** | drawio |
+| **Tunnel ID** | `c3f26824-34cf-4c8d-9bdc-8c0f243619ee` |
+| **Config** | `/etc/cloudflared/config.yml` |
+| **Credentials** | `/etc/cloudflared/c3f26824-34cf-4c8d-9bdc-8c0f243619ee.json` |
+| **Public URL** | https://drawio.meshcrawler.com |
+| **Proxied service** | `http://localhost:8080` |
+| **TLS** | Cloudflare-managed |
+
+### Config File
+```yaml
+tunnel: c3f26824-34cf-4c8d-9bdc-8c0f243619ee
+credentials-file: /etc/cloudflared/c3f26824-34cf-4c8d-9bdc-8c0f243619ee.json
+
+ingress:
+  - hostname: drawio.meshcrawler.com
+    service: http://localhost:8080
+  - service: http_status:404
+```
+
+### Management
+```bash
+ssh drawio "sudo systemctl status cloudflared"
+ssh drawio "sudo journalctl -u cloudflared -f"
+```
+
+(An earlier tunnel named `drawio` — `936f9974-...` from 2026-07-28 — had no
+connectors and unrecoverable credentials; it was deleted and recreated as
+`c3f26824-...` on 2026-08-02.)
 
 ## Management
 

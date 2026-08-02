@@ -36,6 +36,7 @@
 | `www` | A | `103.168.172.37`, `103.168.172.52` | Yes | CloudFront site |
 | `n8n` | CNAME | `6b2b99a2-4fb1-4e88-be58-fca8b9d6fd2e.cfargotunnel.com` | Yes | n8n automation (VM 107, `n8n-server`, 192.168.0.145) |
 | `docuseal` | CNAME | `fdbd66cf-8ea3-4f25-8ea8-440997b14378.cfargotunnel.com` | Yes | DocuSeal document signing (VM 113, `docuseal`, 192.168.0.139) |
+| `drawio` | CNAME | `c3f26824-34cf-4c8d-9bdc-8c0f243619ee.cfargotunnel.com` | Yes | drawio diagram editor (VM 114, `drawio`, 192.168.0.149) |
 | `mail` | A | `103.168.172.65` | Yes | Fastmail mail server |
 | `*.meshcrawler.com` | A | `103.168.172.52`, `103.168.172.37` | Yes | Wildcard catch-all |
 
@@ -45,12 +46,23 @@
 |--------|----|----|--------|
 | n8n | `6b2b99a2-4fb1-4e88-be58-fca8b9d6fd2e` | 107 (n8n-server) | `/etc/cloudflared/config.yml` → `localhost:5678` |
 | docuseal | `fdbd66cf-8ea3-4f25-8ea8-440997b14378` | 113 (docuseal) | `/etc/cloudflared/config.yml` → `localhost:3000` |
+| drawio | `c3f26824-34cf-4c8d-9bdc-8c0f243619ee` | 114 (drawio) | `/etc/cloudflared/config.yml` → `localhost:8080` |
 
 ### Notes
 - Migrated DNS from Namecheap → Route 53 → Cloudflare (back) on 2026-07-22
 - Route 53 zone `Z0810906C526BUOORYFC` was the active delegated zone before migration
 - Cloudflare Tunnels require Cloudflare DNS for `cfargotunnel.com` CNAMEs to resolve — does not work with Route 53
 - The `_2264e785400799a90f3c2bef22202402` CNAME is an ACM validation record
+- **WARNING (cloudflared CLI on the Mac):** `~/.cloudflared/config.yml` pins
+  `tunnel: 602eba22-...` (ogp). Any bare `cloudflared tunnel <cmd> <name>`
+  silently operates on **ogp** instead of the named tunnel. Always run tunnel
+  commands with an explicit override, e.g.
+  `cloudflared --config /dev/null tunnel route dns <uuid> <hostname>`.
+  This caused a stray `drawio.meshcrawler.com.aicoe.fit` record on 2026-08-02
+  (same failure mode as the docuseal stray below).
+- Original `drawio` tunnel (`936f9974-...`, created 2026-07-28) had no
+  connectors and unrecoverable credentials; deleted and recreated 2026-08-02
+  as `c3f26824-...`.
 
 ---
 
@@ -72,7 +84,9 @@
 
 ### Notes
 - Cloudflare API token has limited permissions on this zone (worker + R2 only, no DNS edit)
-- Stray CNAME `docuseal.meshcrawler.com.aicoe.fit` was accidentally created by `cloudflared tunnel route dns` — needs cleanup in Cloudflare dashboard
+- Stray CNAMEs in this zone created by `cloudflared tunnel route dns` misfires (see warning in meshcrawler.com notes) — **need cleanup in Cloudflare dashboard** (no API token has DNS edit on this zone):
+  - `docuseal.meshcrawler.com.aicoe.fit` (2026-07-22)
+  - `drawio.meshcrawler.com.aicoe.fit` (2026-08-02)
 
 ---
 
