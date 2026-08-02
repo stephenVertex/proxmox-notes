@@ -79,7 +79,7 @@ layers (Proxmox, /etc/hosts, SSH config, guest hostname) use the same name.
 - `n8n-server` → 192.168.0.145
 - `docuseal` → 192.168.0.139 (Tailscale: 100.117.77.67)
 - `drawio` → 192.168.0.149
-- `dynamodb-local` → 192.168.0.144 (LXC; DynamoDB endpoint on port 8000)
+- `dynamodb-local` → 192.168.0.144 (LXC; DynamoDB endpoint on port 8000; resolves via mDNS as `dynamodb-local.local`, no /etc/hosts entry needed)
 
 ---
 

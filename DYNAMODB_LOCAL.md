@@ -23,7 +23,9 @@ values are accepted.
 
 ## Endpoint
 
-- **URL:** `http://192.168.0.144:8000`
+- **URL:** `http://192.168.0.144:8000` or `http://dynamodb-local.local:8000`
+- **Name resolution:** mDNS via `avahi-daemon` — macOS/Linux resolve
+  `dynamodb-local.local` with zero client config; **no /etc/hosts entry needed**
 - **Auth:** any dummy credentials work (e.g. `AWS_ACCESS_KEY_ID=fake AWS_SECRET_ACCESS_KEY=fake`)
 - **Region:** any (use `us-east-1` for consistency)
 
