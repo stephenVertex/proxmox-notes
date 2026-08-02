@@ -84,9 +84,9 @@
 
 ### Notes
 - Cloudflare API token has limited permissions on this zone (worker + R2 only, no DNS edit)
-- Stray CNAMEs in this zone created by `cloudflared tunnel route dns` misfires (see warning in meshcrawler.com notes) — **need cleanup in Cloudflare dashboard** (no API token has DNS edit on this zone):
-  - `docuseal.meshcrawler.com.aicoe.fit` (2026-07-22)
-  - `drawio.meshcrawler.com.aicoe.fit` (2026-08-02)
+- Stray CNAMEs previously created in this zone by `cloudflared tunnel route dns` misfires (see warning in meshcrawler.com notes) — **deleted via Cloudflare dashboard 2026-08-02, confirmed NXDOMAIN at authoritative NS:**
+  - ~~`docuseal.meshcrawler.com.aicoe.fit`~~ (2026-07-22)
+  - ~~`drawio.meshcrawler.com.aicoe.fit`~~ (2026-08-02)
 
 ---
 
