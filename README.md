@@ -45,7 +45,7 @@
 
 | CTID | Name | Status | CPU | RAM | Disk | LAN IP | MAC | Purpose |
 |------|------|--------|-----|-----|------|--------|-----|---------|
-| 115 | dynamodb-local | running | 1 | 1GB | 8GB | 192.168.0.144 | bc:24:11:a3:ea:0d | Amazon DynamoDB Local (port 8000) |
+| 115 | dynamodb | running | 1 | 1GB | 8GB | 192.168.0.144 | bc:24:11:a3:ea:0d | Amazon DynamoDB Local (port 8000) |
 
 ---
 
@@ -79,7 +79,7 @@ layers (Proxmox, /etc/hosts, SSH config, guest hostname) use the same name.
 - `n8n-server` → 192.168.0.145
 - `docuseal` → 192.168.0.139 (Tailscale: 100.117.77.67)
 - `drawio` → 192.168.0.149
-- `dynamodb-local` → 192.168.0.144 (LXC; DynamoDB endpoint on port 8000; resolves via mDNS as `dynamodb-local.local`, no /etc/hosts entry needed)
+- `dynamodb` → 192.168.0.144 (LXC; DynamoDB endpoint on port 8000; resolves via mDNS as `dynamodb.local`, no /etc/hosts entry needed)
 
 ---
 
@@ -154,7 +154,7 @@ ssh root@192.168.0.202 "qm console <vmid>"
 | docuseal | [DOCUSEAL.md](DOCUSEAL.md) |
 | opensymphony-base | [OPEN_SYMPHONY_BASE.md](OPEN_SYMPHONY_BASE.md) |
 | drawio | *(undocumented)* |
-| dynamodb-local | [DYNAMODB_LOCAL.md](DYNAMODB_LOCAL.md) |
+| dynamodb | [DYNAMODB_LOCAL.md](DYNAMODB_LOCAL.md) |
 
 ---
 
@@ -208,7 +208,7 @@ ssh root@192.168.0.202 "qm restart <vmid>"
 - `yesod-runner-2` (VM 108) and `yesod-runner-3` (VM 110) are cloned from the template and configured as active runners
 - VM 106 IP changed from 192.168.0.146 to 192.168.0.152 after network reservation fix
 - `sb-edge` (VM 111) runs a complete Supabase stack (PostgREST + Edge Runtime + nginx) with Tailscale HTTPS access
-- `dynamodb-local` (CTID 115) is the first LXC container on the node (created 2026-08-02); 1 core / 1GB, runs Amazon DynamoDB Local on port 8000 — see [DYNAMODB_LOCAL.md](DYNAMODB_LOCAL.md)
+- `dynamodb` (CTID 115) is the first LXC container on the node (created 2026-08-02); 1 core / 1GB, runs Amazon DynamoDB Local on port 8000 — see [DYNAMODB_LOCAL.md](DYNAMODB_LOCAL.md)
 - VM 106 is named `yesod-runner-1` in Proxmox; SSH alias / docs still use `yesod-runner`
 - VM 102 disk was expanded to 120GB (observed 2026-08-02)
 

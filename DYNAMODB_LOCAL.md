@@ -1,7 +1,7 @@
-# dynamodb-local — Amazon DynamoDB Local (LXC)
+# dynamodb — Amazon DynamoDB Local (LXC)
 
 ## Overview
-`dynamodb-local` (CTID 115) is an unprivileged LXC container running
+`dynamodb` (CTID 115) is an unprivileged LXC container running
 [Amazon DynamoDB Local](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBLocal.html),
 the official local build of DynamoDB for development and testing. No AWS
 account, credentials, or network egress required — any access key/secret
@@ -11,7 +11,7 @@ values are accepted.
 | Setting | Value |
 |---------|-------|
 | **CTID** | 115 |
-| **Hostname** | dynamodb-local |
+| **Hostname** | dynamodb |
 | **Type** | LXC (unprivileged) |
 | **OS** | Debian 12 "Bookworm" (template `debian-12-standard_12.12-1`) |
 | **Cores** | 1 |
@@ -23,9 +23,9 @@ values are accepted.
 
 ## Endpoint
 
-- **URL:** `http://192.168.0.144:8000` or `http://dynamodb-local.local:8000`
+- **URL:** `http://192.168.0.144:8000` or `http://dynamodb.local:8000`
 - **Name resolution:** mDNS via `avahi-daemon` — macOS/Linux resolve
-  `dynamodb-local.local` with zero client config; **no /etc/hosts entry needed**
+  `dynamodb.local` with zero client config; **no /etc/hosts entry needed**
 - **Auth:** any dummy credentials work (e.g. `AWS_ACCESS_KEY_ID=fake AWS_SECRET_ACCESS_KEY=fake`)
 - **Region:** any (use `us-east-1` for consistency)
 
