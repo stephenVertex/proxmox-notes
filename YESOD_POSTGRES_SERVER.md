@@ -224,6 +224,16 @@ DATABASE_URL = "postgresql://stephen:lj*123NM@yesod-postgres-server:5432/stephen
 
 > **Note:** The `sjb_social` database has row-level security (RLS) policies. The backup script uses the `postgres` superuser to dump it, bypassing RLS. The `sjb_social_owner` role cannot dump all tables directly.
 
+#### bukher
+| Parameter | Value |
+|-----------|-------|
+| **Database** | `bukher` |
+| **Username** | `bukher` |
+| **Password** | `bukher2026` |
+| **Connection string** | `postgres://bukher:bukher2026@yesod-postgres-server:5432/bukher` |
+| **Owner** | `bukher` |
+| **Purpose** | RSS ingestion backend for the `bukher` Proxmox VM (Miniflux) |
+
 ## Resources
 - Proxmox Host: `seykhl` (192.168.0.202)
 - Cloud Image: `/var/lib/vz/template/iso/debian-13-generic-amd64.qcow2`
@@ -240,14 +250,15 @@ DATABASE_URL = "postgresql://stephen:lj*123NM@yesod-postgres-server:5432/stephen
 ### Tiered pg_dump Backup (Inside VM)
 - **Script:** `/home/stephen/pg_backup.sh`
 - **Schedule:** Every hour at `:00` via cron
-- **Databases backed up:** `stephen`, `sjb_social`
-- **Location:** `/var/backups/postgresql/{stephen,sjb_social}-YYYYMMDD-HHMM.sql.gz`
+- **Databases backed up:** `stephen`, `sjb_social`, `bukher`
+- **Location:** `/var/backups/postgresql/{stephen,sjb_social,bukher}-YYYYMMDD-HHMM.sql.gz`
 - **sjb_social dump method:** `sudo -u postgres pg_dump sjb_social` (superuser, to bypass RLS policies)
 - **Retention:**
   - **Hourly:** kept for the last 5 days (120 backups per database)
   - **Daily:** midnight backups kept for the last 30 days
 - **Size (stephen):** ~170 MB per backup (compressed; database is ~2.3 GB as of 2026-06-29)
 - **Size (sjb_social):** ~11 MB per backup (compressed as of 2026-07-09)
+- **Size (bukher):** ~6 KB per backup (compressed as of 2026-08-05)
 - **Total estimated:** ~21 GB for a full 30-day window (30 daily × ~180 MB combined)
 
 ### Backup Script Contents
@@ -256,7 +267,7 @@ DATABASE_URL = "postgresql://stephen:lj*123NM@yesod-postgres-server:5432/stephen
 # PostgreSQL tiered backup
 # - Hourly backups for the last 5 days
 # - Daily (midnight) backups for the last 30 days
-# - Backs up: stephen, sjb_social
+# - Backs up: stephen, sjb_social, bukher
 
 BACKUP_DIR="/var/backups/postgresql"
 TIMESTAMP=$(date +%Y%m%d-%H%M)
@@ -269,11 +280,17 @@ pg_dump -U stephen stephen | gzip > "$STEPHEN_FILE" 2>/dev/null
 SJB_FILE="$BACKUP_DIR/sjb_social-${TIMESTAMP}.sql.gz"
 sudo -u postgres pg_dump sjb_social | gzip > "$SJB_FILE" 2>/dev/null
 
+# --- Backup bukher database (via postgres superuser) ---
+BUKHER_FILE="$BACKUP_DIR/bukher-${TIMESTAMP}.sql.gz"
+sudo -u postgres pg_dump bukher | gzip > "$BUKHER_FILE" 2>/dev/null
+
 # --- Retention: keep hourly for 5 days, daily (midnight) for 30 days ---
 find "$BACKUP_DIR" -name "stephen-*.sql.gz" -mtime +5 ! -name "*-0000.sql.gz" -delete
 find "$BACKUP_DIR" -name "stephen-*.sql.gz" -mtime +30 -delete
 find "$BACKUP_DIR" -name "sjb_social-*.sql.gz" -mtime +5 ! -name "*-0000.sql.gz" -delete
 find "$BACKUP_DIR" -name "sjb_social-*.sql.gz" -mtime +30 -delete
+find "$BACKUP_DIR" -name "bukher-*.sql.gz" -mtime +5 ! -name "*-0000.sql.gz" -delete
+find "$BACKUP_DIR" -name "bukher-*.sql.gz" -mtime +30 -delete
 ```
 
 ### Crontab Entry
@@ -288,6 +305,9 @@ zcat /var/backups/postgresql/stephen-20260518-1703.sql.gz | psql -U stephen -d s
 
 # Restore sjb_social database
 zcat /var/backups/postgresql/sjb_social-20260709-1721.sql.gz | sudo -u postgres psql -d sjb_social
+
+# Restore bukher database
+zcat /var/backups/postgresql/bukher-20260805-2311.sql.gz | sudo -u postgres psql -d bukher
 ```
 
 ### Off-VM Backup via NAS (Active)

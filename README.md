@@ -36,6 +36,7 @@
 | 112 | yesod-dispatch | running | 4GB | 20GB | 192.168.0.140 / 100.123.34.77 (TS) | bc:24:11:e3:c0:cf | Yesod Dispatch |
 | 113 | docuseal | running | 2GB | 20GB | 192.168.0.139 / 100.117.77.67 (TS) | bc:24:11:7a:9e:42 | DocuSeal Document Signing |
 | 114 | drawio | running | 2GB | 20GB | 192.168.0.149 | bc:24:11:1a:97:34 | drawio Diagram Server |
+| 116 | bukher | running | 4GB | 30GB | 192.168.0.169 / 100.77.145.88 (TS) | bc:24:11:51:5f:ad | RSS Ingestion (RssHub + Miniflux) |
 | 203 | test-full-201 | stopped | 4GB | 33GB | N/A | bc:24:11:67:9c:b6 | Test/Experimental |
 | 205 | opensymphony-base | stopped | 4GB | 33GB | N/A | bc:24:11:4a:19:61 | Test/Experimental |
 
@@ -86,6 +87,7 @@ avahi needs to be installed from the console).
 - `n8n-server` → 192.168.0.145
 - `docuseal` → 192.168.0.139 (Tailscale: 100.117.77.67)
 - `drawio` → 192.168.0.149
+- `bukher` → 192.168.0.169 (Tailscale: 100.77.145.88; mDNS: `bukher.local`)
 - `dynamodb` → 192.168.0.144 (LXC; DynamoDB endpoint on port 8000; resolves via mDNS as `dynamodb.local`, no /etc/hosts entry needed)
 
 ---
