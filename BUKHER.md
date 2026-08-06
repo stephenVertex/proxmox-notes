@@ -146,7 +146,9 @@ services:
       - ADMIN_PASSWORD=h14K1SClFMz6Q17TStiOv9KTfWVUQZtv
       - BASE_URL=https://bukher.tailb4b58.ts.net
       - POLLING_FREQUENCY=30
+      - DISABLE_SCHEDULER_SERVICE=1
       - FETCHER_ALLOW_PRIVATE_NETWORKS=1
+      - HTTP_CLIENT_TIMEOUT=45
     networks:
       - bukher-net
     depends_on:
@@ -168,7 +170,8 @@ networks:
 - **Admin Username:** `admin`
 - **Admin Password:** `h14K1SClFMz6Q17TStiOv9KTfWVUQZtv`
 - **Purpose:** Poll RSS feeds, store entries, and provide a web UI/API.
-- **Polling:** Built-in scheduler (every 30 minutes by default).
+- **Polling:** Miniflux's built-in batch scheduler is disabled (`DISABLE_SCHEDULER_SERVICE=1`). Feeds are instead
+  refreshed individually on a staggered schedule — see [Staggered Feed Refresh](#staggered-feed-refresh) below.
 
 ### Management
 
@@ -183,6 +186,127 @@ sudo docker compose restart
 sudo docker compose logs -f
 sudo docker compose logs -f miniflux
 sudo docker compose logs -f rsshub
+```
+
+### Staggered Feed Refresh
+
+With 100+ tracked feeds, Miniflux's built-in batch poller was hitting all feeds in the same
+window, overwhelming RssHub and causing widespread `context deadline exceeded` errors. Fixed
+(2026-08-06) by disabling the batch scheduler and refreshing feeds individually, spread across
+a 4-hour cycle based on the first letter of the Twitter handle.
+
+- **Script:** `/home/stephen/bukher/stagger_refresh.py`
+- **Trigger:** systemd timer `bukher-feed-stagger.timer`, runs every 5 minutes
+- **Logic:** 27 buckets (`a`-`z` + `_` for non-alphabetic handles) spaced ~8.9 min apart across
+  a 240-minute (4h) cycle. Each run checks which bucket(s) are due and calls
+  `PUT /v1/feeds/{id}/refresh` for just those feeds — so each feed gets refreshed roughly every
+  4 hours, and only a handful of feeds are ever in flight at once.
+- **Timeout:** `HTTP_CLIENT_TIMEOUT=45` (up from Miniflux's 20s default) gives slow
+  Twitter/RssHub scrapes more room; occasional individual timeouts self-correct on the next
+  ~4-hour pass since they don't block other feeds.
+
+**`/home/stephen/bukher/stagger_refresh.py`:**
+
+```python
+#!/usr/bin/env python3
+"""Refresh Miniflux feeds on a letter-staggered ~4h cycle instead of one big batch poll."""
+import string
+import sys
+import time
+
+import requests
+
+MINIFLUX_URL = "http://100.77.145.88:8080"
+AUTH = ("admin", "h14K1SClFMz6Q17TStiOv9KTfWVUQZtv")
+CYCLE_MINUTES = 240  # 4 hours
+BUCKET_KEYS = list(string.ascii_lowercase) + ["_"]  # 27 buckets; non a-z first chars fold into "_"
+SLOT_SPACING = CYCLE_MINUTES / len(BUCKET_KEYS)  # ~8.89 min apart
+WINDOW_MINUTES = 5  # must match the systemd timer's run interval
+
+
+def bucket_for_handle(handle):
+    c = handle[0].lower()
+    return c if c in string.ascii_lowercase else "_"
+
+
+def slot_minute(bucket_key):
+    idx = BUCKET_KEYS.index(bucket_key)
+    return idx * SLOT_SPACING
+
+
+def due_buckets(now_minute):
+    due = set()
+    for key in BUCKET_KEYS:
+        slot = slot_minute(key)
+        delta = (now_minute - slot) % CYCLE_MINUTES
+        if delta < WINDOW_MINUTES:
+            due.add(key)
+    return due
+
+
+def main():
+    now_minute = (time.time() / 60) % CYCLE_MINUTES
+    due = due_buckets(now_minute)
+    if not due:
+        return
+
+    resp = requests.get(f"{MINIFLUX_URL}/v1/feeds", auth=AUTH, timeout=30)
+    resp.raise_for_status()
+    feeds = resp.json()
+
+    to_refresh = [f for f in feeds if bucket_for_handle(f["feed_url"].rsplit("/", 1)[-1]) in due]
+    if not to_refresh:
+        print(f"buckets due={sorted(due)} but no matching feeds")
+        return
+
+    print(f"buckets due={sorted(due)} refreshing {len(to_refresh)} feed(s)")
+    for feed in to_refresh:
+        handle = feed["feed_url"].rsplit("/", 1)[-1]
+        try:
+            r = requests.put(f"{MINIFLUX_URL}/v1/feeds/{feed['id']}/refresh", auth=AUTH, timeout=60)
+            print(f"  {handle}: HTTP {r.status_code}")
+        except requests.RequestException as e:
+            print(f"  {handle}: ERROR {e}", file=sys.stderr)
+
+
+if __name__ == "__main__":
+    main()
+```
+
+**`/etc/systemd/system/bukher-feed-stagger.service`:**
+
+```ini
+[Unit]
+Description=Bukher staggered Miniflux feed refresh
+
+[Service]
+Type=oneshot
+User=stephen
+ExecStart=/usr/bin/python3 /home/stephen/bukher/stagger_refresh.py
+```
+
+**`/etc/systemd/system/bukher-feed-stagger.timer`:**
+
+```ini
+[Unit]
+Description=Run bukher-feed-stagger every 5 minutes
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=5min
+AccuracySec=10s
+
+[Install]
+WantedBy=timers.target
+```
+
+```bash
+# Check timer status / logs
+systemctl status bukher-feed-stagger.timer
+sudo journalctl -u bukher-feed-stagger.service -n 50 --no-pager
+
+# Run a refresh cycle manually
+sudo systemctl start bukher-feed-stagger.service
 ```
 
 ---
