@@ -98,16 +98,29 @@ All services are available over HTTPS via Tailscale, routed through nginx on por
 | HTTPS path | Proxies to | Prefix stripped | Backend |
 |------------|-----------|-----------------|---------|
 | `/` | `127.0.0.1:8092` | — | Cluster services index |
-| `/yesod/` | `127.0.0.1:8090` | `/yesod` | Yesod API server |
+| `/yesod/` | `127.0.0.1:8090` | `/yesod` | Yesod API server (natively prefix-aware, see below) |
+| `/yesod/ws` | `127.0.0.1:8765` | — | Yesod live-viz WebSocket (wss, avoids mixed content) |
+| `/viz/*` | 301 → `/yesod/viz/*` | — | Legacy absolute viz paths |
 | `/clip/` | `127.0.0.1:8091` | `/clip` | clip-together frontend |
 | `/health/` | `127.0.0.1:8093` | `/health` | Seykhl health dashboard |
 | `/db/` | `127.0.0.1:8094` | `/db` | Database details |
 | `/sjbis/` | `127.0.0.1:7878` | `/sjbis` | SJBIS dashboard |
 | `/perf/` | `127.0.0.1:8080` | `/perf` | Performance dashboard |
+| `/sjbgtd/`, `/api/`, `/ws` | `127.0.0.1:8766/8767` | varies | sjbgtd DAG visualizer (owns root `/api/` and `/ws`!) |
 
-- **nginx config**: `/etc/nginx/sites-available/dertog-router`
+- **nginx config**: `/etc/nginx/sites-enabled/dertog-router` — a REAL FILE, not a symlink;
+  `sites-available/dertog-router` is kept in sync manually. Edit sites-enabled (or both).
 - **Tailscale serve**: `tailscale serve --bg 8088` (background, port 443)
 - **Old `tailscale-serve-cluster.service`**: Removed (was foreground, only proxied 8092)
+
+**Yesod /yesod/ prefix handling (2026-07-25, ys-yes-j9fu):** serve.py natively honors
+`X-Forwarded-Prefix` — it rewrites its own `href/src/action/fetch/EventSource` output and
+`live-viz/config.js` (API base, `ws://host:8765` → `wss://host/yesod/ws` under https), so
+nginx just forwards the prefix/proto, no `sub_filter` needed. The 2026-07-23 interim
+`sub_filter` rewrite block was retired the same day the fix deployed (double-prefixing
+`/yesod/yesod/...` was the tell that both nginx and serve.py were rewriting). `absolute_redirect
+off` still keeps redirects relative. The cluster-services index page shows an HTTPS link for
+every proxied service.
 
 **Direct HTTP access is unchanged** — all ports (8090, 8091, 8092, 8093, 8094, 7878, 8080) still work as before.
 

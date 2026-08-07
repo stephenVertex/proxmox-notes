@@ -24,8 +24,8 @@
 
 ### n8n Web Interface (HTTPS) ✅
 - **URL:** https://n8n.meshcrawler.com
-- **Basic Auth:** admin / admin
-- **Note:** The default credentials are set in the systemd service. Change these for production use.
+- **Auth:** n8n built-in user management (owner: stephen@meshcrawler.com)
+- **Note:** Basic auth in systemd service is legacy; n8n's own user management is primary auth
 - **TLS:** Valid certificate via Cloudflare (Let’s Encrypt)
 
 ### Local Access (Alternative)
@@ -52,8 +52,23 @@ ssh root@192.168.0.202 "qm console 107"
 - **Service:** n8n (systemd)
 - **Port:** 5678 (localhost only — not exposed externally)
 - **Process:** Node.js (n8n)
+- **Version:** 2.8.4
 - **Data Directory:** /home/stephen/.n8n
 - **Logs:** `sudo journalctl -u n8n -f`
+
+### n8n Environment Variables (systemd)
+| Variable | Value | Purpose |
+|----------|-------|---------|
+| `NODE_ENV` | `production` | Node environment |
+| `N8N_BASIC_AUTH_ACTIVE` | `true` | Enable basic auth |
+| `N8N_BASIC_AUTH_USER` | (set in service) | Auth username |
+| `N8N_BASIC_AUTH_PASSWORD` | (set in service) | Auth password |
+| `N8N_HOST` | `127.0.0.1` | Bind address (localhost only) |
+| `N8N_PORT` | `5678` | Listen port |
+| `N8N_EDITOR_BASE_URL` | `https://n8n.meshcrawler.com` | Public URL — tells n8n it's behind HTTPS proxy |
+| `N8N_SECURE_COOKIE` | `false` | Required because TLS is terminated at Cloudflare/Caddy, not n8n |
+
+> **Note:** `N8N_SECURE_COOKIE=false` is safe here because n8n only listens on localhost. All external access is HTTPS via Cloudflare Tunnel (public) or Caddy (local).
 
 ## Reverse Proxy (Cloudflare Tunnel)
 - **Service:** cloudflared (systemd)
@@ -137,16 +152,19 @@ ssh root@192.168.0.202 "ip neigh | grep bc:24:11:3b:86:22"
 ## Notes
 - n8n is installed directly via npm (no Docker)
 - Runs as a systemd service for auto-start on boot
-- Basic auth is enabled with default credentials (admin/admin)
+- Basic auth is enabled in systemd (legacy); n8n built-in user management is primary auth
+- Owner account: stephen@meshcrawler.com (password reset 2026-07-26, DB backup on server)
 - SQLite is used for the database (default n8n setup)
 - Python task runner is not configured (JS task runner is active)
 - HTTPS is configured via Caddy reverse proxy with self-signed TLS
 - n8n binds to localhost only (127.0.0.1:5678) — external access only through Caddy on 443
 
 ## To Do
-- [ ] Change default admin credentials
+- [ ] Disable legacy basic auth in systemd (N8N_BASIC_AUTH_ACTIVE=false) once n8n user management confirmed working
 - [ ] Configure n8n for production use (webhook URL, etc.)
 - [ ] Set up automated backups
 - [x] HTTPS/TLS configured via Caddy
+- [x] Secure cookie issue fixed (N8N_EDITOR_BASE_URL + N8N_SECURE_COOKIE=false)
+- [x] Owner password reset (2026-07-26)
 - [ ] Configure external task runner if needed
 - [ ] Consider using a real domain + Let's Encrypt certificate for trusted TLS

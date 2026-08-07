@@ -448,6 +448,10 @@
                     <div class="service-desc">React/Vite SPA for the clip-together application</div>
                     <div class="service-links">
                         <div class="link-row">
+                            <span class="link-label">HTTPS</span>
+                            <a class="service-link ts-https" href="https://dertog.tailb4b58.ts.net/clip/">dertog.tailb4b58.ts.net/clip/</a>
+                        </div>
+                        <div class="link-row">
                             <span class="link-label">TS</span>
                             <a class="service-link ts" href="http://dertog.tailb4b58.ts.net:8091">dertog.tailb4b58.ts.net:8091</a>
                         </div>
@@ -471,6 +475,10 @@
                     <div class="service-desc">HTTP API + site for Yesod platform</div>
                     <div class="service-links">
                         <div class="link-row">
+                            <span class="link-label">HTTPS</span>
+                            <a class="service-link ts-https" href="https://dertog.tailb4b58.ts.net/yesod/">dertog.tailb4b58.ts.net/yesod/</a>
+                        </div>
+                        <div class="link-row">
                             <span class="link-label">TS</span>
                             <a class="service-link ts" href="http://dertog.tailb4b58.ts.net:8090">dertog.tailb4b58.ts.net:8090</a>
                         </div>
@@ -489,6 +497,10 @@
                     </div>
                     <div class="service-desc">Live visualization and watcher</div>
                     <div class="service-links">
+                        <div class="link-row">
+                            <span class="link-label">WSS</span>
+                            <span class="service-link ts-https">wss://dertog.tailb4b58.ts.net/yesod/ws</span>
+                        </div>
                         <div class="link-row">
                             <span class="link-label">TS</span>
                             <a class="service-link ts" href="http://dertog.tailb4b58.ts.net:8765">dertog.tailb4b58.ts.net:8765</a>
@@ -532,6 +544,10 @@
                     <div class="service-desc">Live cluster health and performance metrics</div>
                     <div class="service-links">
                         <div class="link-row">
+                            <span class="link-label">HTTPS</span>
+                            <a class="service-link ts-https" href="https://dertog.tailb4b58.ts.net/health/">dertog.tailb4b58.ts.net/health/</a>
+                        </div>
+                        <div class="link-row">
                             <span class="link-label">TS</span>
                             <a class="service-link ts" href="http://dertog.tailb4b58.ts.net:8093">dertog.tailb4b58.ts.net:8093</a>
                         </div>
@@ -554,6 +570,10 @@
                     </div>
                     <div class="service-desc">PostgreSQL and Dolt database sizes, counts, and activity</div>
                     <div class="service-links">
+                        <div class="link-row">
+                            <span class="link-label">HTTPS</span>
+                            <a class="service-link ts-https" href="https://dertog.tailb4b58.ts.net/db/">dertog.tailb4b58.ts.net/db/</a>
+                        </div>
                         <div class="link-row">
                             <span class="link-label">TS</span>
                             <a class="service-link ts" href="http://dertog.tailb4b58.ts.net:8094">dertog.tailb4b58.ts.net:8094</a>
@@ -628,6 +648,10 @@
                     <div class="service-desc">Information surfacer dashboard</div>
                     <div class="service-links">
                         <div class="link-row">
+                            <span class="link-label">HTTPS</span>
+                            <a class="service-link ts-https" href="https://dertog.tailb4b58.ts.net/sjbis/">dertog.tailb4b58.ts.net/sjbis/</a>
+                        </div>
+                        <div class="link-row">
                             <span class="link-label">TS</span>
                             <a class="service-link ts" href="http://dertog.tailb4b58.ts.net:7878">dertog.tailb4b58.ts.net:7878</a>
                         </div>
@@ -637,6 +661,63 @@
                         </div>
                     </div>
                     <div class="service-meta">Process: /home/stephen/sjbis/sjbis daemon start --port 7878</div>
+                </div>
+            </div>
+
+            <div class="card web">
+                <h2>sjbgtd</h2>
+                <div class="service">
+                    <div class="service-name">
+                        <span class="status-indicator status-active"></span>
+                        Project Graph Viewer
+                        <span class="badge web">Web</span>
+                    </div>
+                    <div class="service-desc">Live Cytoscape.js DAG of the project currently open in the sjbt TUI</div>
+                    <div class="service-links">
+                        <div class="link-row">
+                            <span class="link-label">HTTPS</span>
+                            <a class="service-link ts-https" href="https://dertog.tailb4b58.ts.net/sjbgtd/sidecar/viewer/">dertog.tailb4b58.ts.net/sjbgtd/sidecar/viewer/</a>
+                        </div>
+                    </div>
+                    <div class="service-meta">Shows whichever project was last pushed from sjbt (Active Project screen)</div>
+                </div>
+                <div class="service">
+                    <div class="service-name">
+                        <span class="status-indicator status-active"></span>
+                        Template DAG Viewer + API
+                        <span class="badge api">API</span>
+                    </div>
+                    <div class="service-desc">Template dependency graphs and REST API (template_api_server :8766)</div>
+                    <div class="service-links">
+                        <div class="link-row">
+                            <span class="link-label">HTTPS</span>
+                            <a class="service-link ts-https" href="https://dertog.tailb4b58.ts.net/sjbgtd/sidecar/template/">dertog.tailb4b58.ts.net/sjbgtd/sidecar/template/</a>
+                        </div>
+                        <div class="link-row">
+                            <span class="link-label">API</span>
+                            <a class="service-link ts-https" href="https://dertog.tailb4b58.ts.net/sjbgtd/api/templates">dertog.tailb4b58.ts.net/sjbgtd/api/templates</a>
+                        </div>
+                    </div>
+                    <div class="service-meta">Process: python -m sidecar.template_api_server (localhost :8766, ~/sjbgtd)</div>
+                </div>
+                <div class="service">
+                    <div class="service-name">
+                        <span class="status-indicator status-active"></span>
+                        State Server
+                        <span class="badge api">WebSocket</span>
+                    </div>
+                    <div class="service-desc">Receives graph pushes from sjbt and broadcasts to connected viewers</div>
+                    <div class="service-links">
+                        <div class="link-row">
+                            <span class="link-label">WSS</span>
+                            <span class="service-link ts-https">wss://dertog.tailb4b58.ts.net/sjbgtd/ws</span>
+                        </div>
+                        <div class="link-row">
+                            <span class="link-label">LAN</span>
+                            <span class="service-link lan">ws://192.168.0.138:8767</span>
+                        </div>
+                    </div>
+                    <div class="service-meta">Process: python -m sidecar.state_server (:8767, ~/sjbgtd) · TUI connects via ws://dertog:8767</div>
                 </div>
             </div>
         </div>
@@ -721,6 +802,10 @@
                     </div>
                     <div class="service-desc">System performance monitoring</div>
                     <div class="service-links">
+                        <div class="link-row">
+                            <span class="link-label">HTTPS</span>
+                            <a class="service-link ts-https" href="https://dertog.tailb4b58.ts.net/perf/">dertog.tailb4b58.ts.net/perf/</a>
+                        </div>
                         <div class="link-row">
                             <span class="link-label">TS</span>
                             <a class="service-link ts" href="http://dertog.tailb4b58.ts.net:8080">dertog.tailb4b58.ts.net:8080</a>
