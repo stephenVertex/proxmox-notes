@@ -250,47 +250,82 @@ DATABASE_URL = "postgresql://stephen:lj*123NM@yesod-postgres-server:5432/stephen
 ### Tiered pg_dump Backup (Inside VM)
 - **Script:** `/home/stephen/pg_backup.sh`
 - **Schedule:** Every hour at `:00` via cron
-- **Databases backed up:** `stephen`, `sjb_social`, `bukher`
-- **Location:** `/var/backups/postgresql/{stephen,sjb_social,bukher}-YYYYMMDD-HHMM.sql.gz`
-- **sjb_social dump method:** `sudo -u postgres pg_dump sjb_social` (superuser, to bypass RLS policies)
+- **Databases backed up:** Every connectable database, discovered dynamically at runtime. As of 2026-08-09: `bukher`, `clip`, `instasort`, `postgres`, `sjb_social`, `sjbgtd`, `sjbis`, `stephen`, `template1`, `ttrac`, `yesod_claimdiag`, and `yesod_gate`.
+- **Cluster-wide objects:** PostgreSQL roles and other global objects via `globals-YYYYMMDD-HHMM.sql.gz`
+- **Location:** `/var/backups/postgresql/{database}-YYYYMMDD-HHMM.sql.gz`
+- **Dump method:** `sudo -n -u postgres pg_dump <database>` (superuser, to include every database and bypass RLS policies)
+- **Template exception:** `template0` is not connectable by design (`datallowconn=false`) and is recreated by PostgreSQL; it is not dumped.
+- **Access check (2026-08-09):** `stephen` can connect to all 12 connectable databases; no privilege grants were changed. The backup job uses the `postgres` role so it does not depend on application-user table privileges.
 - **Retention:**
-  - **Hourly:** kept for the last 5 days (120 backups per database)
+  - **Hourly (local VM):** kept for roughly the last 6 hours while the current 120GB guest disk is capacity-constrained; several hourly restore points remain available
   - **Daily:** midnight backups kept for the last 30 days
-- **Size (stephen):** ~170 MB per backup (compressed; database is ~2.3 GB as of 2026-06-29)
-- **Size (sjb_social):** ~11 MB per backup (compressed as of 2026-07-09)
-- **Size (bukher):** ~6 KB per backup (compressed as of 2026-08-05)
-- **Total estimated:** ~21 GB for a full 30-day window (30 daily × ~180 MB combined)
+  - **Capacity note:** restore the longer hourly window after the replacement Proxmox host and larger guest storage are in service. The NAS retains the midnight copies off-VM.
+- **Observed compressed sizes (2026-08-09):** `stephen` ~518 MB, `sjbgtd` ~789 MB, `sjb_social` ~11 MB, and the remaining databases are each ~1.2 MB or smaller in the first all-database run. Sizes will grow with data.
 
 ### Backup Script Contents
 ```bash
 #!/bin/bash
 # PostgreSQL tiered backup
-# - Hourly backups for the last 5 days
+# - Hourly backups for the last 6 hours locally
 # - Daily (midnight) backups for the last 30 days
-# - Backs up: stephen, sjb_social, bukher
+# - Backs up every connectable database and PostgreSQL global objects
 
+set -Eeuo pipefail
+umask 077
 BACKUP_DIR="/var/backups/postgresql"
-TIMESTAMP=$(date +%Y%m%d-%H%M)
+TIMESTAMP="$(date +%Y%m%d-%H%M)"
 
-# --- Backup stephen database ---
-STEPHEN_FILE="$BACKUP_DIR/stephen-${TIMESTAMP}.sql.gz"
-pg_dump -U stephen stephen | gzip > "$STEPHEN_FILE" 2>/dev/null
+mkdir -p "$BACKUP_DIR"
 
-# --- Backup sjb_social database (via postgres superuser to bypass RLS) ---
-SJB_FILE="$BACKUP_DIR/sjb_social-${TIMESTAMP}.sql.gz"
-sudo -u postgres pg_dump sjb_social | gzip > "$SJB_FILE" 2>/dev/null
+dump_stream() {
+    local label="$1"
+    shift
+    local outfile="$BACKUP_DIR/${label}-${TIMESTAMP}.sql.gz"
+    local attempt
+    local errfile
+    local tmpfile
+    for attempt in 1 2 3; do
+        tmpfile=$(mktemp "$BACKUP_DIR/.${label}-${TIMESTAMP}.XXXXXX")
+        errfile="${tmpfile}.err"
+        if "$@" 2>"$errfile" | gzip -c > "$tmpfile"; then
+            if gzip -t "$tmpfile"; then
+                mv -f "$tmpfile" "$outfile"
+                chmod 600 "$outfile"
+                rm -f "$errfile"
+                echo "Backed up $label to $outfile ($(du -h "$outfile" | cut -f1))"
+                return 0
+            fi
+        fi
+        rm -f "$tmpfile"
+        echo "WARNING: dump attempt $attempt failed for $label" >&2
+        tail -c 4000 "$errfile" >&2 || true
+        rm -f "$errfile"
+        if (( attempt < 3 )); then sleep 10; fi
+    done
+    echo "ERROR: dump failed for $label after 3 attempts" >&2
+    return 1
+}
 
-# --- Backup bukher database (via postgres superuser) ---
-BUKHER_FILE="$BACKUP_DIR/bukher-${TIMESTAMP}.sql.gz"
-sudo -u postgres pg_dump bukher | gzip > "$BUKHER_FILE" 2>/dev/null
+mapfile -t DATABASES < <(
+    sudo -n -u postgres psql -XAtqc \
+        "SELECT datname FROM pg_database WHERE datallowconn AND datname <> 'template0' ORDER BY datname"
+)
 
-# --- Retention: keep hourly for 5 days, daily (midnight) for 30 days ---
-find "$BACKUP_DIR" -name "stephen-*.sql.gz" -mtime +5 ! -name "*-0000.sql.gz" -delete
-find "$BACKUP_DIR" -name "stephen-*.sql.gz" -mtime +30 -delete
-find "$BACKUP_DIR" -name "sjb_social-*.sql.gz" -mtime +5 ! -name "*-0000.sql.gz" -delete
-find "$BACKUP_DIR" -name "sjb_social-*.sql.gz" -mtime +30 -delete
-find "$BACKUP_DIR" -name "bukher-*.sql.gz" -mtime +5 ! -name "*-0000.sql.gz" -delete
-find "$BACKUP_DIR" -name "bukher-*.sql.gz" -mtime +30 -delete
+if (( ${#DATABASES[@]} == 0 )); then
+    echo "ERROR: could not find any connectable PostgreSQL databases" >&2
+    exit 1
+fi
+
+for db in "${DATABASES[@]}"; do
+    dump_stream "$db" sudo -n -u postgres pg_dump --format=plain --dbname="$db"
+done
+
+dump_stream globals sudo -n -u postgres pg_dumpall --globals-only
+
+# --- Retention: keep hourly for roughly 6 hours locally, daily (midnight) for 30 days ---
+find "$BACKUP_DIR" -maxdepth 1 -type f -name "*.sql.gz" \
+    -mmin +360 ! -name "*-0000.sql.gz" -delete
+find "$BACKUP_DIR" -maxdepth 1 -type f -name "*.sql.gz" -mtime +30 -delete
 ```
 
 ### Crontab Entry
@@ -336,19 +371,23 @@ mount -t cifs //192.168.0.123/proxmox-backups /mnt/proxmox-backups \
 ### Host Backup Script
 - **Script:** `/root/sync-yesod-backups.sh`
 - **Schedule:** Every hour at `:05` via cron
-- **Action:** Pulls daily (midnight) pg_dump backups from VM to NAS (both `stephen` and `sjb_social` databases)
-- **Note:** Only syncs `*-0000.sql.gz` files (matches both `stephen-*-0000.sql.gz` and `sjb_social-*-0000.sql.gz`). Hourly backups are NOT synced to NAS
-  to avoid WORM accumulation. `--delete` removed because WORM prevents deletion.
+- **Action:** Pulls daily (midnight) pg_dump backups from VM to NAS for every database plus `globals`.
+- **Note:** Only syncs `*-0000.sql.gz` files. Hourly backups are NOT synced to NAS
+  to avoid WORM accumulation. `--ignore-existing` prevents attempts to rewrite immutable files;
+  `--delete` is intentionally absent because WORM prevents deletion.
 
 ```bash
 #!/bin/bash
+set -Eeuo pipefail
+
 # Pull daily pg_dump backups from yesod-postgres-server to NAS share
 # Only syncs midnight (00:00) backups to reduce WORM accumulation
 # --delete removed: WORM compliance mode prevents file deletion
-rsync -avz -e 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null' \
+rsync -az --ignore-existing \
+  -e 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null' \
   --include='*-0000.sql.gz' --exclude='*' \
   stephen@192.168.0.155:/var/backups/postgresql/ \
-  /mnt/proxmox-backups/yesod-postgres-server/pg_dump/ 2>/dev/null
+  /mnt/proxmox-backups/yesod-postgres-server/pg_dump/
 ```
 
 ### Host Crontab Entries
