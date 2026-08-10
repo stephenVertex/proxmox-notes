@@ -1,6 +1,6 @@
 # Proxmox Infrastructure Overview
 
-**Document Version:** 2026-07-02
+**Document Version:** 2026-08-10
 **Proxmox Node:** seykhl (192.168.0.202)
 **PVE Version:** 9.1.1
 
@@ -33,7 +33,7 @@
 | 109 | yesod-runner-base | stopped | 8GB | 20GB | N/A | bc:24:11:b3:bd:df | Yesod Runner Template |
 | 110 | yesod-runner-3 | running | 16GB | 60GB | 192.168.0.136 | bc:24:11:68:88:b3 | Yesod Agent Runner |
 | 111 | sb-edge | running | 4GB | 20GB | 192.168.0.137 | bc:24:11:5e:d5:a8 | Supabase Edge Runtime |
-| 112 | yesod-dispatch | running | 4GB | 20GB | 192.168.0.140 / 100.123.34.77 (TS) | bc:24:11:e3:c0:cf | Yesod Dispatch |
+| 112 | yesod-dispatch | running | 4GB | 64GB | 192.168.0.140 / 100.123.34.77 (TS) | bc:24:11:e3:c0:cf | Yesod Dispatch |
 | 113 | docuseal | running | 2GB | 20GB | 192.168.0.139 / 100.117.77.67 (TS) | bc:24:11:7a:9e:42 | DocuSeal Document Signing |
 | 114 | drawio | running | 2GB | 20GB | 192.168.0.149 | bc:24:11:1a:97:34 | drawio Diagram Server |
 | 116 | bukher | running | 4GB | 30GB | 192.168.0.169 / 100.77.145.88 (TS) | bc:24:11:51:5f:ad | RSS Ingestion (RssHub + Miniflux) |
@@ -136,8 +136,11 @@ ssh root@192.168.0.202 "qm console <vmid>"
   - `/dev/nvme0n1p3` — 237GB (original NVMe)
   - `/dev/sda` — 512GB Fanxiang S101 SATA SSD (added 2026-06-11)
 - **Total LVM Thin Pool:** ~634GB (was ~141GB)
-- **Used:** ~108GB (16.3%)
-- **Available:** ~556GB
+- **Live data utilization:** 66.94% as of 2026-08-10 UTC
+- **Physically available in the thin pool:** ~210GB
+- **Thin logical allocations:** ~751GB, which exceeds the 634GB pool; monitor
+  physical utilization and do not treat thin-provisioned logical capacity as
+  free space
 - **ISOs:** /var/lib/vz/template/iso/
 - **VM Disks:** local-lvm (thin-provisioned)
 - **Backups:** Configured on NAS (see individual VM docs)
@@ -169,13 +172,13 @@ ssh root@192.168.0.202 "qm console <vmid>"
 
 ## Resource Summary
 
-- **Total Running VMs:** 12
+- **Total Running VMs:** 14
 - **Total Running LXC Containers:** 1
-- **Total RAM Allocated:** 96GB VMs (24+6+4+6+2+16+4+16+16+4+4+2) + 1GB LXC
-- **Total Disk Allocated:** ~530GB VMs (~450GB + 60GB from VM 102 expansion to 120GB + 20GB drawio) + 8GB LXC
+- **Running VM RAM Allocated:** 110GB + 1GB LXC
+- **VM Boot Disks Allocated:** 710GB logical + 8GB LXC
 - **Stopped VMs:** 4 (jeffrey-dev, test-full-201, opensymphony-base, yesod-runner-base)
 - **Stopped VMs RAM:** 20GB
-- **Stopped VMs Disk:** ~86GB
+- **Stopped VMs Disk:** 106GB
 
 ---
 
@@ -220,6 +223,11 @@ ssh root@192.168.0.202 "qm restart <vmid>"
 - `dynamodb` (CTID 115) is the first LXC container on the node (created 2026-08-02); 1 core / 1GB, runs Amazon DynamoDB Local on port 8000 — see [DYNAMODB_LOCAL.md](DYNAMODB_LOCAL.md)
 - VM 106 is named `yesod-runner-1` in Proxmox; SSH alias / docs still use `yesod-runner`
 - VM 102 disk was expanded to 120GB (observed 2026-08-02)
+- VM 112 (`yesod-dispatch`) was expanded online from 20GB to 64GB on
+  2026-08-10. The guest's first partition and ext4 root filesystem were grown
+  in place without a reboot; the post-growth snapshot had about 45GB free.
+  This is interim Conductor headroom while the larger replacement host is
+  forthcoming, not a reason to add application services directly to `seykhl`.
 
 ---
 
@@ -234,4 +242,3 @@ ssh root@192.168.0.202 "qm restart <vmid>"
 - [ ] Add firewall rules for VM network isolation
 - [x] Install 512GB SATA drive (added 2026-06-11) — expanded LVM thin pool to ~634GB
 - [ ] Create runner self-update mechanism (system packages, uv, cargo, opencode)
-
