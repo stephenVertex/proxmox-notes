@@ -1,6 +1,6 @@
 # Proxmox Infrastructure Overview
 
-**Document Version:** 2026-08-10
+**Document Version:** 2026-08-11
 **Proxmox Node:** seykhl (192.168.0.202)
 **PVE Version:** 9.1.1
 
@@ -24,7 +24,7 @@
 | 100 | doltsvr | running | 24GB | 64GB | 192.168.0.150 / 100.101.145.38 (TS) | bc:24:11:d0:43:5d | Dolt SQL Server |
 | 101 | jeffrey-dev | stopped | 4GB | 20GB | 192.168.0.132 | bc:24:11:cd:26:f7 | Development VM |
 | 102 | yesod-postgres-server | running | 6GB | 120GB | 192.168.0.155 / 100.115.10.68 (TS) | bc:24:11:00:88:f5 | PostgreSQL for Yesod |
-| 103 | homestar-runner | running | 4GB | 30GB | 192.168.0.154 | bc:24:11:6c:cf:b7 | GitHub Actions Runner |
+| 103 | seykhl-actions-runner | running | 4GB | 30GB | 192.168.0.154 | bc:24:11:6c:cf:b7 | GitHub Actions Runner host |
 | 104 | dertog | running | 6GB | 30GB | 192.168.0.138 | bc:24:11:90:a9:cc | Dashboard Server |
 | 105 | aicoe-social-runner | running | 2GB | 20GB | 192.168.0.147 | bc:24:11:a4:ce:80 | Social Media Monitor |
 | 106 | yesod-runner-1 | running | 16GB | 40GB | 192.168.0.152 | bc:24:11:a0:58:60 | Yesod Agent Runner |
@@ -79,7 +79,7 @@ avahi needs to be installed from the console).
 - `yesod-runner-3` → 192.168.0.136
 - `yesod-dispatch` → 192.168.0.140 (Tailscale: 100.123.34.77)
 - `sb-edge` → 192.168.0.137 (Tailscale: 100.115.156.68)
-- `homestar-runner` → 192.168.0.154
+- `seykhl-actions-runner` → 192.168.0.154
 - `doltsvr` → 192.168.0.150 (Tailscale: 100.101.145.38)
 - `dertog` → 192.168.0.138
 - `aicoe-social-runner` → 192.168.0.147
@@ -154,7 +154,7 @@ ssh root@192.168.0.202 "qm console <vmid>"
 | doltsvr | [DOLT_SERVER.md](DOLT_SERVER.md) |
 | jeffrey-dev | [JEFFREY-DEV.md](JEFFREY-DEV.md) |
 | yesod-postgres-server | [YESOD_POSTGRES_SERVER.md](YESOD_POSTGRES_SERVER.md) |
-| homestar-runner | [HOMESTAR_RUNNER.md](HOMESTAR_RUNNER.md) |
+| seykhl-actions-runner | [SEYKHL_ACTIONS_RUNNER.md](SEYKHL_ACTIONS_RUNNER.md) |
 | dertog | [DERTOG.md](DERTOG.md) |
 | aicoe-social-runner | [AICOE_SOCIAL_RUNNER.md](AICOE_SOCIAL_RUNNER.md) |
 | yesod-runner | [YESOD-RUNNER.md](YESOD-RUNNER.md) |

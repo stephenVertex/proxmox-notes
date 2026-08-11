@@ -12,7 +12,7 @@
   - doltsvr (VM 100) — Dolt databases
   - yesod-postgres-server (VM 102) — PostgreSQL data
   - n8n-server (VM 107) — workflows + credentials
-  - homestar-runner (VM 103), jeffrey-dev (VM 101) — anything stateful
+  - seykhl-actions-runner (VM 103), jeffrey-dev (VM 101) — anything stateful
 - **seykhl host itself** — any config not in /etc/pve (cron, custom packages, etc.)
 
 ### Options to evaluate

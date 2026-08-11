@@ -164,14 +164,14 @@ systemctl --user restart cluster-services
 
 ### clip-together Frontend (port 8091 / HTTPS /clip/)
 
-Static SPA serving the clip-together React/Vite frontend, built elsewhere (homestar-runner) and deployed via rsync.
+Static SPA serving the clip-together React/Vite frontend, built on `seykhl-actions-runner` and deployed via rsync.
 
 - **HTTP URL**: `http://dertog:8091`
 - **HTTPS URL**: `https://dertog.tailb4b58.ts.net/clip/` (via nginx → 8091)
 - **Server**: Python static SPA server with `index.html` fallback
 - **Systemd unit**: `clip-together-web.service` (user unit)
-- **Deploy source**: `~/clip-together-web/` (rsync'd from homestar-runner)
-- **Build host**: `homestar-runner` (192.168.0.154) via GitHub Actions
+- **Deploy source**: `~/clip-together-web/` (rsync'd from `seykhl-actions-runner`)
+- **Build host**: `seykhl-actions-runner` (192.168.0.154) via GitHub Actions label `dertog-deploy`
 - **API backend**: `sb-edge` (192.168.0.137:8001) with CORS enabled
 
 ```bash
@@ -271,6 +271,6 @@ systemctl --user restart db-details
 - CPU type `host` for modern tool compatibility
 - Ballooning enabled for memory efficiency
 - `qemu-guest-agent` not available in default Debian 13 repos (not critical for basic operation)
-- **Do not install node/npm** on dertog — the frontend is built on homestar-runner and copied as static files
+- **Do not install node/npm** on dertog — the frontend is built on `seykhl-actions-runner` and copied as static files
 - **HTTPS routing**: nginx strips path prefixes via `proxy_pass` trailing-slash syntax. Direct HTTP access to all ports is unchanged.
 - To change `VITE_*` env vars, the frontend must be **rebuilt** (env vars are baked into the bundle at build time)

@@ -23,7 +23,7 @@ LAN,BC-24-11-A4-CE-80,192.168.0.147,Enabled,TRUE,aicoe-social-runner
 LAN,BC-24-11-3F-86-EB,192.168.0.148,Enabled,TRUE,yesod-runner-2
 LAN,BC-24-11-D0-43-5D,192.168.0.150,Enabled,TRUE,doltsvr
 LAN,BC-24-11-A0-58-60,192.168.0.152,Enabled,TRUE,yesod-runner
-LAN,BC-24-11-6C-CF-B7,192.168.0.154,Enabled,TRUE,homestar-runner
+LAN,BC-24-11-6C-CF-B7,192.168.0.154,Enabled,TRUE,seykhl-actions-runner
 LAN,BC-24-11-00-88-F5,192.168.0.155,Enabled,TRUE,yesod-postgres-server
 LAN,7C-2E-0D-13-1F-6D,192.168.0.173,Enabled,TRUE,Atem Extreme ISO
 LAN,F8-73-DF-11-0A-4B,192.168.0.190,Enabled,TRUE,neelix

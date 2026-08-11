@@ -88,7 +88,7 @@ chroot /mnt/vm103 /bin/bash -c "echo '<username>:<password>' | chpasswd"
 
 This is less reliable because cloud-init may overwrite it on next boot.
 
-## Full Example (homestar-runner, VMID 103)
+## Full Example (seykhl-actions-runner, VMID 103)
 
 ```bash
 ssh root@seykhl

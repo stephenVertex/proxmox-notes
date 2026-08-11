@@ -136,7 +136,7 @@ onto its own mirror vdev for predictable latency.
 2. **yesod-postgres-server (VMID 102)** — 6GB / 60GB / Tailscale — `pg_dumpall` then restore
 3. **yesod-runners (VMIDs 106, 108, 110)** — 16GB each — these were cloned from VMID 109 template; bring up empty on new box from the running template clone instead of cloning across the bridge
 4. **dertog (VMID 104)** — 6GB / 30GB dashboard server
-5. **homestar-runner (VMID 103)** — 4GB / 30GB — GitHub Actions runner; re-register the runner on GitHub side
+5. **seykhl-actions-runner (VMID 103)** — 4GB / 30GB — GitHub Actions runner host; re-register all repository-scoped runners on GitHub
 6. **aicoe-social-runner (VMID 105)** — 2GB / 20GB
 7. **n8n-server (VMID 107)** — 4GB / 30GB — re-import workflows from the n8n UI or backup
 8. **sb-edge (VMID 111)** — 4GB / 20GB Supabase Edge — reconfigure Deno + edge-runtime

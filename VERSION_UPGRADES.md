@@ -25,7 +25,7 @@ Dolt is the version-controlled SQL database used by Beads workspaces. Server mod
 | **yesod-runner** | not installed | — | Not needed on this host. |
 | **yesod-runner-2** | not installed | — | Not needed on this host. |
 | **yesod-runner-3** | not installed | — | Not needed on this host. |
-| **homestar-runner** | not installed | — | GitHub Actions runner; not needed. |
+| **seykhl-actions-runner** | not installed | — | GitHub Actions runner; not needed. |
 
 **Latest release:** [2.1.9](https://github.com/dolthub/dolt) (confirmed 2026-06-23).
 
@@ -45,7 +45,7 @@ PostgreSQL hosts the yesod catalog (`yesod-postgres-server`, 192.168.0.155).
 | **yesod-runner-2** | not installed | — | No client or server installed. |
 | **dertog** | not installed | — | No PostgreSQL client installed. |
 | **doltsvr** | not installed | — | No PostgreSQL client installed. |
-| **homestar-runner** | not installed | — | No PostgreSQL client installed. |
+| **seykhl-actions-runner** | not installed | — | No PostgreSQL client installed. |
 | **Local Mac** | not installed | — | No PostgreSQL client installed. |
 
 **Latest stable release:** [18.4](https://www.postgresql.org/) (released 2026-05-14). PostgreSQL 19 is in beta.
@@ -67,7 +67,7 @@ Beads is the distributed graph issue tracker used by yesod and agent runners.
 | **dertog** | not installed | — | Not needed here. |
 | **doltsvr** | not installed | — | Not needed here. |
 | **yesod-postgres-server** | not installed | — | Not needed here. |
-| **homestar-runner** | not installed | — | GitHub Actions runner; not needed. |
+| **seykhl-actions-runner** | not installed | — | GitHub Actions runner; not needed. |
 
 **Latest release:** [1.0.4](https://github.com/gastownhall/beads) (released 2026-05-09).
 
@@ -103,7 +103,7 @@ The `yesod` CLI and web UI are installed from the `yesod-refinery` source tree (
 | Tailscale HTTPS | dertog | 443 | Running |
 | Dolt SQL server | doltsvr | 3306 | Running |
 | PostgreSQL | yesod-postgres-server | 5432 | Running |
-| GitHub Actions runner | homestar-runner | — | Running, label `dertog-deploy` |
+| GitHub Actions runners | seykhl-actions-runner | — | Three repository-scoped registrations; labels `yesod-ci`, `dertog-deploy`, and `sjbis-ci` |
 
 ---
 
