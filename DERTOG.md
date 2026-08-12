@@ -122,6 +122,13 @@ nginx just forwards the prefix/proto, no `sub_filter` needed. The 2026-07-23 int
 off` still keeps redirects relative. The cluster-services index page shows an HTTPS link for
 every proxied service.
 
+**sjbgtd `/sjbgtd/` prefix stripping (2026-08-12):** The live nginx route must use
+`proxy_pass http://127.0.0.1:8766/;` with the trailing slash. Without it, nginx forwards
+`/sjbgtd/sidecar/viewer/` unchanged to `sidecar.template_api_server`, which expects
+`/sidecar/viewer/` and returns 404. The live config at
+`/etc/nginx/sites-enabled/dertog-router` was corrected, validated with `nginx -t`, and
+reloaded. The backup is `/etc/nginx/sites-enabled/dertog-router.bak-20260812-sidecar`.
+
 **Direct HTTP access is unchanged** — all ports (8090, 8091, 8092, 8093, 8094, 7878, 8080) still work as before.
 
 ```bash
