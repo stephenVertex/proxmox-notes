@@ -108,8 +108,12 @@ All services are available over HTTPS via Tailscale, routed through nginx on por
 | `/perf/` | `127.0.0.1:8080` | `/perf` | Performance dashboard |
 | `/sjbgtd/`, `/api/`, `/ws` | `127.0.0.1:8766/8767` | varies | sjbgtd DAG visualizer (owns root `/api/` and `/ws`!) |
 
-- **nginx config**: `/etc/nginx/sites-enabled/dertog-router` — a REAL FILE, not a symlink;
-  `sites-available/dertog-router` is kept in sync manually. Edit sites-enabled (or both).
+- **nginx config**: `/etc/nginx/sites-enabled/dertog-router` is the active file and
+  `/etc/nginx/sites-available/dertog-router` is its manually synchronized copy; both are
+  regular files and should remain byte-for-byte identical.
+- **nginx backups**: keep rollback copies in `sites-available`, never as non-hidden files in
+  `sites-enabled`; `/etc/nginx/nginx.conf` includes every `sites-enabled/*` file, so a backup
+  left there becomes a second live server block and triggers a conflicting-server warning.
 - **Tailscale serve**: `tailscale serve --bg 8088` (background, port 443)
 - **Old `tailscale-serve-cluster.service`**: Removed (was foreground, only proxied 8092)
 
@@ -127,7 +131,31 @@ every proxied service.
 `/sjbgtd/sidecar/viewer/` unchanged to `sidecar.template_api_server`, which expects
 `/sidecar/viewer/` and returns 404. The live config at
 `/etc/nginx/sites-enabled/dertog-router` was corrected, validated with `nginx -t`, and
-reloaded. The backup is `/etc/nginx/sites-enabled/dertog-router.bak-20260812-sidecar`.
+reloaded. The backup is `/etc/nginx/sites-available/dertog-router.bak-20260812-sidecar`.
+
+**SJBIS `/sjbis/events` streaming (2026-08-23):** The dashboard's `offline` label tracks its
+Server-Sent Events connection, not daemon health. The general `/sjbis/` proxy loaded state
+successfully but nginx's default response buffering withheld the idle event stream, so the
+browser's `EventSource` never opened. Keep this exact-match location before the general
+`/sjbis/` location:
+
+```nginx
+location = /sjbis/events {
+    proxy_pass http://127.0.0.1:7878/events;
+    proxy_http_version 1.1;
+    proxy_set_header Connection "";
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_buffering off;
+    proxy_cache off;
+    proxy_read_timeout 3600s;
+}
+```
+
+The sjbis handler also returns `X-Accel-Buffering: no` as defense in depth. Validate both
+nginx config copies, run `sudo nginx -t`, reload (do not restart), and confirm that the public
+event endpoint returns `200` plus `Content-Type: text/event-stream` immediately.
 
 **Direct HTTP access is unchanged** — all ports (8090, 8091, 8092, 8093, 8094, 7878, 8080) still work as before.
 
@@ -237,6 +265,12 @@ systemctl --user restart db-details
 - **HTTPS URL**: `https://dertog.tailb4b58.ts.net/sjbis/` (via nginx → 7878)
 - **Process**: `/home/stephen/sjbis/sjbis daemon start --port 7878`
 - **Purpose**: Information surfacer dashboard
+
+```bash
+# The headers must arrive immediately; curl then waits on the intentionally open stream.
+curl -sS -N --max-time 5 -D - -o /dev/null \
+  https://dertog.tailb4b58.ts.net/sjbis/events
+```
 
 ### Performance Dashboard (port 8080 / HTTPS /perf/)
 
