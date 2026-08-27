@@ -1,6 +1,8 @@
 # GitLab: `makor.meshcrawler.com`
 
-**Status:** deployed; ready for initial administrator setup and pilot projects.
+**Status:** operational. The private `meshcrawler` group, `stevejb`
+administrator account, outbound email, GitLab API/CLI access, and Docker CI
+runner are all in use.
 
 **Last verified:** 2026-08-27
 
@@ -69,31 +71,61 @@ or copied into shell history.
   The tunnel is appropriate for normal source repositories and small CI output,
   not a large-artifact transport design.
 
-## Initial administrator actions
+## Access and project creation
 
-New-user sign-up is disabled. The `root` bootstrap password remains in
-`/etc/gitlab/initial_root_password` only for GitLab's short initial-password
-window. Retrieve it privately from the LAN, sign in, and immediately set and
-vault a new password:
+New-user sign-up is disabled. `stevejb` is the routine administrator; retain
+`root` only as a break-glass account. The bootstrap password file is useful
+only during GitLab's short initial-password window and must not be relied on
+for future access.
+
+Fastmail SMTP is configured with a dedicated app password. A delivery test to
+`gitlab@meshcrawler.com` succeeded on 2026-08-27.
+
+Create projects under the private top-level `meshcrawler` group. In the web
+UI, choose **New project** → **Create blank project**, select the group, and
+choose **Private** visibility.
+
+For an administrator workstation, the GitLab CLI is available through `glab`:
 
 ```bash
-ssh stephen@192.168.0.170 'sudo cat /etc/gitlab/initial_root_password'
+brew install glab
+glab auth login --hostname makor.meshcrawler.com
+GITLAB_HOST=makor.meshcrawler.com \
+  glab repo create meshcrawler/my-new-repo --private --defaultBranch main
 ```
 
-Before inviting other users:
+Use a personal access token with `api` and `write_repository` scopes when the
+CLI requests one. `glab` stores the token in the macOS keychain. Do not put
+tokens, runner authentication tokens, or SMTP credentials in a repository,
+CI variable, or shell history. Clone and push repositories using their
+Git-over-HTTPS URLs because GitLab's public SSH listener is not exposed.
 
-1. `stevejb` is the initial named administrator. Use it for routine work and
-   retain `root` only as a break-glass account.
-2. Fastmail SMTP is configured with a dedicated app password; a delivery test
-   to `gitlab@meshcrawler.com` succeeded on 2026-08-27. Test invitation and
-   password-reset delivery after creating the named administrator accounts.
-3. Enroll administrator 2FA, store recovery codes safely, then require 2FA
-   according to the chosen policy. Instance-wide 2FA enforcement is **not**
-   configured yet.
-4. Review project visibility defaults, protected-branch policy, and
+## Dual-remote migration
+
+`proxmox-notes` is mirrored to both GitHub and GitLab while the self-hosted
+service is being proven. The existing `origin` remote remains GitHub; the
+secondary remote is named `gitlab` and points at
+`https://makor.meshcrawler.com/meshcrawler/proxmox-notes.git`.
+
+Push new work to both while this transition is active:
+
+```bash
+git push origin main
+git push gitlab main
+git push gitlab --tags
+```
+
+Do not retire GitHub or make GitLab the sole canonical copy until GitLab
+application backups and a restore rehearsal have been completed successfully.
+
+Still to complete before inviting untrusted users:
+
+1. Verify administrator 2FA enrollment and recovery codes, then decide
+   whether to enforce instance-wide 2FA.
+2. Test invitation and password-reset messages after creating additional
+   accounts.
+3. Review project visibility defaults, protected-branch policy, and
    personal-access-token expiry policy.
-5. Create pilot projects under the private top-level `meshcrawler` group. Do
-   not migrate existing GitHub projects until their owner accepts the pilot.
 
 ## GitLab Runner
 
@@ -112,7 +144,8 @@ Before inviting other users:
 The runner uses Cloudflare DNS resolvers (`1.1.1.1`, `1.0.0.1`), because the
 LAN router had cached a negative result immediately after the new hostname was
 created. Runner registration, GitLab handshake, and an unprivileged Docker
-`alpine:3.23` smoke run have passed.
+`alpine:3.23` smoke run have passed. The runner also picked up the first
+untagged project job successfully.
 
 Do not put a runner authentication token in a repository or CI variable. It is
 stored only in the runner's root-owned `/etc/gitlab-runner/config.toml`.
@@ -122,14 +155,16 @@ production credentials. General build runners must not receive them.
 
 ## Backups, recovery, and operations
 
-The existing Proxmox job `sefer-light-services` now backs up both VMs daily at
-03:30 to `nas-backups` using zstd snapshots. Retention is 7 daily, 4 weekly,
-and 3 monthly backups.
+The existing Proxmox job `sefer-light-services` backs up both GitLab VMs daily
+at 03:30 to `nas-backups` using zstd snapshots. Retention is 7 daily, 4
+weekly, and 3 monthly backups. This is the only active backup layer currently.
 
-This is useful VM-level protection, but a GitLab application backup schedule
-and an encrypted off-VM copy of `/etc/gitlab/gitlab.rb` and
-`/etc/gitlab/gitlab-secrets.json` are **not configured yet**. Before migrating
-valuable projects, implement and test all of the following:
+There is no GitLab application backup archive or schedule yet, and no
+encrypted off-VM copy of `/etc/gitlab/gitlab.rb` and
+`/etc/gitlab/gitlab-secrets.json`. VM snapshots provide useful host-level
+recovery but are not a replacement for a tested application restore. Before
+retiring GitHub or treating GitLab as the sole canonical copy of valuable
+projects, implement and test all of the following:
 
 1. A daily `gitlab-backup create` that completes before the Proxmox backup.
 2. An encrypted, least-privilege NAS or offsite copy of the GitLab archive,
@@ -163,6 +198,12 @@ snapshot aids rollback but does not replace a tested application restore.
   unprivileged.
 - Fastmail accepted GitLab's SMTP verification message sent from
   `gitlab@meshcrawler.com`.
+- Private project `meshcrawler/yesod-semantic-graph` was created with `main`
+  as its default branch. Its first CI job pulled the `uv` Docker image, checked
+  out the repository through Gitaly, and ran formatting, linting, type checks,
+  and 14 tests successfully on runner 1. The final `uv build` step failed
+  because the project source distribution included its generated `.venv`; this
+  is a project packaging configuration issue, not a GitLab or runner failure.
 - VMs 119 and 120 are in the existing Proxmox backup job.
 
 ## Primary references
