@@ -1,7 +1,7 @@
 # aicoe-social-runner — Social-Media Engagement Monitor Runner
 
 ## Overview
-`aicoe-social-runner` (VMID 105) is a Debian 13 VM on Proxmox host `seykhl`. It is a
+`aicoe-social-runner` (VMID 105) is a Debian 13 VM on Proxmox host `sefer`. It is a
 dedicated, headless cron runner for the **engage-watch** agent
 (`sjb-agentic-social-media-monitor`) — a scheduled AI agent that monitors
 social-media engagement via `aysp` and reports findings to Synapse org-memory.
@@ -18,7 +18,7 @@ It runs the Synapse agent identity `agent.aicoe-social-monitor` under
 | **CPU** | host |
 | **Cores** | 2 |
 | **Memory** | 2GB (balloon 1GB) |
-| **Disk** | 20GB (local-lvm, scsi0) |
+| **Disk** | 20GB (`vmdata`, scsi0) |
 | **Network** | vmbr0 (DHCP), virtio |
 | **MAC** | BC:24:11:A4:CE:80 |
 | **LAN IP** | 192.168.0.147 |
@@ -101,7 +101,7 @@ cd ~/dev/ayrshare-simple && git pull && uv tool install --reinstall .
 ```
 
 ## Resources
-- Proxmox host: `seykhl` (192.168.0.202)
+- Proxmox host: `sefer` (192.168.0.100)
 - engage-watch repo: https://github.com/stephenVertex/sjb-agentic-social-media-monitor (private)
 - aysp repo: https://github.com/stephenVertex/ayrshare-simple (private)
 - Synapse: https://cnu.synapse-os.ai (project.social-monitoring / team.ai-coe)

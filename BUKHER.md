@@ -19,7 +19,7 @@
 | **CPU** | host |
 | **Cores** | 2 |
 | **Memory** | 4 GB |
-| **Disk** | 30 GB (raw on local-lvm) |
+| **Disk** | 30 GB on `vmdata` |
 | **Network** | vmbr0 (bridge to LAN) |
 | **Net Model** | virtio |
 | **Display** | none |
@@ -27,6 +27,10 @@
 ---
 
 ## Build Steps
+
+> **Historical provisioning record:** these steps were performed on the
+> retired `seykhl` host and deliberately retain its original storage commands.
+> The current VM configuration is recorded in [Current host and backup status](#current-host-and-backup-status).
 
 ### 1. Create VM on Proxmox
 
@@ -108,6 +112,15 @@ sudo systemctl restart avahi-daemon
 - **Status:** Connected to tailnet `tailb4b58.ts.net`
 - **MagicDNS:** `bukher.tailb4b58.ts.net`
 - **CLI check:** `tailscale status` on any tailnet node shows `100.77.145.88 bukher ... linux -`
+
+## Current host and backup status
+
+- **Proxmox host:** `sefer` (`192.168.0.100`)
+- **VM disk:** `vmdata:vm-116-disk-0`
+- **VM backup:** included in the nightly 03:30 `sefer-light-services` snapshot
+  job on `nas-backups` (7 daily, 4 weekly, 3 monthly retained)
+- **Guest agent:** configured in the VM but not responding during the
+  2026-08-27 inventory; use SSH or console access until it is repaired.
 
 ---
 
@@ -425,7 +438,7 @@ All feeds are in the **X/Twitter** category and are polled automatically by Mini
 
 ## Resources
 
-- Proxmox Host: `seykhl` (192.168.0.202)
+- Proxmox Host: `sefer` (192.168.0.100)
 - Cloud Image: `/var/lib/vz/template/iso/debian-13-generic-amd64.qcow2`
-- VM Disk: `local-lvm:vm-116-disk-0`
+- VM Disk: `vmdata:vm-116-disk-0`
 - Docker Compose: `/home/stephen/bukher/docker-compose.yml`

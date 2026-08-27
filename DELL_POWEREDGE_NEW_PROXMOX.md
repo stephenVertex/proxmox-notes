@@ -1,4 +1,11 @@
-# New Proxmox Host — Dell PowerEdge R740xd (Reykhl)
+# Historical Proxmox Procurement and Migration Plan — Dell PowerEdge R740xd (Reykhl)
+
+> **Historical record — superseded 2026-08-27.** The delivered and active
+> single-node host is [`sefer`](README.md), not the proposed `reykhl`.
+> `sefer` runs Proxmox VE 9.2.2 at `192.168.0.100`; the migrated services and
+> active backup policy are recorded in the current [infrastructure overview](README.md).
+> Keep the remainder of this document for the purchase decision and original
+> migration rationale, not as an operational runbook.
 
 ## Overview
 

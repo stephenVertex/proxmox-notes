@@ -1,7 +1,7 @@
 # n8n-server — n8n Automation Platform
 
 ## Overview
-`n8n-server` (VMID 107) is a dedicated n8n automation server running on Proxmox host `seykhl`. It provides a self-hosted workflow automation platform.
+`n8n-server` (VMID 107) is a dedicated n8n automation server running on Proxmox host `sefer`. It provides a self-hosted workflow automation platform.
 
 ## VM Specifications
 | Setting | Value |
@@ -12,7 +12,7 @@
 | **CPU** | x86-64-v2-AES |
 | **Cores** | 2 |
 | **Memory** | 4GB |
-| **Disk** | 30GB (local-lvm, scsi0) |
+| **Disk** | 30GB (`vmdata`, scsi0) |
 | **Network** | vmbr0 (DHCP), virtio |
 | **MAC** | BC:24:11:3B:86:22 |
 | **LAN IP** | 192.168.0.145 |
@@ -39,7 +39,7 @@ ssh stephen@192.168.0.145
 
 ### Proxmox Console
 ```bash
-ssh root@192.168.0.202 "qm console 107"
+ssh root@sefer "qm console 107"
 ```
 
 ## Network Details
@@ -134,19 +134,19 @@ ssh stephen@192.168.0.145 "curl -k https://192.168.0.145"
 ## Management Commands
 ```bash
 # Start VM
-ssh root@192.168.0.202 "qm start 107"
+ssh root@sefer "qm start 107"
 
 # Stop VM
-ssh root@192.168.0.202 "qm stop 107"
+ssh root@sefer "qm stop 107"
 
 # Restart VM
-ssh root@192.168.0.202 "qm restart 107"
+ssh root@sefer "qm restart 107"
 
 # Check status
-ssh root@192.168.0.202 "qm status 107"
+ssh root@sefer "qm status 107"
 
 # Get IP
-ssh root@192.168.0.202 "ip neigh | grep bc:24:11:3b:86:22"
+ssh root@sefer "ip neigh | grep bc:24:11:3b:86:22"
 ```
 
 ## Notes

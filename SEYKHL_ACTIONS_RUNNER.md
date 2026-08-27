@@ -3,8 +3,8 @@
 ## Overview
 
 `seykhl-actions-runner` (VMID 103) is a Debian 13 guest on the Proxmox host
-`seykhl`. It hosts three independent, repository-scoped GitHub Actions runner
-registrations. The name `homestar` is reserved for the NAS and must not be used
+`sefer`. It hosts repository-scoped GitHub Actions runner registrations. The
+name `homestar` is reserved for the NAS and must not be used
 for this VM, its GitHub runners, or workflow labels.
 
 ## VM specifications
@@ -15,7 +15,7 @@ for this VM, its GitHub runners, or workflow labels.
 | Proxmox name / guest hostname | `seykhl-actions-runner` |
 | OS | Debian 13 “Trixie” |
 | CPU / memory | 2 host cores / 4 GB |
-| Disk | 30 GB on `local-lvm` |
+| Disk | 30 GB on `vmdata` |
 | LAN | `192.168.0.154`, MAC `BC:24:11:6C:CF:B7` |
 
 SSH by IP is canonical until LAN DNS/DHCP naming has propagated:
@@ -25,6 +25,20 @@ ssh stephen@192.168.0.154
 ```
 
 ## GitHub runner registrations
+
+Five runner services were active at the 2026-08-27 inventory:
+
+| Systemd service suffix | Runner name |
+|---|---|
+| `clip-together` | `seykhl-actions-clip-together` |
+| `sjbis` | `seykhl-actions-sjbis` |
+| `docs` | `seykhl-actions-docs` |
+| `yesod` | `seykhl-actions-yesod` |
+| `yesodwork` | `seykhl-actions-yesodwork` |
+
+The established repository-to-label mapping below documents the first three;
+confirm the repositories and labels for the `docs` and `yesodwork` registrations
+in GitHub before re-registering or changing their routing.
 
 Each repository has its own runner directory and registration. Workflows
 select purpose-specific labels; they do not select the VM hostname.
@@ -102,8 +116,7 @@ the publicly served asset hash, not merely an HTTP 200 response.
 
 ## Resources
 
-- Proxmox host: `seykhl` (`192.168.0.202`)
-- VM disk: `local-lvm:vm-103-disk-0`
+- Proxmox host: `sefer` (`192.168.0.100`)
+- VM disk: `vmdata:vm-103-disk-0`
 - [GitHub self-hosted runner documentation](https://docs.github.com/en/actions/how-tos/manage-runners/self-hosted-runners)
 - [GitHub runner releases](https://github.com/actions/runner/releases)
-

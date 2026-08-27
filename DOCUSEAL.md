@@ -12,7 +12,7 @@
 | **CPU** | host |
 | **Cores** | 1 |
 | **Memory** | 2GB |
-| **Disk** | 20GB (local-lvm, scsi0) |
+| **Disk** | 20GB (`vmdata`, scsi0) |
 | **Network** | vmbr0 (static IP), virtio |
 | **MAC** | BC:24:11:7A:9E:42 |
 | **LAN IP** | 192.168.0.139 |
@@ -163,3 +163,7 @@ curl -sL -o /dev/null -w '%{http_code}' http://localhost:3000
 - Container uses `--restart unless-stopped` so it survives reboots
 - Cloudflare Tunnel provides public access without port forwarding
 - For SMTP (email notifications to signers), configure in DocuSeal admin settings
+- The VM now runs on `sefer` (`192.168.0.100`) and is included in the nightly
+  `sefer-light-services` Proxmox backup job. At the 2026-08-27 inventory its
+  in-guest QEMU agent was not responding, so use SSH or console access rather
+  than guest-agent commands until it is repaired.

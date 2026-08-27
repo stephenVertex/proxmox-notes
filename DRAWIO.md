@@ -15,7 +15,7 @@ the LAN (no external service calls required for editing).
 | **CPU** | host |
 | **Cores** | 1 |
 | **Memory** | 2GB |
-| **Disk** | 20GB (local-lvm, scsi0) |
+| **Disk** | 20GB (`vmdata`, scsi0) |
 | **Network** | vmbr0 (static IP via cloud-init), virtio |
 | **MAC** | BC:24:11:1A:97:34 |
 | **LAN IP** | 192.168.0.149 |
@@ -108,3 +108,5 @@ ssh drawio "sudo docker pull jgraph/drawio && sudo docker stop drawio && \
   mounted — diagrams live in the browser session unless the user saves
   (download / device storage). Add a volume mount if server-side diagram
   storage is ever wanted.
+- The VM now runs on `sefer` (`192.168.0.100`) and is included in the nightly
+  `sefer-light-services` Proxmox backup job.
