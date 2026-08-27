@@ -34,6 +34,7 @@ separate VM to administer.
 | VM allocation | 8 vCPU (`host`), 24 GiB fixed RAM, `onboot: 1`, QEMU guest agent |
 | Disks | 80 GiB OS disk; 300 GiB ext4 data disk mounted at `/var/opt/gitlab` |
 | GitLab package | `gitlab-ee` 19.3.1-ee.0 |
+| Outbound email | Fastmail SMTP from `gitlab@meshcrawler.com`; credentials use GitLab's encrypted SMTP secret store |
 | Public URL | `https://makor.meshcrawler.com` |
 | Tunnel | `makor`, ID `ffdf5860-2735-4fe8-89b0-e0ad6c5582e5` |
 | Tunnel service | `cloudflared` 2026.8.2, enabled as a system service |
@@ -82,8 +83,9 @@ ssh stephen@192.168.0.170 'sudo cat /etc/gitlab/initial_root_password'
 Before inviting other users:
 
 1. Create named administrator accounts and stop using `root` for routine work.
-2. Configure Fastmail SMTP with a dedicated app password, then test invitation
-   and password-reset delivery. SMTP is **not** configured yet.
+2. Fastmail SMTP is configured with a dedicated app password; a delivery test
+   to `gitlab@meshcrawler.com` succeeded on 2026-08-27. Test invitation and
+   password-reset delivery after creating the named administrator accounts.
 3. Enroll administrator 2FA, store recovery codes safely, then require 2FA
    according to the chosen policy. Instance-wide 2FA enforcement is **not**
    configured yet.
@@ -158,6 +160,8 @@ snapshot aids rollback but does not replace a tested application restore.
   remains reachable.
 - The runner is online, verified by GitLab, and can run the pinned Alpine image
   unprivileged.
+- Fastmail accepted GitLab's SMTP verification message sent from
+  `gitlab@meshcrawler.com`.
 - VMs 119 and 120 are in the existing Proxmox backup job.
 
 ## Primary references
