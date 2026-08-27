@@ -1,6 +1,6 @@
 # Domain Registry
 
-**Last updated:** 2026-07-22
+**Last updated:** 2026-08-27
 
 ---
 
@@ -11,7 +11,7 @@
 | **Registrar** | Namecheap |
 | **DNS** | Cloudflare (`adaline.ns.cloudflare.com`, `jimmy.ns.cloudflare.com`) |
 | **Cloudflare Zone ID** | `3ea596f72ef21f4cbf67efaf2456fca2` |
-| **Plan** | Cloudflare Pro |
+| **Plan** | Previously recorded as Pro; billing was not reverified on 2026-08-27 |
 | **Previous DNS** | Route 53 (migrated back to Cloudflare 2026-07-22) |
 | **Route 53 Zone IDs** | `Z0810906C526BUOORYFC` (delegated, now stale), `Z0356075ECD65FKGTUF0` (not delegated) |
 
@@ -37,6 +37,7 @@
 | `n8n` | CNAME | `6b2b99a2-4fb1-4e88-be58-fca8b9d6fd2e.cfargotunnel.com` | Yes | n8n automation (VM 107, `n8n-server`, 192.168.0.145) |
 | `docuseal` | CNAME | `fdbd66cf-8ea3-4f25-8ea8-440997b14378.cfargotunnel.com` | Yes | DocuSeal document signing (VM 113, `docuseal`, 192.168.0.139) |
 | `drawio` | CNAME | `c3f26824-34cf-4c8d-9bdc-8c0f243619ee.cfargotunnel.com` | Yes | drawio diagram editor (VM 114, `drawio`, 192.168.0.149) |
+| `makor` | CNAME | `ffdf5860-2735-4fe8-89b0-e0ad6c5582e5.cfargotunnel.com` | Yes | GitLab EE (VM 119, `makor`, 192.168.0.170) |
 | `mail` | A | `103.168.172.65` | Yes | Fastmail mail server |
 | `*.meshcrawler.com` | A | `103.168.172.52`, `103.168.172.37` | Yes | Wildcard catch-all |
 
@@ -47,6 +48,7 @@
 | n8n | `6b2b99a2-4fb1-4e88-be58-fca8b9d6fd2e` | 107 (n8n-server) | `/etc/cloudflared/config.yml` → `localhost:5678` |
 | docuseal | `fdbd66cf-8ea3-4f25-8ea8-440997b14378` | 113 (docuseal) | `/etc/cloudflared/config.yml` → `localhost:3000` |
 | drawio | `c3f26824-34cf-4c8d-9bdc-8c0f243619ee` | 114 (drawio) | `/etc/cloudflared/config.yml` → `localhost:8080` |
+| makor | `ffdf5860-2735-4fe8-89b0-e0ad6c5582e5` | 119 (makor) | `/etc/cloudflared/config.yml` → `127.0.0.1:80`; public health/metrics paths return 404 |
 
 ### Notes
 - Migrated DNS from Namecheap → Route 53 → Cloudflare (back) on 2026-07-22

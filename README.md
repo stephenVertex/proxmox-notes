@@ -28,7 +28,7 @@ pct list
 
 ## Virtual machines
 
-All listed disks are on the `vmdata` ZFS pool. All eight running service VMs
+All listed disks are on the `vmdata` ZFS pool. All ten running service VMs
 are configured to start at boot and have the Proxmox guest agent enabled in
 their VM configuration.
 
@@ -42,6 +42,8 @@ their VM configuration.
 | 116 | `bukher` | running | 2 | 4 GiB | 30 GiB | 192.168.0.169 | RSSHub and Miniflux ingestion |
 | 117 | `obs-vultr` | running | 8 | 16 GiB | 120 GiB | 192.168.0.163 | SigNoz observability stack |
 | 118 | `neo4j` | running | 4 | 16 GiB | 100 GiB | 192.168.0.167 | Neo4j graph database |
+| 119 | `makor` | running | 8 | 24 GiB | 80 GiB OS + 300 GiB data | 192.168.0.170 | GitLab EE (Free tier) via Cloudflare Tunnel |
+| 120 | `makor-runner-docker-1` | running | 6 | 16 GiB | 120 GiB | 192.168.0.171 | Dedicated GitLab Docker group runner |
 | 201 | `yesod-runner-4-codex` | stopped | 16 | 48 GiB | 64 GiB | — | Codex runner image |
 | 202 | `yesod-runner-5-claude` | stopped | 16 | 48 GiB | 64 GiB | — | Claude runner image |
 | 203 | `yesod-runner-6-opencode-fw` | stopped | 16 | 48 GiB | 64 GiB | — | OpenCode firewall runner image |
@@ -61,10 +63,10 @@ One 1 TB Seagate IronWolf SATA SSD is visible to the host but is not a member
 of either reported ZFS pool.
 
 The enabled `sefer-light-services` job creates `zstd` snapshot backups to
-`nas-backups` daily at 03:30 for VMs 103, 105, 107, 113, 114, 116, 117, and
-118. Retention is 7 daily, 4 weekly, and 3 monthly backups. This protects the
-VMs; stateful services should still have application-consistent recovery
-procedures (especially SigNoz and Neo4j).
+`nas-backups` daily at 03:30 for VMs 103, 105, 107, 113, 114, 116, 117, 118,
+119, and 120. Retention is 7 daily, 4 weekly, and 3 monthly backups. This
+protects the VMs; stateful services should still have application-consistent
+recovery procedures (especially SigNoz, Neo4j, and GitLab).
 
 ## Service documentation
 
@@ -78,12 +80,7 @@ procedures (especially SigNoz and Neo4j).
 | Bukher (VM 116) | [BUKHER.md](BUKHER.md) |
 | SigNoz observability (VM 117) | [OBS_VULTR.md](OBS_VULTR.md) |
 | Neo4j (VM 118) | [NEO4J.md](NEO4J.md) |
-
-## Planned services
-
-| Service | Documentation |
-|---|---|
-| GitLab on `makor.meshcrawler.com` | [GITLAB.md](GITLAB.md) — proposed; not yet provisioned |
+| GitLab and GitLab Runner (VMs 119/120) | [GITLAB.md](GITLAB.md) |
 
 ## Operational notes
 
