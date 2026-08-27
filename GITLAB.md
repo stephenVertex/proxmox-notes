@@ -103,7 +103,7 @@ Before inviting other users:
 | Allocation | 6 vCPU (`host`), 16 GiB fixed RAM, 120 GiB disk, `onboot: 1`, QEMU guest agent |
 | Packages | Docker Engine 29.7.2; GitLab Runner 19.3.1-1 |
 | Scope | `meshcrawler` group runner, ID 1 |
-| Tags | `linux-amd64`, `docker`; `run_untagged = false` |
+| Tags | `linux-amd64`, `docker`; `run_untagged = true` (the runner also accepts untagged jobs from the trusted `meshcrawler` group) |
 | Capacity | `concurrent = 2` |
 | Executor | Docker, default image `alpine:3.23`, pull policy `if-not-present` |
 | Isolation | `privileged = false`; no host Docker socket or production credentials are mounted into jobs |
