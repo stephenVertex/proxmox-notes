@@ -82,7 +82,8 @@ ssh stephen@192.168.0.170 'sudo cat /etc/gitlab/initial_root_password'
 
 Before inviting other users:
 
-1. Create named administrator accounts and stop using `root` for routine work.
+1. `stevejb` is the initial named administrator. Use it for routine work and
+   retain `root` only as a break-glass account.
 2. Fastmail SMTP is configured with a dedicated app password; a delivery test
    to `gitlab@meshcrawler.com` succeeded on 2026-08-27. Test invitation and
    password-reset delivery after creating the named administrator accounts.
