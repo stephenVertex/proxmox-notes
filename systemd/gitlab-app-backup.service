@@ -1,0 +1,13 @@
+[Unit]
+Description=Back up GitLab application and configuration archives to the NAS
+Wants=network-online.target
+After=network-online.target
+ConditionPathIsMountPoint=/mnt/proxmox-backups
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/backup-gitlab-to-nas
+TimeoutStartSec=3h
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7

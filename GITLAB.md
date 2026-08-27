@@ -163,21 +163,41 @@ production credentials. General build runners must not receive them.
 
 The existing Proxmox job `sefer-light-services` backs up both GitLab VMs daily
 at 03:30 to `nas-backups` using zstd snapshots. Retention is 7 daily, 4
-weekly, and 3 monthly backups. This is the only active backup layer currently.
+weekly, and 3 monthly backups.
 
-There is no GitLab application backup archive or schedule yet, and no
-encrypted off-VM copy of `/etc/gitlab/gitlab.rb` and
-`/etc/gitlab/gitlab-secrets.json`. VM snapshots provide useful host-level
-recovery but are not a replacement for a tested application restore. Before
-retiring GitHub or treating GitLab as the sole canonical copy of valuable
-projects, implement and test all of the following:
+In addition, `sefer` now creates GitLab-native recovery artifacts daily at
+01:30, leaving a two-hour buffer before the Proxmox snapshot. The root-owned
+`gitlab-app-backup.timer` invokes `/usr/local/sbin/backup-gitlab-to-nas`, whose
+tracked source is [`scripts/backup-gitlab-to-nas`](scripts/backup-gitlab-to-nas).
+The service:
 
-1. A daily `gitlab-backup create` that completes before the Proxmox backup.
-2. An encrypted, least-privilege NAS or offsite copy of the GitLab archive,
-   configuration, and secrets file.
-3. An isolated restore rehearsal using the identical GitLab EE version.
-4. Monitoring for data-disk capacity, Proxmox/GitLab backup failure, GitLab
-   health, and the `cloudflared` systemd service.
+1. Runs `gitlab-backup create` on `makor`.
+2. Runs `gitlab-ctl backup-etc` to include `gitlab.rb`,
+   `gitlab-secrets.json`, certificates, and other `/etc/gitlab` configuration.
+3. Copies both archives atomically over a dedicated restricted SSH key, checks
+   their SHA-256 hashes, then removes the temporary guest copies.
+4. Retains each artifact type for 35 days on the NAS.
+
+The Proxmox host, rather than the GitLab VM, writes to the NAS. This keeps the
+NAS SMB credential out of the GitLab guest. The archive paths on the mounted
+NAS share are:
+
+```text
+/mnt/proxmox-backups/gitlab/makor/application/
+/mnt/proxmox-backups/gitlab/makor/configuration/
+```
+
+Two full backup runs succeeded on 2026-08-27. Each application archive and its
+configuration archive was checksum-verified after transfer; the initial pair
+also passed a local `tar` integrity listing. The container registry is disabled
+on this GitLab instance, so there are no registry images to protect.
+
+The NAS copies are not separately encrypted by this process. Before retiring
+GitHub or treating GitLab as the sole canonical copy of valuable projects,
+complete an isolated restore rehearsal using the exact GitLab EE version and
+decide on encrypted, access-controlled storage for the application and
+configuration archives. Also add monitoring/alerting for data-disk capacity,
+Proxmox/GitLab backup failure, GitLab health, and `cloudflared`.
 
 Useful checks (none display credentials):
 
@@ -186,6 +206,8 @@ ssh stephen@192.168.0.170 'sudo gitlab-ctl status'
 ssh stephen@192.168.0.170 'curl -fsS http://127.0.0.1/-/health'
 ssh stephen@192.168.0.170 'sudo systemctl is-active cloudflared'
 ssh stephen@192.168.0.171 'sudo gitlab-runner verify'
+ssh root@sefer 'systemctl status --no-pager gitlab-app-backup.timer'
+ssh root@sefer 'journalctl -u gitlab-app-backup.service -n 50 --no-pager'
 ```
 
 For an upgrade, take and verify an application backup first, apply the newest
@@ -204,6 +226,8 @@ snapshot aids rollback but does not replace a tested application restore.
   unprivileged.
 - Fastmail accepted GitLab's SMTP verification message sent from
   `gitlab@meshcrawler.com`.
+- Native application and configuration backups completed twice, were
+  SHA-256-verified on `nas-backups`, and are scheduled daily at 01:30.
 - Private project `meshcrawler/yesod-semantic-graph` was created with `main`
   as its default branch. Its first CI job pulled the `uv` Docker image, checked
   out the repository through Gitaly, and ran formatting, linting, type checks,

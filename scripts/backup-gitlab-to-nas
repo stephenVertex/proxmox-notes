@@ -1,0 +1,100 @@
+#!/usr/bin/env bash
+# Back up GitLab application data and configuration from VM 119 to the NAS.
+# This runs on the sefer Proxmox host, which already mounts the NAS share.
+
+set -euo pipefail
+umask 077
+
+readonly guest_host='192.168.0.170'
+readonly guest_user='stephen'
+readonly guest_backup_dir='/var/opt/gitlab/backups'
+readonly guest_configuration_dir='/etc/gitlab/config_backup'
+readonly identity_file='/root/.ssh/gitlab-app-backup'
+readonly nas_mount='/mnt/proxmox-backups'
+readonly backup_root="${nas_mount}/gitlab/makor"
+readonly application_dir="${backup_root}/application"
+readonly configuration_dir="${backup_root}/configuration"
+readonly retention_days=35
+
+declare -a ssh_command=(
+  ssh
+  -i "${identity_file}"
+  -o BatchMode=yes
+  -o ClearAllForwardings=yes
+  -o ConnectTimeout=15
+  -o StrictHostKeyChecking=yes
+  "${guest_user}@${guest_host}"
+)
+
+partial_path=''
+
+cleanup() {
+  if [[ -n "${partial_path}" ]]; then
+    rm -f -- "${partial_path}"
+  fi
+}
+trap cleanup EXIT
+
+fail() {
+  printf 'gitlab NAS backup: %s\n' "$*" >&2
+  exit 1
+}
+
+remote_exec() {
+  "${ssh_command[@]}" "$@"
+}
+
+latest_new_file() {
+  local source_dir="$1"
+  local pattern="$2"
+  local after_epoch="$3"
+
+  remote_exec "sudo -n find '${source_dir}' -maxdepth 1 -type f -name '${pattern}' -newermt '@${after_epoch}' -printf '%T@ %f\\n' | sort -nr | head -n 1 | cut -d' ' -f2-"
+}
+
+copy_and_verify() {
+  local source_dir="$1"
+  local filename="$2"
+  local destination_dir="$3"
+  local remote_path="${source_dir}/${filename}"
+  local remote_hash local_hash
+
+  [[ "${filename}" != */* && -n "${filename}" ]] || fail "unsafe backup filename"
+
+  remote_hash="$(remote_exec "sudo -n sha256sum -- '${remote_path}'" | awk '{print $1}')"
+  [[ "${remote_hash}" =~ ^[[:xdigit:]]{64}$ ]] || fail "could not obtain checksum for ${filename}"
+
+  partial_path="${destination_dir}/.${filename}.partial"
+  remote_exec "sudo -n cat -- '${remote_path}'" > "${partial_path}"
+  local_hash="$(sha256sum "${partial_path}" | awk '{print $1}')"
+  [[ "${local_hash}" == "${remote_hash}" ]] || fail "checksum mismatch for ${filename}"
+
+  mv -f -- "${partial_path}" "${destination_dir}/${filename}"
+  partial_path=''
+  remote_exec "sudo -n rm -f -- '${remote_path}'"
+}
+
+main() {
+  mountpoint -q "${nas_mount}" || fail "NAS mount ${nas_mount} is unavailable"
+  [[ -r "${identity_file}" ]] || fail "backup SSH identity is unavailable"
+
+  install -d -m 0700 "${application_dir}" "${configuration_dir}"
+
+  local application_started application_file configuration_started configuration_file
+  application_started="$(remote_exec 'date +%s')"
+  remote_exec 'sudo -n gitlab-backup create'
+  application_file="$(latest_new_file "${guest_backup_dir}" '*_gitlab_backup.tar' "${application_started}")"
+  [[ "${application_file}" == *_gitlab_backup.tar ]] || fail 'GitLab application archive was not created'
+  copy_and_verify "${guest_backup_dir}" "${application_file}" "${application_dir}"
+
+  configuration_started="$(remote_exec 'date +%s')"
+  remote_exec 'sudo -n gitlab-ctl backup-etc'
+  configuration_file="$(latest_new_file "${guest_configuration_dir}" 'gitlab_config_*.tar' "${configuration_started}")"
+  [[ "${configuration_file}" == gitlab_config_*.tar ]] || fail 'GitLab configuration archive was not created'
+  copy_and_verify "${guest_configuration_dir}" "${configuration_file}" "${configuration_dir}"
+
+  find "${application_dir}" -maxdepth 1 -type f -name '*_gitlab_backup.tar' -mtime "+${retention_days}" -delete
+  find "${configuration_dir}" -maxdepth 1 -type f -name 'gitlab_config_*.tar' -mtime "+${retention_days}" -delete
+}
+
+main "$@"
