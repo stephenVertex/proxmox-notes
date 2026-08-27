@@ -105,7 +105,13 @@ Git-over-HTTPS URLs because GitLab's public SSH listener is not exposed.
 `proxmox-notes` is mirrored to both GitHub and GitLab while the self-hosted
 service is being proven. The existing `origin` remote remains GitHub; the
 secondary remote is named `gitlab` and points at
-`https://makor.meshcrawler.com/meshcrawler/proxmox-notes.git`.
+`git@makor-git:meshcrawler/proxmox-notes.git`.
+
+On Stephen's administrator Mac, `makor-git` is an SSH configuration alias for
+the LAN address `192.168.0.170`. GitLab has the Mac's `id_ed25519` public key
+registered for `stevejb`. This direct SSH path works only on the home LAN; it
+does not expose an SSH listener through Cloudflare. Use the standard
+Git-over-HTTPS clone URL when away from the LAN.
 
 Push new work to both while this transition is active:
 
