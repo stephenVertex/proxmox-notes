@@ -73,10 +73,10 @@ or copied into shell history.
 
 ## Access and project creation
 
-New-user sign-up is disabled. `stevejb` is the routine administrator; retain
-`root` only as a break-glass account. The bootstrap password file is useful
-only during GitLab's short initial-password window and must not be relied on
-for future access.
+New-user sign-up is disabled. `stevejb` is the routine administrator and an
+Owner of the private `meshcrawler` group; retain `root` only as a break-glass
+account. The bootstrap password file is useful only during GitLab's short
+initial-password window and must not be relied on for future access.
 
 Fastmail SMTP is configured with a dedicated app password. A delivery test to
 `gitlab@meshcrawler.com` succeeded on 2026-08-27.
