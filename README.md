@@ -79,6 +79,12 @@ procedures (especially SigNoz and Neo4j).
 | SigNoz observability (VM 117) | [OBS_VULTR.md](OBS_VULTR.md) |
 | Neo4j (VM 118) | [NEO4J.md](NEO4J.md) |
 
+## Planned services
+
+| Service | Documentation |
+|---|---|
+| GitLab on `makor.meshcrawler.com` | [GITLAB.md](GITLAB.md) — proposed; not yet provisioned |
+
 ## Operational notes
 
 - `docuseal` and `bukher` did not respond to the QEMU guest-agent query during
