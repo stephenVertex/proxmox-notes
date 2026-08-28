@@ -157,6 +157,19 @@ sudo systemctl restart sshd
 - **URL**: `https://login.tailscale.com/admin/machines` (admin console)
 - **CLI check**: `tailscale status` on any tailnet node shows `100.115.10.68 yesod-postgres-server ... linux -`
 
+## Boot hardening
+
+PostgreSQL binds explicitly to both its Tailscale and LAN addresses. A systemd
+drop-in for `postgresql@17-main.service` requests and orders itself after
+`tailscaled.service`, then waits up to 90 seconds for `100.115.10.68` and
+`192.168.0.155` before starting PostgreSQL. This prevents the boot-time bind
+failure that occurs when PostgreSQL starts before either address exists.
+
+The tracked sources are
+[`systemd/postgresql@17-main.service.d/tailscale.conf`](systemd/postgresql@17-main.service.d/tailscale.conf)
+and
+[`scripts/wait-for-postgresql-listen-addresses`](scripts/wait-for-postgresql-listen-addresses).
+
 ## PostgreSQL Connection
 
 ### Listen Addresses

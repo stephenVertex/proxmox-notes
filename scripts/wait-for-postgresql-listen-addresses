@@ -1,0 +1,30 @@
+#!/bin/sh
+# Wait for every explicitly configured PostgreSQL listen address to exist.
+
+set -eu
+
+max_attempts=90
+attempt=0
+
+while [ "${attempt}" -lt "${max_attempts}" ]; do
+  available_addresses="$(/usr/sbin/ip -o -4 addr show scope global 2>/dev/null | awk '{split($4, address, "/"); print address[1]}')"
+  all_available=1
+
+  for expected_address in "$@"; do
+    if ! printf '%s\n' "${available_addresses}" | /usr/bin/grep -Fxq "${expected_address}"; then
+      all_available=0
+      break
+    fi
+  done
+
+  if [ "${all_available}" -eq 1 ]; then
+    exit 0
+  fi
+
+  attempt=$((attempt + 1))
+  sleep 1
+done
+
+printf 'PostgreSQL listen addresses did not become available within %s seconds: %s\n' \
+  "${max_attempts}" "$*" >&2
+exit 1

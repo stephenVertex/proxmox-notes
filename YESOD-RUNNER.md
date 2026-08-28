@@ -21,6 +21,14 @@ The **yesod-runner** is a Debian 13 virtual machine (VMID 106) running on Proxmo
 
 ---
 
+## Boot behavior
+
+VMs 106 (`yesod-runner`) and 108 (`yesod-runner-2`) have `onboot=1` on
+`seykhl` so they return after a Proxmox host restart. VM 110
+(`yesod-runner-3`) remains configured for manual start.
+
+---
+
 ## Access Information
 
 ### Network Details (Primary Runner)
