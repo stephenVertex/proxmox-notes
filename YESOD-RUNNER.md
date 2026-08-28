@@ -153,7 +153,7 @@ poll_interval: 10
 max_concurrent: 1
 worktree_base_dir: /tmp/yesod-workdir
 opencode_path: opencode
-postgres_dsn: postgresql://stephen:lj*123NM@yesod-postgres-server:5432/stephen
+postgres_dsn: postgresql://stephen:<redacted-rotate-required>@yesod-postgres-server:5432/stephen
 fireworks_api_key: fw_GDwAQVjo2JwrupnfcF6LpS
 model_map:
   opencode-kimi: "fireworks-custom/accounts/fireworks/routers/kimi-k2p6-turbo"
@@ -174,7 +174,7 @@ model_map:
 **File:** `/etc/yesod/runner.env`
 
 ```
-YESOD_POSTGRES_DSN=postgresql://stephen:lj*123NM@yesod-postgres-server:5432/stephen
+YESOD_POSTGRES_DSN=postgresql://stephen:<redacted-rotate-required>@yesod-postgres-server:5432/stephen
 FIREWORKS_API_KEY=fw_GDwAQVjo2JwrupnfcF6LpS
 # Claude lane only (hosts with the claude CLI installed — see below):
 ANTHROPIC_BASE_URL=https://tfy.promptlens.trilogy.com
@@ -389,7 +389,7 @@ opencode -d
 
 3. **Claude CLI is optional per host:** ~~The `claude` model requires macOS Claude.app~~ — OUTDATED. The claude CLI runs fine on Linux (yesod-runner serves the claude-fable-5 lane). Install it only on hosts meant to serve that lane, and configure gateway auth per the "Claude lane auth" section above. Hosts without it should not list claude/claude-fable-5 in their runner.yaml `models`.
 
-4. **ALWAYS pin postgres DSN to the LAN IP — never use hostname form:** Use `postgresql://stephen:lj*123NM@192.168.0.155:5432/stephen` in BOTH `runner.yaml` (postgres_dsn field) AND `/etc/yesod/runner.env` (YESOD_POSTGRES_DSN). **Never use `@yesod-postgres-server:5432`** — on reboot, libpq resolves the hostname using the system resolver (systemd-resolved / mDNS / avahi). If the resolver returns an IPv6 address (fe80 link-local or fd60 ULA) for `yesod-postgres-server`, libpq tries IPv6 first and fails with `Invalid argument` or `server closed the connection unexpectedly`. The daemon gets exit=1, systemd restarts it, it crashes again — repeat 40+ times. `systemctl is-active` returns `active` between crashes, masking the loop. **Failure signature:** `is-active` = active, no claims, err log contains `connection to server at "fe80:...` or `fd60:...` — pin the DSN. For Mac runners (sjbmbp), pin in runner.yaml and in the LaunchAgent plist `YESOD_POSTGRES_DSN` env key. Observed: runner-3 and sjbmbp post-seykhl-reboot (2026-06-12, 40+ restarts).
+4. **ALWAYS pin postgres DSN to the LAN IP — never use hostname form:** Use `postgresql://stephen:<redacted-rotate-required>@192.168.0.155:5432/stephen` in BOTH `runner.yaml` (postgres_dsn field) AND `/etc/yesod/runner.env` (YESOD_POSTGRES_DSN). **Never use `@yesod-postgres-server:5432`** — on reboot, libpq resolves the hostname using the system resolver (systemd-resolved / mDNS / avahi). If the resolver returns an IPv6 address (fe80 link-local or fd60 ULA) for `yesod-postgres-server`, libpq tries IPv6 first and fails with `Invalid argument` or `server closed the connection unexpectedly`. The daemon gets exit=1, systemd restarts it, it crashes again — repeat 40+ times. `systemctl is-active` returns `active` between crashes, masking the loop. **Failure signature:** `is-active` = active, no claims, err log contains `connection to server at "fe80:...` or `fd60:...` — pin the DSN. For Mac runners (sjbmbp), pin in runner.yaml and in the LaunchAgent plist `YESOD_POSTGRES_DSN` env key. Observed: runner-3 and sjbmbp post-seykhl-reboot (2026-06-12, 40+ restarts).
 
 5. **Pulse health check: `is-active` lies — check restart counter:** A daemon crash-looping gets `is-active = active` between systemd restarts. True health check: `journalctl -u yesod-codefactory-dispatch --since '5 minutes ago' | grep 'restart counter'` — any nonzero counter means crash-looping. On Mac: `launchctl list | grep codefactory` — PID column should be a positive number (not `-`) and exit code should be `0`.
 
@@ -425,7 +425,7 @@ sudo systemctl restart yesod-codefactory-dispatch.service
 ### Database Connection Issues
 ```bash
 # Test PostgreSQL connection
-psql postgresql://stephen:lj*123NM@yesod-postgres-server:5432/stephen
+psql postgresql://stephen:<redacted-rotate-required>@yesod-postgres-server:5432/stephen
 
 # Check hosts file
 cat /etc/hosts | grep yesod-postgres
@@ -495,7 +495,7 @@ ssh stephen@yesod-runner-2      # 192.168.0.148
 ssh stephen@yesod-runner-3      # 192.168.0.136
 
 # Check status
-export YESOD_POSTGRES_DSN=postgresql://stephen:lj*123NM@yesod-postgres-server:5432/stephen
+export YESOD_POSTGRES_DSN=postgresql://stephen:<redacted-rotate-required>@yesod-postgres-server:5432/stephen
 yesod codefactory-dispatch status
 
 # Restart service

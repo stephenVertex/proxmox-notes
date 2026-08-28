@@ -153,7 +153,7 @@ psql -U stephen -d stephen -h yesod-postgres-server
 psql -U stephen -d stephen -h 100.115.10.68
 ```
 
-Password: `lj*123NM`
+Password: `<redacted-rotate-required>`
 
 ## Alternatives Considered
 - **Manual IP reservation on router**: DHCP reservation works but isn't encrypted and doesn't work across networks

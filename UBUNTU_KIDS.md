@@ -138,7 +138,7 @@ VM `jeffrey-dev` (101) is configured on `seykhl`.
 
 ### User
 - **Username:** stephen
-- **Password:** lj*123NM
+- **Password:** <redacted-rotate-required>
 - **SSH:** Passwordless key-based auth configured by user
 - **Sudo:** yes
 

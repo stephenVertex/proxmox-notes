@@ -208,7 +208,7 @@ sudo systemctl restart nginx
 ### Database Connection Issues
 ```bash
 # Test PostgreSQL connection
-psql postgresql://stephen:lj*123NM@yesod-postgres-server:5432/stephen -c "SELECT 1"
+psql postgresql://stephen:<redacted-rotate-required>@yesod-postgres-server:5432/stephen -c "SELECT 1"
 
 # Check PostgREST logs
 sudo journalctl -u postgrest.service -n 50

@@ -60,7 +60,7 @@ qm set 102 --ide2 local-lvm:cloudinit
 
 # Configure cloud-init user data (NO SSH key injection - user will handle manually)
 qm set 102 --ciuser stephen
-qm set 102 --cipassword lj*123NM
+qm set 102 --cipassword <redacted-rotate-required>
 
 # Set IP (DHCP)
 qm set 102 --ipconfig0 ip=dhcp
@@ -107,7 +107,7 @@ psql --version
 sudo -u postgres psql
 
 # Create database and user for applications
-CREATE USER stephen WITH PASSWORD 'lj*123NM' CREATEDB;
+CREATE USER stephen WITH PASSWORD '<redacted-rotate-required>' CREATEDB;
 CREATE DATABASE stephen OWNER stephen;
 \q
 
@@ -135,7 +135,7 @@ sudo systemctl restart sshd
 
 ### 6. Verification Checklist
 - [x] VM boots successfully
-- [x] User `stephen` can login via SSH with password `lj*123NM`
+- [x] User `stephen` can login via SSH with password `<redacted-rotate-required>`
 - [x] `sudo` works for stephen
 - [x] PostgreSQL service is running (PostgreSQL 17.10)
 - [x] `psql` connects as stephen
@@ -201,7 +201,7 @@ host    all             all             100.115.10.68/32        scram-sha-256
 | **Port** | `5432` |
 | **Database** | `stephen` |
 | **Username** | `stephen` |
-| **Password** | `lj*123NM` |
+| **Password** | `<redacted-rotate-required>` |
 | **SSL** | `disable` (Tailscale encrypts the tunnel) |
 
 ### psql
@@ -212,17 +212,17 @@ psql -U stephen -d stephen -h yesod-postgres-server
 ### Connection Strings
 **Python:**
 ```python
-DATABASE_URL = "postgresql://stephen:lj*123NM@yesod-postgres-server:5432/stephen"
+DATABASE_URL = "postgresql://stephen:<redacted-rotate-required>@yesod-postgres-server:5432/stephen"
 ```
 
 **Node.js:**
 ```javascript
-{ host: 'yesod-postgres-server', port: 5432, database: 'stephen', user: 'stephen', password: 'lj*123NM' }
+{ host: 'yesod-postgres-server', port: 5432, database: 'stephen', user: 'stephen', password: '<redacted-rotate-required>' }
 ```
 
 **Go:**
 ```go
-"host=yesod-postgres-server port=5432 user=stephen password=lj*123NM dbname=stephen sslmode=disable"
+"host=yesod-postgres-server port=5432 user=stephen password=<redacted-rotate-required> dbname=stephen sslmode=disable"
 ```
 
 ### Other Databases

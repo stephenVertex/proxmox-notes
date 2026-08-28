@@ -44,11 +44,12 @@ The guest uses the `America/Los_Angeles` timezone. Important paths are:
 | `/opt/yesod-semantic-graph/current` | Relative symlink to the active release |
 | `/etc/yesod-semantic-graph/pipeline.env` | Protected pipeline-state and local path settings |
 | `/etc/yesod-semantic-graph/source.env` | Protected synthetic fixture read-only DSN |
+| `/etc/yesod-semantic-graph/source-production.env` | Staged production reader DSN; unusable until its role and network path pass audit |
 | `/etc/yesod-semantic-graph/neo4j.env` | Protected trusted-TLS projector credential |
 | `/var/lib/yesod-semantic-graph` | Service-account state and current artifact staging |
 | `/var/backups/yesod-semantic-graph` | Local PostgreSQL custom-format dumps |
 
-The active application release is git commit `50217d2b01a8`. Application
+The active application release is git commit `e0e1d498d1c8`. Application
 deployment, synthetic acceptance, and migration commands are canonical in that
 repository's `docs/deployment.md`.
 
@@ -59,8 +60,15 @@ database is `yesod_semantic_graph`, schema `pipeline`, and the matching Linux
 and PostgreSQL account is `yesod_semantic_graph_pipeline`.
 
 The role has no password and uses local Unix-socket peer authentication. It is
-not a superuser and cannot create databases, roles, or replicas. No production
-Yesod source credential is present on this VM.
+not a superuser and cannot create databases, roles, or replicas.
+
+A generated credential for the proposed production login
+`yesod_semantic_graph_source_reader` is staged in
+`/etc/yesod-semantic-graph/source-production.env`. The file is
+`root:yesod_semantic_graph_pipeline` mode `0640`; its non-secret fields target
+database `stephen` on `yesod-postgres-server`. The source role does not yet
+exist, so the credential is not active and must not be treated as a successful
+source connection.
 
 The separate `yesod_fixture` database contains only the committed sanitized
 acceptance fixture. Login `yesod_semantic_graph_fixture_reader` has
@@ -72,6 +80,33 @@ The forward-only Alembic revision `0001_pipeline_ledger` is applied. It owns
 six application tables plus its schema-local version table. Do not drop this
 database just because Neo4j is disposable: the PostgreSQL ledger owns pipeline
 resumability, lineage, and promotion reports.
+
+## Production source connectivity
+
+The production catalog runs on VM 102 (`yesod-postgres-server`) on Proxmox host
+`seykhl`. PostgreSQL listens on the server's Tailscale address
+`100.115.10.68:5432`, not its LAN address `192.168.0.155:5432`. Live preflight
+from VM 121 on 2026-08-27 found:
+
+- `192.168.0.155:5432`: connection refused;
+- `100.115.10.68:5432`: unreachable without a tailnet route;
+- the dedicated source-reader PostgreSQL role: absent.
+
+Tailscale 1.102.3 is installed from its stable Debian 13 repository on VM 121,
+and `tailscaled` is enabled. Tailnet enrollment is the remaining transport
+step. Keep MagicDNS acceptance disabled on this guest and use the explicit
+source Tailscale address in its protected DSN to avoid the LAN hostname
+collision.
+
+After tailnet enrollment, verify TCP reachability first. A source DBA must then
+create only the restricted reader role described in the application
+repository's `docs/source-boundary.md`, using the already staged password via a
+secure channel. `ysg source-audit` must pass before any note row is read.
+
+The current production application password was also found in tracked
+infrastructure Markdown. The plaintext copies are redacted in the current
+tree, but the password remains in git history and must be rotated by the source
+owner. Do not reuse that application identity for the semantic graph.
 
 ## Neo4j dependency
 
@@ -131,6 +166,10 @@ credentials or configuration.
 
 ## Remaining infrastructure follow-ups
 
+- Complete VM 121 tailnet enrollment and restrict its ACL to the required
+  `yesod-postgres-server:5432` path.
+- Have the source DBA create `yesod_semantic_graph_source_reader`, set the
+  staged password, and rotate the exposed production application password.
 - Choose the final NAS path/mount for content-addressed artifacts before a
   production backfill. The current VM-local path is suitable only for the M1
   structured-spine work.
