@@ -17,6 +17,7 @@ authoritative Yesod source data.
 | Resources | 4 vCPU, 8 GiB RAM, 64 GiB thin disk on redundant `vmdata` |
 | LAN IP | Static `192.168.0.172/24`, gateway `192.168.0.1` |
 | MAC | `BC:24:11:B8:5D:94` |
+| Router reservation | Confirmed complete 2026-08-27 |
 | Start policy | Starts with host; startup order 30; guest agent enabled |
 | Protection | Proxmox deletion protection enabled |
 | Tags | `yesod`, `semantic-graph` |
@@ -130,9 +131,6 @@ credentials or configuration.
 
 ## Remaining infrastructure follow-ups
 
-- Reserve or exclude `192.168.0.172` for MAC `BC:24:11:B8:5D:94` in the
-  router. The address was inactive and absent from the 2026-07-21 reservation
-  export when VM 121 was created, but the router itself was not changed.
 - Choose the final NAS path/mount for content-addressed artifacts before a
   production backfill. The current VM-local path is suitable only for the M1
   structured-spine work.
