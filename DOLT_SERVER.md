@@ -2,11 +2,12 @@
 
 > **Phased migration status (2026-08-27):** This VM remains the production
 > write primary. An isolated replacement/standby base now exists as VM 100 on
-> `sefer` at `192.168.0.160`, but it has no live replication, cluster
-> configuration, or running SQL service; its data is only an offline rehearsal
-> copy. See [DOLT_STANDBY.md](DOLT_STANDBY.md).
-> Do not restart or reconfigure this primary while the current complex job is
-> active.
+> `sefer` at `192.168.0.160`. A fresh cold seed was taken during an authorized
+> pause on 2026-08-27 and passed full validation, but it has no live
+> replication, cluster configuration, or running SQL service. Production was
+> restarted unchanged on Dolt 2.1.10 after the seed. See
+> [DOLT_STANDBY.md](DOLT_STANDBY.md). Do not upgrade or reconfigure this primary
+> outside an explicit maintenance window.
 
 ## Overview
 `doltsvr` (VMID 100) is an Ubuntu VM on Proxmox host `seykhl` running the Dolt SQL server. This document covers the backup setup and configuration. (Renamed in Proxmox from `dolt-server` to `doltsvr` on 2026-06-09 to match /etc/hosts, SSH config, and the guest hostname.)

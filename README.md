@@ -48,6 +48,7 @@ and have the Proxmox guest agent enabled in their VM configuration.
 | 120 | `makor-runner-docker-1` | running | 6 | 16 GiB | 120 GiB | 192.168.0.171 | Dedicated GitLab Docker group runner |
 | 121 | `yesod-semantic-graph` | running | 4 | 8 GiB | 64 GiB | 192.168.0.172 | Semantic graph controller and private pipeline PostgreSQL state |
 | 122 | `doltsvr-rehearsal-20260824` | stopped | 4 | 24 GiB | 64 GiB | — | Protected offline restore of the August 24 production snapshot; NIC removed |
+| 123 | `doltsvr-fresh-seed-20260827` | stopped | 4 | 24 GiB | 64 GiB | — | Protected offline source for the fresh Dolt seed; NIC removed |
 | 201 | `yesod-runner-4-codex` | stopped | 16 | 48 GiB | 64 GiB | — | Codex runner image |
 | 202 | `yesod-runner-5-claude` | stopped | 16 | 48 GiB | 64 GiB | — | Claude runner image |
 | 203 | `yesod-runner-6-opencode-fw` | stopped | 16 | 48 GiB | 64 GiB | — | OpenCode firewall runner image |
@@ -63,6 +64,9 @@ There are no LXC containers on `sefer`.
 | `vmdata` | ZFS mirror, 2 × 1 TB Samsung 970 EVO Plus NVMe SSDs | 928 GB total; 69.7 GB allocated; healthy | All VM disks |
 | `scratch` | Single 1 TB Seagate IronWolf SATA SSD | 899 GiB available; **no redundancy**; ZFS `zstd` compression and autotrim | Proxmox VM/CT disks for disposable workloads; host datasets at `/scratch/datasets` |
 | `nas-backups` | NAS directory storage | 31.4 TiB total; 14.5 TiB used; 16.9 TiB free | Proxmox backups |
+
+Sefer reaches `nas-backups` over 10 GbE. A 2026-08-27 post-seed Dolt VM backup
+transferred its sparse 100 GiB virtual disk in 83 seconds.
 
 `scratch` must never contain the sole copy of important data, production
 state, or a workload that cannot be recreated. Its SSD passed SMART health
