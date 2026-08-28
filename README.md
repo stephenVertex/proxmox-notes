@@ -30,11 +30,12 @@ pct list
 
 All production service disks are on the redundant `vmdata` ZFS pool. The
 separate non-redundant `scratch` pool is available for disposable VM/CT disks
-and host datasets. All eleven running service VMs are configured to start at boot
+and host datasets. All twelve running service VMs are configured to start at boot
 and have the Proxmox guest agent enabled in their VM configuration.
 
 | VMID | Name | State | vCPU | RAM | Disk | LAN IP | Purpose |
 |---:|---|---|---:|---:|---:|---|---|
+| 100 | `doltsvr-sefer` | running | 4 | 24 GiB | 100 GiB | 192.168.0.160 | Isolated Dolt standby and migration target; SQL disabled |
 | 103 | `seykhl-actions-runner` | running | 2 | 4 GiB | 30 GiB | 192.168.0.154 | Five self-hosted GitHub Actions runners |
 | 105 | `aicoe-social-runner` | running | 2 | 2 GiB | 20 GiB | 192.168.0.147 | Social-engagement monitor cron runner |
 | 107 | `n8n-server` | running | 2 | 4 GiB | 30 GiB | 192.168.0.145 | n8n automation |
@@ -46,6 +47,7 @@ and have the Proxmox guest agent enabled in their VM configuration.
 | 119 | `makor` | running | 8 | 24 GiB | 80 GiB OS + 300 GiB data | 192.168.0.170 | GitLab EE (Free tier) via Cloudflare Tunnel |
 | 120 | `makor-runner-docker-1` | running | 6 | 16 GiB | 120 GiB | 192.168.0.171 | Dedicated GitLab Docker group runner |
 | 121 | `yesod-semantic-graph` | running | 4 | 8 GiB | 64 GiB | 192.168.0.172 | Semantic graph controller and private pipeline PostgreSQL state |
+| 122 | `doltsvr-rehearsal-20260824` | stopped | 4 | 24 GiB | 64 GiB | — | Protected offline restore of the August 24 production snapshot; NIC removed |
 | 201 | `yesod-runner-4-codex` | stopped | 16 | 48 GiB | 64 GiB | — | Codex runner image |
 | 202 | `yesod-runner-5-claude` | stopped | 16 | 48 GiB | 64 GiB | — | Claude runner image |
 | 203 | `yesod-runner-6-opencode-fw` | stopped | 16 | 48 GiB | 64 GiB | — | OpenCode firewall runner image |
@@ -67,8 +69,8 @@ state, or a workload that cannot be recreated. Its SSD passed SMART health
 checks before it was repurposed on 2026-08-27.
 
 The enabled `sefer-light-services` job creates `zstd` snapshot backups to
-`nas-backups` daily at 03:30 for VMs 103, 105, 107, 113, 114, 116, 117, 118,
-119, and 120. Retention is 7 daily, 4 weekly, and 3 monthly backups. This
+`nas-backups` daily at 03:30 for VMs 100, 103, 105, 107, 113, 114, 116, 117,
+118, 119, and 120. Retention is 7 daily, 4 weekly, and 3 monthly backups. This
 protects the VMs; stateful services should still have application-consistent
 recovery procedures (especially SigNoz, Neo4j, and GitLab).
 
@@ -80,6 +82,7 @@ in-guest PostgreSQL logical backup runs at 04:15 Pacific.
 
 | Service | Documentation |
 |---|---|
+| Dolt primary and Sefer standby (VM 100) | [DOLT_SERVER.md](DOLT_SERVER.md), [DOLT_STANDBY.md](DOLT_STANDBY.md) |
 | GitHub Actions runner (VM 103) | [SEYKHL_ACTIONS_RUNNER.md](SEYKHL_ACTIONS_RUNNER.md) |
 | AICOE social runner (VM 105) | [AICOE_SOCIAL_RUNNER.md](AICOE_SOCIAL_RUNNER.md) |
 | n8n (VM 107) | [N8N_SERVER.md](N8N_SERVER.md) |
@@ -105,3 +108,6 @@ in-guest PostgreSQL logical backup runs at 04:15 Pacific.
   as a historical procurement record.
 - VM 121 uses static `192.168.0.172` with MAC `BC:24:11:B8:5D:94`; add the
   router reservation or exclude `.172` from its DHCP pool.
+- VM 100 uses reserved static `192.168.0.160` with MAC
+  `BC:24:11:69:D9:AB`. It remains `doltsvr-sefer` until the controlled Dolt
+  cutover; do not move the production `doltsvr` identity early.

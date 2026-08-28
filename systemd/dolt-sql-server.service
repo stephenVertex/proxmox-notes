@@ -1,0 +1,25 @@
+[Unit]
+Description=Dolt SQL Server
+Documentation=https://www.dolthub.com/docs/sql-reference/server/replication/
+Wants=network-online.target
+After=network-online.target
+ConditionPathExists=/etc/dolt/config.yaml
+
+[Service]
+Type=simple
+User=dolt
+Group=dolt
+WorkingDirectory=/home/doltdb/databases/doltsvr
+ExecStart=/usr/local/bin/dolt sql-server --config /etc/dolt/config.yaml
+Restart=on-failure
+RestartSec=5s
+TimeoutStopSec=120
+LimitNOFILE=65536
+UMask=0027
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ReadWritePaths=/home/doltdb
+
+[Install]
+WantedBy=multi-user.target

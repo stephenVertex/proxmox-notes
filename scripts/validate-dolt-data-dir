@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+
+set -uo pipefail
+
+if [[ $# -ne 1 ]]; then
+  echo "usage: $0 DOLT_SERVER_DATA_DIR" >&2
+  exit 64
+fi
+
+data_dir=${1%/}
+
+if [[ ! -d "$data_dir" ]]; then
+  echo "data directory does not exist: $data_dir" >&2
+  exit 66
+fi
+
+repositories=()
+
+if [[ -d "$data_dir/.dolt" ]]; then
+  repositories+=("$data_dir")
+fi
+
+for candidate in "$data_dir"/*; do
+  if [[ -d "$candidate/.dolt" ]]; then
+    repositories+=("$candidate")
+  fi
+done
+
+if [[ ${#repositories[@]} -eq 0 ]]; then
+  echo "no Dolt repositories found in: $data_dir" >&2
+  exit 65
+fi
+
+failures=0
+
+for repository in "${repositories[@]}"; do
+  database=$(basename "$repository")
+  printf '\n==> validating %s\n' "$database"
+
+  if (cd "$repository" && dolt fsck); then
+    printf 'PASS %s\n' "$database"
+  else
+    printf 'FAIL %s\n' "$database" >&2
+    failures=$((failures + 1))
+  fi
+done
+
+printf '\nValidated %d Dolt repositories; failures: %d\n' \
+  "${#repositories[@]}" "$failures"
+
+if [[ $failures -ne 0 ]]; then
+  exit 1
+fi
