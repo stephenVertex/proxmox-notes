@@ -47,6 +47,9 @@ start or contact production.
 
 ## Migration phases
 
+The executable activation and rollback checklist is maintained in
+[DOLT_LIVE_REPLICA_PLAN.md](DOLT_LIVE_REPLICA_PLAN.md).
+
 1. **Isolated base — complete.** Provision and harden the VM, pin Dolt 2.3.1,
    establish its reserved address, and keep all Dolt network services off.
 2. **Restore and upgrade rehearsal — complete for the August 24 snapshot.** A

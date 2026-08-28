@@ -86,7 +86,7 @@ in-guest PostgreSQL logical backup runs at 04:15 Pacific.
 
 | Service | Documentation |
 |---|---|
-| Dolt primary and Sefer standby (VM 100) | [DOLT_SERVER.md](DOLT_SERVER.md), [DOLT_STANDBY.md](DOLT_STANDBY.md) |
+| Dolt primary and Sefer standby (VM 100) | [DOLT_SERVER.md](DOLT_SERVER.md), [DOLT_STANDBY.md](DOLT_STANDBY.md), [DOLT_LIVE_REPLICA_PLAN.md](DOLT_LIVE_REPLICA_PLAN.md) |
 | GitHub Actions runner (VM 103) | [SEYKHL_ACTIONS_RUNNER.md](SEYKHL_ACTIONS_RUNNER.md) |
 | AICOE social runner (VM 105) | [AICOE_SOCIAL_RUNNER.md](AICOE_SOCIAL_RUNNER.md) |
 | n8n (VM 107) | [N8N_SERVER.md](N8N_SERVER.md) |
