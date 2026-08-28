@@ -1,6 +1,6 @@
 # Yesod Semantic Graph controller VM
 
-**Last verified:** 2026-08-27
+**Last verified:** 2026-08-28
 
 ## Overview
 
@@ -44,7 +44,7 @@ The guest uses the `America/Los_Angeles` timezone. Important paths are:
 | `/opt/yesod-semantic-graph/current` | Relative symlink to the active release |
 | `/etc/yesod-semantic-graph/pipeline.env` | Protected pipeline-state and local path settings |
 | `/etc/yesod-semantic-graph/source.env` | Protected synthetic fixture read-only DSN |
-| `/etc/yesod-semantic-graph/source-production.env` | Staged production reader DSN; unusable until its role and network path pass audit |
+| `/etc/yesod-semantic-graph/source-production.env` | Dedicated audited production reader DSN over Tailscale |
 | `/etc/yesod-semantic-graph/neo4j.env` | Protected trusted-TLS projector credential |
 | `/var/lib/yesod-semantic-graph` | Service-account state and current artifact staging |
 | `/var/backups/yesod-semantic-graph` | Local PostgreSQL custom-format dumps |
@@ -62,13 +62,14 @@ and PostgreSQL account is `yesod_semantic_graph_pipeline`.
 The role has no password and uses local Unix-socket peer authentication. It is
 not a superuser and cannot create databases, roles, or replicas.
 
-A generated credential for the proposed production login
-`yesod_semantic_graph_source_reader` is staged in
+A generated credential for the production login
+`yesod_semantic_graph_source_reader` is installed in
 `/etc/yesod-semantic-graph/source-production.env`. The file is
 `root:yesod_semantic_graph_pipeline` mode `0640`; its non-secret fields target
-database `stephen` on `yesod-postgres-server`. The source role does not yet
-exist, so the credential is not active and must not be treated as a successful
-source connection.
+database `stephen` at the source's explicit Tailscale address. The role passes
+the semantic-graph capability audit: required table reads, no writes or
+database/schema creation, no elevated attributes, no role memberships, and a
+read-only transaction.
 
 The separate `yesod_fixture` database contains only the committed sanitized
 acceptance fixture. Login `yesod_semantic_graph_fixture_reader` has
@@ -86,27 +87,37 @@ resumability, lineage, and promotion reports.
 The production catalog runs on VM 102 (`yesod-postgres-server`) on Proxmox host
 `seykhl`. PostgreSQL listens on the server's Tailscale address
 `100.115.10.68:5432`, not its LAN address `192.168.0.155:5432`. Live preflight
-from VM 121 on 2026-08-27 found:
+from VM 121 initially found:
 
 - `192.168.0.155:5432`: connection refused;
-- `100.115.10.68:5432`: unreachable without a tailnet route;
-- the dedicated source-reader PostgreSQL role: absent.
+- `100.115.10.68:5432`: unreachable without a tailnet route.
 
 Tailscale 1.102.3 is installed from its stable Debian 13 repository on VM 121,
-and `tailscaled` is enabled. Tailnet enrollment is the remaining transport
-step. Keep MagicDNS acceptance disabled on this guest and use the explicit
-source Tailscale address in its protected DSN to avoid the LAN hostname
-collision.
+`tailscaled` is enabled, and the guest is enrolled. MagicDNS acceptance remains
+disabled on this guest; the protected DSN uses the explicit source Tailscale
+address to avoid the LAN hostname collision.
 
-After tailnet enrollment, verify TCP reachability first. A source DBA must then
-create only the restricted reader role described in the application
-repository's `docs/source-boundary.md`, using the already staged password via a
-secure channel. `ysg source-audit` must pass before any note row is read.
+The source DBA created only the restricted reader role described in the
+application repository's `docs/source-boundary.md`. TCP reachability and
+`ysg source-audit` both pass.
 
 The current production application password was also found in tracked
 infrastructure Markdown. The plaintext copies are redacted in the current
 tree, but the password remains in git history and must be rotated by the source
 owner. Do not reuse that application identity for the semantic graph.
+
+## Production plan proof
+
+The reviewed, mutation-free production report is retained outside git at
+`/var/lib/yesod-semantic-graph/reviews/production-plan-20260828T044213Z.json`.
+It is owned by `yesod_semantic_graph_pipeline`, mode `0600`, with SHA-256
+`9a22289549f2cfaab92e00a2aee184c62787173c642fdd6aeecd274a834495df`.
+
+The report observed 2,115 source units and produced a candidate with 5,945
+nodes, 5,944 edges, 16,118 evidence assertions, and graph digest
+`ddf27337487c46979c86a4215f29e251ff560f8a1907f7ab7e5be05caa534c78`.
+A repeat produced identical counts and digest. No artifact, pipeline-state, or
+Neo4j mutation occurred; Neo4j remains the six-node synthetic graph.
 
 ## Neo4j dependency
 
@@ -166,10 +177,10 @@ credentials or configuration.
 
 ## Remaining infrastructure follow-ups
 
-- Complete VM 121 tailnet enrollment and restrict its ACL to the required
+- Restrict the VM 121 tailnet ACL to the required
   `yesod-postgres-server:5432` path.
-- Have the source DBA create `yesod_semantic_graph_source_reader`, set the
-  staged password, and rotate the exposed production application password.
+- Rotate the exposed production application password; it remains in git
+  history even though the current tracked copies are redacted.
 - Choose the final NAS path/mount for content-addressed artifacts before a
   production backfill. The current VM-local path is suitable only for the M1
   structured-spine work.
