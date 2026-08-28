@@ -28,9 +28,10 @@ pct list
 
 ## Virtual machines
 
-All listed disks are on the `vmdata` ZFS pool. All ten running service VMs
-are configured to start at boot and have the Proxmox guest agent enabled in
-their VM configuration.
+All production service disks are on the redundant `vmdata` ZFS pool. The
+separate non-redundant `scratch` pool is available for disposable VM/CT disks
+and host datasets. All ten running service VMs are configured to start at boot
+and have the Proxmox guest agent enabled in their VM configuration.
 
 | VMID | Name | State | vCPU | RAM | Disk | LAN IP | Purpose |
 |---:|---|---|---:|---:|---:|---|---|
@@ -57,10 +58,12 @@ There are no LXC containers on `sefer`.
 |---|---|---|---|
 | `rpool` | ZFS mirror, 2 × 240 GB Intel SATA SSDs | 220 GB total; 2.65 GB allocated; healthy | Proxmox boot/system storage (`local`, `local-zfs`) |
 | `vmdata` | ZFS mirror, 2 × 1 TB Samsung 970 EVO Plus NVMe SSDs | 928 GB total; 59.6 GB allocated; healthy | All VM disks |
+| `scratch` | Single 1 TB Seagate IronWolf SATA SSD | 899 GiB available; **no redundancy**; ZFS `zstd` compression and autotrim | Proxmox VM/CT disks for disposable workloads; host datasets at `/scratch/datasets` |
 | `nas-backups` | NAS directory storage | 31.4 TiB total; 14.5 TiB used; 16.9 TiB free | Proxmox backups |
 
-One 1 TB Seagate IronWolf SATA SSD is visible to the host but is not a member
-of either reported ZFS pool.
+`scratch` must never contain the sole copy of important data, production
+state, or a workload that cannot be recreated. Its SSD passed SMART health
+checks before it was repurposed on 2026-08-27.
 
 The enabled `sefer-light-services` job creates `zstd` snapshot backups to
 `nas-backups` daily at 03:30 for VMs 103, 105, 107, 113, 114, 116, 117, 118,
