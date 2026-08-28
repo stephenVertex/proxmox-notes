@@ -30,7 +30,7 @@ pct list
 
 All production service disks are on the redundant `vmdata` ZFS pool. The
 separate non-redundant `scratch` pool is available for disposable VM/CT disks
-and host datasets. All ten running service VMs are configured to start at boot
+and host datasets. All eleven running service VMs are configured to start at boot
 and have the Proxmox guest agent enabled in their VM configuration.
 
 | VMID | Name | State | vCPU | RAM | Disk | LAN IP | Purpose |
@@ -45,6 +45,7 @@ and have the Proxmox guest agent enabled in their VM configuration.
 | 118 | `neo4j` | running | 4 | 16 GiB | 100 GiB | 192.168.0.167 | Neo4j graph database |
 | 119 | `makor` | running | 8 | 24 GiB | 80 GiB OS + 300 GiB data | 192.168.0.170 | GitLab EE (Free tier) via Cloudflare Tunnel |
 | 120 | `makor-runner-docker-1` | running | 6 | 16 GiB | 120 GiB | 192.168.0.171 | Dedicated GitLab Docker group runner |
+| 121 | `yesod-semantic-graph` | running | 4 | 8 GiB | 64 GiB | 192.168.0.172 | Semantic graph controller and private pipeline PostgreSQL state |
 | 201 | `yesod-runner-4-codex` | stopped | 16 | 48 GiB | 64 GiB | — | Codex runner image |
 | 202 | `yesod-runner-5-claude` | stopped | 16 | 48 GiB | 64 GiB | — | Claude runner image |
 | 203 | `yesod-runner-6-opencode-fw` | stopped | 16 | 48 GiB | 64 GiB | — | OpenCode firewall runner image |
@@ -57,7 +58,7 @@ There are no LXC containers on `sefer`.
 | Storage | Type | Live state at verification | Use |
 |---|---|---|---|
 | `rpool` | ZFS mirror, 2 × 240 GB Intel SATA SSDs | 220 GB total; 2.65 GB allocated; healthy | Proxmox boot/system storage (`local`, `local-zfs`) |
-| `vmdata` | ZFS mirror, 2 × 1 TB Samsung 970 EVO Plus NVMe SSDs | 928 GB total; 59.6 GB allocated; healthy | All VM disks |
+| `vmdata` | ZFS mirror, 2 × 1 TB Samsung 970 EVO Plus NVMe SSDs | 928 GB total; 69.7 GB allocated; healthy | All VM disks |
 | `scratch` | Single 1 TB Seagate IronWolf SATA SSD | 899 GiB available; **no redundancy**; ZFS `zstd` compression and autotrim | Proxmox VM/CT disks for disposable workloads; host datasets at `/scratch/datasets` |
 | `nas-backups` | NAS directory storage | 31.4 TiB total; 14.5 TiB used; 16.9 TiB free | Proxmox backups |
 
@@ -70,6 +71,10 @@ The enabled `sefer-light-services` job creates `zstd` snapshot backups to
 119, and 120. Retention is 7 daily, 4 weekly, and 3 monthly backups. This
 protects the VMs; stateful services should still have application-consistent
 recovery procedures (especially SigNoz, Neo4j, and GitLab).
+
+The separate `yesod-semantic-graph` job snapshots only VM 121 to `nas-backups`
+daily at 04:30 with the same 7 daily, 4 weekly, and 3 monthly retention. Its
+in-guest PostgreSQL logical backup runs at 04:15 Pacific.
 
 ## Service documentation
 
@@ -84,6 +89,7 @@ recovery procedures (especially SigNoz, Neo4j, and GitLab).
 | SigNoz observability (VM 117) | [OBS_VULTR.md](OBS_VULTR.md) |
 | Neo4j (VM 118) | [NEO4J.md](NEO4J.md) |
 | GitLab and GitLab Runner (VMs 119/120) | [GITLAB.md](GITLAB.md) |
+| Yesod Semantic Graph (VM 121) | [YESOD_SEMANTIC_GRAPH.md](YESOD_SEMANTIC_GRAPH.md) |
 
 ## Operational notes
 
@@ -97,3 +103,5 @@ recovery procedures (especially SigNoz, Neo4j, and GitLab).
 - The current Dell-host deployment supersedes the planned migration in
   [DELL_POWEREDGE_NEW_PROXMOX.md](DELL_POWEREDGE_NEW_PROXMOX.md), which is kept
   as a historical procurement record.
+- VM 121 uses static `192.168.0.172` with MAC `BC:24:11:B8:5D:94`; add the
+  router reservation or exclude `.172` from its DHCP pool.
