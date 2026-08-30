@@ -1,6 +1,6 @@
 # Yesod Semantic Graph controller VM
 
-**Last verified:** 2026-08-28
+**Last verified:** 2026-08-30
 
 ## Overview
 
@@ -49,7 +49,7 @@ The guest uses the `America/Los_Angeles` timezone. Important paths are:
 | `/var/lib/yesod-semantic-graph` | Service-account state and current artifact staging |
 | `/var/backups/yesod-semantic-graph` | Local PostgreSQL custom-format dumps |
 
-The active application release is git commit `e0e1d498d1c8`. Application
+The active application release is git commit `dac21c562713`. Application
 deployment, synthetic acceptance, and migration commands are canonical in that
 repository's `docs/deployment.md`.
 
@@ -113,11 +113,13 @@ The reviewed, mutation-free production report is retained outside git at
 It is owned by `yesod_semantic_graph_pipeline`, mode `0600`, with SHA-256
 `9a22289549f2cfaab92e00a2aee184c62787173c642fdd6aeecd274a834495df`.
 
-The report observed 2,115 source units and produced a candidate with 5,945
+This was the pre-projection review report. It observed 2,115 source units and
+produced a candidate with 5,945
 nodes, 5,944 edges, 16,118 evidence assertions, and graph digest
 `ddf27337487c46979c86a4215f29e251ff560f8a1907f7ab7e5be05caa534c78`.
-A repeat produced identical counts and digest. No artifact, pipeline-state, or
-Neo4j mutation occurred; Neo4j remains the six-node synthetic graph.
+A repeat produced identical counts and digest. That report itself caused no
+artifact, pipeline-state, or Neo4j mutation; later guarded M2 and M3
+acceptances superseded the six-node synthetic projection.
 
 ## Neo4j dependency
 
@@ -133,6 +135,12 @@ system trust store. `/etc/yesod-semantic-graph/neo4j.env` holds the dedicated
 identity cannot be privilege-restricted inside Neo4j; effective scope comes
 from the single-purpose disposable VM and owner-tagged projector code.
 
+For the accepted M3 graph, VM 118 uses 6 GiB heap and 6 GiB page cache. The
+prior 4 GiB/8 GiB Compose configuration is preserved at
+`/opt/neo4j/compose.yaml.pre-m3-memory-20260830`. This narrow rebalance was
+needed after a single large projection transaction filled the default
+transaction-memory pool; the failed transaction rolled back cleanly.
+
 ## Synthetic rebuild proof
 
 The live sanitized run produced active epoch
@@ -143,6 +151,37 @@ references. Acceptance deleted all 7 owned nodes (including epoch metadata),
 rebuilt, and obtained the identical digest. The PostgreSQL ledger contains one
 source unit, checkpoint, job, artifact, active epoch, and passing promotion
 report. Raw fixture body/comment text is absent from the mode-`0600` artifact.
+
+## Production M3 rebuild proof
+
+The active epoch is `epoch:ff074c8537e13d748f2cab6b`, produced by release
+`dac21c562713` from 24,077 immutable source units and eight checkpoints. It
+contains 138,879 domain nodes, 170,443 domain edges, and 389,993 resolved
+evidence assertions. Its canonical digest is:
+
+```text
+67b8430f3b307ff0e678ca03a28c46d2943038a4def7858fe608aa03c045d9c9
+```
+
+The graph includes the M2 structured spine plus fresh committed-object code
+snapshots for `yesod-aicoe` and `aicoe-bot`: 961 modules, 21,921
+functions/symbols, 2,598 exact imports, 31,655 exact calls, 37,721
+commit-to-current-symbol blame links, and two Git-proven renames.
+
+Projector v3 deletes and creates in committed batches of 1,000. Full acceptance
+is therefore a deliberate read-only maintenance window: readers can observe an
+empty or partial owned graph until the second verified build is promoted. The
+retained transient unit `ysg-m3-acceptance-r4.service` ran from 15:29:06 to
+15:35:20 Pacific, peaked at 3.5 GiB controller memory, deleted 138,880 owned
+nodes including epoch metadata, built twice to the same digest, and wrote
+passing report `promotion-report:57cd8fac22a11c1abf20a0a0`.
+
+Protected artifacts are outside git:
+
+```text
+/var/lib/yesod-semantic-graph/artifacts/graph_envelope/39/39c6c7018a24c9cb4d592b082a51c767d4afe34bfaf7ff19099536553dedd630.json
+/var/lib/yesod-semantic-graph/artifacts/code-manifest/a7/a79f4a79d040c697e03cfe5f3deffbd62e180320843abaa4713d66c283d29c2e.json
+```
 
 ## Backups
 
@@ -182,7 +221,7 @@ credentials or configuration.
 - Rotate the exposed production application password; it remains in git
   history even though the current tracked copies are redacted.
 - Choose the final NAS path/mount for content-addressed artifacts before a
-  production backfill. The current VM-local path is suitable only for the M1
-  structured-spine work.
+  production corpus backfill. The current VM-local path is sufficient for the
+  accepted deterministic M1–M3 artifacts, not corpus-scale M4/M5 payloads.
 - Neo4j Browser remains plaintext HTTP on the trusted LAN. Do not expose VM 118
   or VM 121 to an untrusted network without a firewall review.
