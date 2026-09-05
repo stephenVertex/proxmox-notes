@@ -64,7 +64,7 @@ Coverage follow-up: `proxmox-uev`.
 | GitLab | `gitlab-app-backup.timer` at 01:30 Pacific; success, exit 0, finished 2026-09-05 01:31 | Restore rehearsal not repeated |
 | Semantic graph pipeline PostgreSQL | `yesod-semantic-graph-backup.timer` at 04:15 Pacific; success, exit 0; September 5 custom dump is 6,218,546 bytes | Separate from failed VM pruning |
 | Production PostgreSQL | Guest cron runs `/home/stephen/pg_backup.sh` hourly; 17:00 UTC September 5 dump files and globals exist | Stale host sync does not establish an off-VM copy |
-| Dolt | SQL service active on migrated VM; historic dump workflow requires revalidation | No current dump artifacts established by the initial root-path check |
+| Dolt | Hourly guest dump cron runs, but guest and NAS SQL directories are empty; newest production-specific VM archive found is August 27 | Likely cron PATH failure, stale NAS sync IP, and no scheduled VM124 backup; [full trace](DOLT_SERVER.md#backups) |
 
 A timestamp and nonzero file size are not a restore test. Earlier dated restore
 proofs remain historical evidence in the relevant service document.
