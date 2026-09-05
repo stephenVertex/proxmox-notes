@@ -1,5 +1,12 @@
 # Cloudflare Tunnel Setup for meshcrawler.com
 
+**Historical setup guide, reviewed 2026-09-05.** n8n's tunnel is already
+active, and public HTTPS returned 200 during the live audit. DocuSeal, draw.io
+and GitLab also returned 200. Current deployed service details are in
+[N8N_SERVER.md](N8N_SERVER.md), [DOCUSEAL.md](DOCUSEAL.md),
+[DRAWIO.md](DRAWIO.md) and [GITLAB.md](GITLAB.md); the setup steps below are
+not pending work.
+
 ## Step 1: Create Cloudflare Account & Tunnel
 
 1. Go to [Cloudflare Dashboard](https://dash.cloudflare.com)
@@ -24,7 +31,7 @@
    cloudflared.exe service install YOUR_TOKEN_HERE
    ```
    **Copy that long token string** (it looks like `eyJhIjoi...` and is very long)
-   
+
    **Important:** The token is the secret that connects your VM to Cloudflare. Keep it safe.
 
 ## Step 3: Configure Public Hostnames

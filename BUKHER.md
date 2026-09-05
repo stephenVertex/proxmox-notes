@@ -1,5 +1,12 @@
 # Bukher — RSS Ingestion Node
 
+**Last verified:** 2026-09-05. **Partially operational:** RSSHub returns 200
+on `100.77.145.88:1200`, but Miniflux is stopped (exit 128) and port 8080
+refuses connections. Docker records a startup failure binding
+`100.77.145.88:8080`: `cannot assign requested address`. The staggered-refresh
+timer is active but cannot refresh feeds while Miniflux is down. The VM remains
+on Sefer `vmbr0` at `192.168.0.169`. Follow-up: `proxmox-tdc`. The configured nightly VM backup is not a clean success: September 5 archive transfer completed but NAS pruning failed. See [BACKUPS.md](BACKUPS.md).
+
 ## Overview
 
 **Bukher** is a Proxmox VM that runs **RssHub** + **Miniflux** to ingest RSS feeds (starting with Twitter/X feeds) and store them in a dedicated PostgreSQL database on `yesod-postgres-server`.
@@ -29,7 +36,7 @@
 ## Build Steps
 
 > **Historical provisioning record:** these steps were performed on the
-> retired `seykhl` host and deliberately retain its original storage commands.
+> former service host `seykhl` (now repurposed for g2 gates) and deliberately retain its original storage commands.
 > The current VM configuration is recorded in [Current host and backup status](#current-host-and-backup-status).
 
 ### 1. Create VM on Proxmox
@@ -120,7 +127,7 @@ sudo systemctl restart avahi-daemon
 - **VM backup:** included in the nightly 03:30 `sefer-light-services` snapshot
   job on `nas-backups` (7 daily, 4 weekly, 3 monthly retained)
 - **Guest agent:** configured in the VM but not responding during the
-  2026-08-27 inventory; use SSH or console access until it is repaired.
+  2026-09-05 inventory; use SSH or console access until it is repaired.
 
 ---
 
@@ -152,11 +159,11 @@ services:
     ports:
       - "100.77.145.88:8080:8080"
     environment:
-      - DATABASE_URL=postgres://bukher:bukher2026@100.115.10.68:5432/bukher?sslmode=disable
+      - DATABASE_URL=postgres://bukher:<redacted-rotate-required>@100.115.10.68:5432/bukher?sslmode=disable
       - RUN_MIGRATIONS=1
       - CREATE_ADMIN=0
       - ADMIN_USERNAME=admin
-      - ADMIN_PASSWORD=h14K1SClFMz6Q17TStiOv9KTfWVUQZtv
+      - ADMIN_PASSWORD=<redacted-rotate-required>
       - BASE_URL=https://bukher.tailb4b58.ts.net
       - POLLING_FREQUENCY=30
       - DISABLE_SCHEDULER_SERVICE=1
@@ -181,7 +188,7 @@ networks:
 
 - **URL:** `http://bukher.tailb4b58.ts.net:8080` or `http://100.77.145.88:8080`
 - **Admin Username:** `admin`
-- **Admin Password:** `h14K1SClFMz6Q17TStiOv9KTfWVUQZtv`
+- **Admin Password:** `<redacted-rotate-required>`
 - **Purpose:** Poll RSS feeds, store entries, and provide a web UI/API.
 - **Polling:** Miniflux's built-in batch scheduler is disabled (`DISABLE_SCHEDULER_SERVICE=1`). Feeds are instead
   refreshed individually on a staggered schedule — see [Staggered Feed Refresh](#staggered-feed-refresh) below.
@@ -230,7 +237,7 @@ import time
 import requests
 
 MINIFLUX_URL = "http://100.77.145.88:8080"
-AUTH = ("admin", "h14K1SClFMz6Q17TStiOv9KTfWVUQZtv")
+AUTH = ("admin", "<redacted-rotate-required>")
 CYCLE_MINUTES = 240  # 4 hours
 BUCKET_KEYS = list(string.ascii_lowercase) + ["_"]  # 27 buckets; non a-z first chars fold into "_"
 SLOT_SPACING = CYCLE_MINUTES / len(BUCKET_KEYS)  # ~8.89 min apart
@@ -334,13 +341,13 @@ Bukher uses a dedicated PostgreSQL database on `yesod-postgres-server`.
 | **Port** | `5432` |
 | **Database** | `bukher` |
 | **Username** | `bukher` |
-| **Password** | `bukher2026` |
+| **Password** | `<redacted-rotate-required>` |
 | **SSL** | `disable` (Tailscale encrypts the tunnel) |
 
 ### Connection String
 
 ```
-postgres://bukher:bukher2026@100.115.10.68:5432/bukher?sslmode=disable
+postgres://bukher:<redacted-rotate-required>@100.115.10.68:5432/bukher?sslmode=disable
 ```
 
 ### Backup
@@ -349,7 +356,8 @@ The bukher database is included in the hourly tiered backup on `yesod-postgres-s
 
 - **Script:** `/home/stephen/pg_backup.sh`
 - **Backup file:** `/var/backups/postgresql/bukher-YYYYMMDD-HHMM.sql.gz`
-- **Daily midnight backups** are synced to the NAS under `/mnt/proxmox-backups/yesod-postgres-server/pg_dump/`.
+- The historical midnight NAS sync still targets the old PostgreSQL address.
+  Current off-VM delivery is not established; see [BACKUPS.md](BACKUPS.md).
 
 ---
 
@@ -364,9 +372,10 @@ Feeds are configured in Miniflux. RssHub provides Twitter/X routes such as:
 
 Twitter/X now blocks unauthenticated scraping. RssHub is configured with `TWITTER_AUTH_TOKEN` set to a logged-in X web session's `auth_token` cookie. If feeds stop working, extract a fresh `auth_token` from a Chrome session (Application → Cookies → https://x.com → `auth_token`) and update the environment variable in `docker-compose.yml`, then restart RssHub.
 
-### Current Feeds (53 accounts)
+### Historically recorded feeds (not revalidated 2026-09-05)
 
-All feeds are in the **X/Twitter** category and are polled automatically by Miniflux.
+These were recorded in the **X/Twitter** category. Miniflux is currently
+stopped, so this is not a verified current feed inventory or polling claim.
 
 | Handle | RssHub Feed URL |
 |--------|-----------------|

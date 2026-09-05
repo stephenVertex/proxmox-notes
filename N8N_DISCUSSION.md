@@ -1,5 +1,11 @@
 # N8N Discussion & Setup Notes
 
+**Historical design discussion, reviewed 2026-09-05.** The actual n8n
+service is already deployed on Sefer VM 107 at `192.168.0.145`, version
+2.8.4, with public HTTPS returning 200. See [N8N_SERVER.md](N8N_SERVER.md)
+for the current service and backup observations; this discussion is not a
+record of additional deployed workflows.
+
 ## Date: 2026-06-10
 ## Context: n8n Server Setup on Proxmox
 

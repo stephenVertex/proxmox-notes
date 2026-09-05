@@ -1,5 +1,10 @@
 # opensymphony-base — Test/Experimental Base VM
 
+**Absent from live inventory, 2026-09-05.** No VM 205 or
+`opensymphony-base` exists on Sefer or Seykhl. The following is a historical
+record, not an available template or current boot procedure. Current templates
+are listed in [INVENTORY.md](INVENTORY.md).
+
 ## Overview
 `opensymphony-base` (VMID 205) is a test/template VM on Proxmox host `seykhl`. It is currently stopped and may be used as a base image for other VMs.
 

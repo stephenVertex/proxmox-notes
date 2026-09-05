@@ -1,5 +1,9 @@
 # drawio — Self-hosted drawio (diagrams.net)
 
+**Last verified:** 2026-09-05. Container `drawio` (`jgraph/drawio`) and
+cloudflared are active; local port 8080 and public HTTPS return 200. The VM
+remains on Sefer `vmbr0` at `192.168.0.149`. The configured nightly VM backup is not a clean success: September 5 archive transfer completed but NAS pruning failed. See [BACKUPS.md](BACKUPS.md).
+
 ## Overview
 `drawio` (VMID 114) is a lightweight VM running the official
 [jgraph/drawio](https://hub.docker.com/r/jgraph/drawio) Docker image — a fully
@@ -104,7 +108,7 @@ ssh drawio "sudo docker pull jgraph/drawio && sudo docker stop drawio && \
   `qemu-guest-agent` is not installed/running in the guest — install it from
   the guest (`sudo apt-get install qemu-guest-agent`) if you want
   `qm guest exec` / IP reporting from the Proxmox UI.
-- The drawio container was first started 2026-07-28; no data volume is
+- The drawio container was initially deployed 2026-07-28; no data volume is
   mounted — diagrams live in the browser session unless the user saves
   (download / device storage). Add a volume mount if server-side diagram
   storage is ever wanted.

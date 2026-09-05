@@ -1,5 +1,13 @@
 # SSH Enable HowTo — Mount VM Disk Offline
 
+**Historical recovery example, reviewed 2026-09-05.** The concrete VM 103
+example below was performed on Seykhl before migration. VM 103 now runs on
+Sefer `vmdata`; production VMs 102/104/124 use raw files on Sefer `local`.
+Inspect `qm config <id>` on the correct host before choosing a disk path, and
+verify the actual partition offset rather than reusing this example. See
+[INVENTORY.md](INVENTORY.md). No offline-disk operation was performed in this
+audit.
+
 ## Problem
 You create a VM from a Debian/Ubuntu cloud image on Proxmox. Cloud-init creates the user but locks SSH to **public-key-only authentication**. You don't have console access, and `ssh-copy-id` fails because password auth is disabled.
 
@@ -25,7 +33,8 @@ ls /dev/pve/vm-<vmid>-disk-0
 ```
 
 ### 3. Mount the root partition
-Cloud images use GPT with boot partitions. The root partition starts at offset **134217728 bytes** (256 sectors × 512 bytes).
+Cloud images use GPT with boot partitions. The root partition starts at offset **134217728 bytes** in this example (262144 sectors × 512 bytes).
+Inspect the actual partition table; the offset is image-specific.
 
 ```bash
 # Create a loop device starting at the root partition offset

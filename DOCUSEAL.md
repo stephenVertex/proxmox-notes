@@ -1,5 +1,10 @@
 # docuseal — DocuSeal Document Signing Platform
 
+**Last verified:** 2026-09-05. The Docker container is up; local HTTP and
+public `https://docuseal.meshcrawler.com` return 200. Both the public Cloudflare route and Tailscale HTTPS return 200. Tailscale
+Serve runs in a foreground systemd service; inspect `tailscale serve status
+--json`, because plain status reported no configuration during this audit. Guest address remains `192.168.0.139` on Sefer `vmbr0`. The configured nightly VM backup is not a clean success: September 5 archive transfer completed but NAS pruning failed. See [BACKUPS.md](BACKUPS.md).
+
 ## Overview
 `docuseal` (VMID 113) is a lightweight VM running [DocuSeal](https://github.com/docusealco/docuseal), an open-source platform for secure digital document signing and processing. Create PDF forms, have them filled and signed online on any device.
 
@@ -29,7 +34,7 @@
 
 ### Web Interface (Tailscale)
 - **URL:** https://docuseal.tailb4b58.ts.net
-- **Access:** Tailnet only
+- **Access:** Tailnet only; HTTPS returned 200 on 2026-09-05.
 
 ### Web Interface (LAN)
 - **URL:** http://192.168.0.139:3000
@@ -56,7 +61,7 @@ ssh stephen@docuseal
 | Service | Port | Type | Description |
 |---------|------|------|-------------|
 | DocuSeal (Docker) | 3000 | Web App | DocuSeal web interface + API |
-| Tailscale Serve | 443 | HTTPS Proxy | Tailscale-managed HTTPS within tailnet |
+| Tailscale Serve | 443 | HTTPS Proxy | Foreground service proxies to `127.0.0.1:3000` |
 | cloudflared | — | Tunnel | Cloudflare Tunnel for public access |
 
 ## Docker Configuration
@@ -121,7 +126,7 @@ ingress:
 ## Tailscale
 
 - **Installed:** 2026-07-22
-- **Tailscale Serve:** Port 3000 (HTTPS within tailnet)
+- **Tailscale Serve:** Foreground `tailscale serve 3000` under `tailscale-serve.service`; `status --json` contains the active `Foreground` HTTPS mapping.
 - **Tailscale Funnel:** Not configured (public access via Cloudflare Tunnel instead)
 
 ## Systemd Services
@@ -131,7 +136,7 @@ ingress:
 | **docker** | `/usr/lib/systemd/system/docker.service` | Enabled, Active |
 | **cloudflared** | `/etc/systemd/system/cloudflared.service` | Enabled, Active |
 | **tailscaled** | `/usr/lib/systemd/system/tailscaled.service` | Enabled, Active |
-| **tailscale-serve** | `/etc/systemd/system/tailscale-serve.service` | Enabled |
+| **tailscale-serve** | `/etc/systemd/system/tailscale-serve.service` | Active/running (foreground Serve) |
 
 ## Verification Commands
 ```bash
@@ -164,6 +169,6 @@ curl -sL -o /dev/null -w '%{http_code}' http://localhost:3000
 - Cloudflare Tunnel provides public access without port forwarding
 - For SMTP (email notifications to signers), configure in DocuSeal admin settings
 - The VM now runs on `sefer` (`192.168.0.100`) and is included in the nightly
-  `sefer-light-services` Proxmox backup job. At the 2026-08-27 inventory its
+  `sefer-light-services` Proxmox backup job. At the 2026-09-05 inventory its
   in-guest QEMU agent was not responding, so use SSH or console access rather
   than guest-agent commands until it is repaired.

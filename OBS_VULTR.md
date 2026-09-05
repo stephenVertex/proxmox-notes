@@ -1,6 +1,9 @@
 # obs-vultr — SigNoz Observability Stack
 
-**Last verified:** 2026-08-27
+VM 117 remains on Sefer `vmbr0`; its guest IP and Tailscale bindings below
+are unchanged. The configured nightly VM backup is not a clean success: September 5 archive transfer completed but NAS pruning failed. See [BACKUPS.md](BACKUPS.md).
+
+**Last verified:** 2026-09-05
 
 ## Overview
 
@@ -29,7 +32,10 @@ than the LAN address:
 | OpenTelemetry gRPC | `100.115.156.60:4317` | OTLP ingestion |
 | OpenTelemetry HTTP | `100.115.156.60:4318` | OTLP ingestion |
 
-The active Compose containers are:
+The SigNoz UI returned HTTP 200. Docker reports the UI, ClickHouse,
+PostgreSQL and Keeper healthy; the
+ingester is running. The completed migrator and user-script containers have
+exit code 0. The active Compose containers are:
 
 - `signoz-signoz-0` — `signoz/signoz:v0.137.0`
 - `signoz-ingester-1` — `signoz/signoz-otel-collector:v0.144.8`

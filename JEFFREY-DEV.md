@@ -1,14 +1,19 @@
 # jeffrey-dev — Development VM
 
+**Last verified:** 2026-09-05 at the Proxmox configuration level. Seykhl VM
+101 is stopped; no live guest address or software stack was verified. Sefer
+VM 101 is a different guest, LiteLLM. Historical IP `.132` and software notes
+below are not proof of current reachability.
+
 ## Overview
-`jeffrey-dev` (VMID 101) is a Debian 13 VM on Proxmox host `seykhl`. It is a general-purpose development environment.
+`jeffrey-dev` (VMID 101) is a development VM on Proxmox host `seykhl`. It is a general-purpose development environment.
 
 ## VM Specifications
 | Setting | Value |
 |---------|-------|
 | **VMID** | 101 |
 | **Name** | jeffrey-dev |
-| **OS** | Debian 13 "Trixie" (cloud image) |
+| **OS** | Not reverified while stopped; old records disagree (Debian 13 vs Ubuntu 26.04) |
 | **CPU** | host |
 | **Cores** | 2 |
 | **Memory** | 4GB |
@@ -17,7 +22,7 @@
 | **MAC** | BC:24:11:CD:26:F7 |
 | **LAN IP** | 192.168.0.132 |
 | **Hostname** | jeffrey-dev |
-| **Status** | Running |
+| **Status** | Stopped (verified 2026-09-05) |
 
 ## Access
 
@@ -26,7 +31,7 @@ The VM is configured with cloud-init but may not have the same SSH key as other 
 
 ```bash
 # Via Proxmox console
-ssh root@192.168.0.202 "qm console 101"
+ssh root@192.168.20.202 "qm console 101"
 
 # Or try SSH directly
 ssh stephen@192.168.0.132
@@ -51,16 +56,16 @@ ssh stephen@192.168.0.132
 ## Maintenance
 ```bash
 # Access via Proxmox console
-ssh root@192.168.0.202 "qm console 101"
+ssh root@192.168.20.202 "qm console 101"
 
 # Restart VM
-ssh root@192.168.0.202 "qm restart 101"
+ssh root@192.168.20.202 "qm restart 101"
 
 # Stop VM
-ssh root@192.168.0.202 "qm stop 101"
+ssh root@192.168.20.202 "qm stop 101"
 
 # Check status
-ssh root@192.168.0.202 "qm status 101"
+ssh root@192.168.20.202 "qm status 101"
 ```
 
 ## To Do

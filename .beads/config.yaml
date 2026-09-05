@@ -1,0 +1,3 @@
+# Issues live in the local embedded Dolt database; JSONL is not the sync protocol.
+issue-prefix: "proxmox"
+sync.remote: "git+ssh://git@github.com/stephenVertex/proxmox-notes.git"

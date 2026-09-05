@@ -1,6 +1,11 @@
 # dynamodb — Amazon DynamoDB Local (LXC)
 
-## Overview
+> **DECOMMISSIONED 2026-08-31:** CT 115 was never used and has been
+> destroyed (`pct stop 115 && pct destroy 115` on seykhl). The notes below
+> are kept for reference in case DynamoDB Local is ever needed again.
+> Live inventory on 2026-09-05 confirms CT 115 is absent on both hosts.
+
+## Historical deployment
 `dynamodb` (CTID 115) is an unprivileged LXC container running
 [Amazon DynamoDB Local](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBLocal.html),
 the official local build of DynamoDB for development and testing. No AWS
@@ -19,7 +24,7 @@ values are accepted.
 | **Disk** | 8GB (local-lvm) |
 | **Network** | vmbr0, DHCP |
 | **LAN IP** | 192.168.0.144 |
-| **Status** | Running (`--onboot 1`) |
+| **Status** | Decommissioned; CT absent on 2026-09-05 |
 
 ## Endpoint
 

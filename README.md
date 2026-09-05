@@ -1,117 +1,119 @@
 # Proxmox Infrastructure Overview
 
-**Last verified:** 2026-08-27
+**Last verified:** 2026-09-05 against the live hosts and guests.
 
-## Current Proxmox host: `sefer`
+`sefer` and `seykhl` are both active, separate Proxmox hosts. Sefer hosts the
+production services and most execution infrastructure; Seykhl hosts nine g2
+gate VMs and retains stopped legacy guests. The complete current inventory is
+in [INVENTORY.md](INVENTORY.md), with network details in [NETWORK.md](NETWORK.md).
 
-`sefer` is the active single-node Proxmox host. It replaced the former
-`seykhl` node; documents describing `seykhl` are historical unless explicitly
-updated below.
+## Hosts and networks
 
-| Setting | Value |
-|---|---|
-| Hostname / LAN IP | `sefer` / `192.168.0.100` |
-| Hardware | Dell PowerEdge R740xd |
-| Proxmox | VE 9.2.2 on Debian 13 (Trixie), kernel `7.0.2-6-pve` |
-| CPU | 2 × Intel Xeon Gold 6152: 44 physical cores / 88 threads |
-| Memory | 251 GiB installed; ~218 GiB available at verification |
-| Network | `vmbr0` on `192.168.0.0/24` |
-| Cluster | Single node |
+| Setting | Sefer | Seykhl |
+|---|---|---|
+| VLAN 20 address | `192.168.20.10/24`, `vmbr1` | `192.168.20.202/24`, `vmbr0` |
+| Additional connection | Direct 10 GbE: `192.168.0.100/24`, `vmbr0` | None observed |
+| Default gateway | `192.168.0.1` on direct 10 GbE side | `192.168.20.1` |
+| Proxmox | VE 9.2.2, kernel `7.0.2-6-pve` | VE 9.1.1, kernel `6.17.2-1-pve` |
+| CPU | 2 × Xeon Gold 6152; 44 cores / 88 threads | Xeon W-2123; 4 cores / 8 threads |
+| Installed RAM | 251 GiB | 78 GiB |
+| VMs | 47 configured, 31 running | 21 configured, 9 running |
+| LXC | 21 configured, 19 running | 1 stopped template |
 
-Access the web UI at `https://192.168.0.100:8006`, or use:
+Sefer is the Dell PowerEdge R740xd. Both hosts participate in `192.168.20.0/24`,
+while Sefer retains its separate direct 10 GbE connection. Most Sefer guests
+remain on `192.168.0.0/24`; PostgreSQL, Dertog, Dolt primary and the g2 test
+databases use its VLAN bridge. Seykhl's guests use VLAN 20.
 
 ```bash
-ssh root@sefer
-qm list
-pct list
+ssh -o BatchMode=yes root@192.168.20.10
+ssh -o BatchMode=yes root@192.168.20.202
 ```
 
-## Virtual machines
+## Production and supporting services
 
-All production service disks are on the redundant `vmdata` ZFS pool. The
-separate non-redundant `scratch` pool is available for disposable VM/CT disks
-and host datasets. All twelve running service VMs are configured to start at boot
-and have the Proxmox guest agent enabled in their VM configuration.
+These are all on Sefer. Addresses are observed guest IPv4 addresses; database
+listener restrictions are documented per service.
 
-| VMID | Name | State | vCPU | RAM | Disk | LAN IP | Purpose |
-|---:|---|---|---:|---:|---:|---|---|
-| 100 | `doltsvr-sefer` | running | 4 | 24 GiB | 100 GiB | 192.168.0.160 | Isolated Dolt standby and migration target; SQL disabled |
-| 103 | `seykhl-actions-runner` | running | 2 | 4 GiB | 30 GiB | 192.168.0.154 | Five self-hosted GitHub Actions runners |
-| 105 | `aicoe-social-runner` | running | 2 | 2 GiB | 20 GiB | 192.168.0.147 | Social-engagement monitor cron runner |
-| 107 | `n8n-server` | running | 2 | 4 GiB | 30 GiB | 192.168.0.145 | n8n automation |
-| 113 | `docuseal` | running | 1 | 2 GiB | 20 GiB | 192.168.0.139 | DocuSeal signing service |
-| 114 | `drawio` | running | 1 | 2 GiB | 20 GiB | 192.168.0.149 | draw.io diagram editor |
-| 116 | `bukher` | running | 2 | 4 GiB | 30 GiB | 192.168.0.169 | RSSHub and Miniflux ingestion |
-| 117 | `obs-vultr` | running | 8 | 16 GiB | 120 GiB | 192.168.0.163 | SigNoz observability stack |
-| 118 | `neo4j` | running | 4 | 16 GiB | 100 GiB | 192.168.0.167 | Neo4j graph database |
-| 119 | `makor` | running | 8 | 24 GiB | 80 GiB OS + 300 GiB data | 192.168.0.170 | GitLab EE (Free tier) via Cloudflare Tunnel |
-| 120 | `makor-runner-docker-1` | running | 6 | 16 GiB | 120 GiB | 192.168.0.171 | Dedicated GitLab Docker group runner |
-| 121 | `yesod-semantic-graph` | running | 4 | 8 GiB | 64 GiB | 192.168.0.172 | Semantic graph controller and private pipeline PostgreSQL state |
-| 122 | `doltsvr-rehearsal-20260824` | stopped | 4 | 24 GiB | 64 GiB | — | Protected offline restore of the August 24 production snapshot; NIC removed |
-| 123 | `doltsvr-fresh-seed-20260827` | stopped | 4 | 24 GiB | 64 GiB | — | Protected offline source for the fresh Dolt seed; NIC removed |
-| 201 | `yesod-runner-4-codex` | stopped | 16 | 48 GiB | 64 GiB | — | Codex runner image |
-| 202 | `yesod-runner-5-claude` | stopped | 16 | 48 GiB | 64 GiB | — | Claude runner image |
-| 203 | `yesod-runner-6-opencode-fw` | stopped | 16 | 48 GiB | 64 GiB | — | OpenCode firewall runner image |
-| 9000 | `yesod-runner-template` | stopped | 8 | 24 GiB | 64 GiB | — | Yesod runner template |
+| VM | Service | Guest IPv4 | Documentation |
+|---:|---|---|---|
+| 100 | Isolated Dolt static seed, SQL disabled | `192.168.0.160` | [Dolt standby](DOLT_STANDBY.md) |
+| 101 | LiteLLM gateway, broker and dashboards | `192.168.0.157` | [LiteLLM](LITELLM_GATEWAY.md) |
+| 102 | Production PostgreSQL | `192.168.20.155` | [PostgreSQL](YESOD_POSTGRES_SERVER.md) |
+| 103 | Five GitHub Actions runner services | `192.168.0.154` | [GitHub runners](SEYKHL_ACTIONS_RUNNER.md) |
+| 104 | Dertog dashboards and Yesod API | `192.168.20.138` | [Dertog](DERTOG.md) |
+| 105 | Social monitor cron runner | `192.168.0.147` | [Social runner](AICOE_SOCIAL_RUNNER.md) |
+| 107 | n8n | `192.168.0.145` | [n8n](N8N_SERVER.md) |
+| 111 | Supabase APIs, runtime, realtime and storage | `192.168.0.137` | [sb-edge](SB_EDGE.md) |
+| 113 | DocuSeal | `192.168.0.139` | [DocuSeal](DOCUSEAL.md) |
+| 114 | draw.io | `192.168.0.149` | [draw.io](DRAWIO.md) |
+| 116 | RSSHub; Miniflux currently stopped | `192.168.0.169` | [Bukher](BUKHER.md) |
+| 117 | SigNoz | `192.168.0.163` | [Observability](OBS_VULTR.md) |
+| 118 | Neo4j | `192.168.0.167` | [Neo4j](NEO4J.md) |
+| 119 | GitLab EE | `192.168.0.170` | [GitLab](GITLAB.md) |
+| 120 | GitLab Docker group runner | `192.168.0.171` | [GitLab Runner](GITLAB.md#gitlab-runner) |
+| 121 | Semantic graph controller / pipeline PostgreSQL | `192.168.0.172` | [Semantic graph](YESOD_SEMANTIC_GRAPH.md) |
+| 124 | Production Dolt primary | `192.168.20.150` | [Dolt primary](DOLT_SERVER.md) |
 
-There are no LXC containers on `sefer`.
+[YESOD-RUNNER.md](YESOD-RUNNER.md) covers runner-3 (110), Ibur (130), Golem
+(131), Lamedvov (150), Tzadik (151), dispatch/refinery (152), the g1/g2 gate
+fleet and their PostgreSQL test containers. [INVENTORY.md](INVENTORY.md) also
+lists every stopped VM and template. Jeffrey-dev remains stopped on Seykhl;
+DynamoDB CT 115 and the old OpenSymphony/test VMs are absent.
 
-## Storage and backups
+## Storage
 
-| Storage | Type | Live state at verification | Use |
+| Host/storage | Backing | Observed allocation | Use |
 |---|---|---|---|
-| `rpool` | ZFS mirror, 2 × 240 GB Intel SATA SSDs | 220 GB total; 2.65 GB allocated; healthy | Proxmox boot/system storage (`local`, `local-zfs`) |
-| `vmdata` | ZFS mirror, 2 × 1 TB Samsung 970 EVO Plus NVMe SSDs | 928 GB total; 69.7 GB allocated; healthy | All VM disks |
-| `scratch` | Single 1 TB Seagate IronWolf SATA SSD | 899 GiB available; **no redundancy**; ZFS `zstd` compression and autotrim | Proxmox VM/CT disks for disposable workloads; host datasets at `/scratch/datasets` |
-| `nas-backups` | NAS directory storage | 31.4 TiB total; 14.5 TiB used; 16.9 TiB free | Proxmox backups |
+| Sefer `rpool` | Mirror: 2 × 240 GB Intel SATA SSD | 127 GiB of 220 GiB | Host and `local`; raw VM disks 102, 104, 124 |
+| Sefer `vmdata` | Mirror: 2 × 1 TB Samsung 970 EVO Plus NVMe | 339 GiB of 928 GiB | Remaining VM disks |
+| Sefer `scratch` | Single 1 TB Seagate IronWolf SSD | 6.42 GiB of 928 GiB | Disposable PostgreSQL containers; no redundancy |
+| Sefer `nas-backups` | NAS directory `/mnt/proxmox-backups` | ~15.1 TiB used of 31.4 TiB | Backup archives |
+| Seykhl `local-lvm` | LVM thin pool | ~67.7% used of 634 GiB | g2 gates and retained legacy disks |
 
-Sefer reaches `nas-backups` over 10 GbE. A 2026-08-27 post-seed Dolt VM backup
-transferred its sparse 100 GiB virtual disk in 83 seconds.
+All three Sefer ZFS pools report `ONLINE` with no known data errors. Sefer's
+direct 10 GbE connection provides the NAS path. The production disks are no
+longer all on `vmdata`; free space is a snapshot, not reserved capacity.
 
-`scratch` must never contain the sole copy of important data, production
-state, or a workload that cannot be recreated. Its SSD passed SMART health
-checks before it was repurposed on 2026-08-27.
+## Backups and observed issues
 
-The enabled `sefer-light-services` job creates `zstd` snapshot backups to
-`nas-backups` daily at 03:30 for VMs 100, 103, 105, 107, 113, 114, 116, 117,
-118, 119, and 120. Retention is 7 daily, 4 weekly, and 3 monthly backups. This
-protects the VMs; stateful services should still have application-consistent
-recovery procedures (especially SigNoz, Neo4j, and GitLab).
+The configured Sefer jobs still cover only the original 12 guests:
 
-The separate `yesod-semantic-graph` job snapshots only VM 121 to `nas-backups`
-daily at 04:30 with the same 7 daily, 4 weekly, and 3 monthly retention. Its
-in-guest PostgreSQL logical backup runs at 04:15 Pacific.
+| Job | Schedule (Pacific) | VMs | Configured retention |
+|---|---|---|---|
+| `sefer-light-services` | Daily 03:30 | 100,103,105,107,113,114,116,117,118,119,120 | 7 daily / 4 weekly / 3 monthly |
+| `yesod-semantic-graph` | Daily 04:30 | 121 | 7 daily / 4 weekly / 3 monthly |
 
-## Service documentation
+Both September 5 jobs reported **job errors during pruning**: archive transfer
+completed, but deleting older NAS archives returned `Operation not supported`.
+Configured retention must not be described as successfully enforced. See
+[BACKUPS.md](BACKUPS.md) for the evidence and coverage gaps.
 
-| Service | Documentation |
-|---|---|
-| Dolt primary and Sefer standby (VM 100) | [DOLT_SERVER.md](DOLT_SERVER.md), [DOLT_STANDBY.md](DOLT_STANDBY.md), [DOLT_LIVE_REPLICA_PLAN.md](DOLT_LIVE_REPLICA_PLAN.md) |
-| GitHub Actions runner (VM 103) | [SEYKHL_ACTIONS_RUNNER.md](SEYKHL_ACTIONS_RUNNER.md) |
-| AICOE social runner (VM 105) | [AICOE_SOCIAL_RUNNER.md](AICOE_SOCIAL_RUNNER.md) |
-| n8n (VM 107) | [N8N_SERVER.md](N8N_SERVER.md) |
-| DocuSeal (VM 113) | [DOCUSEAL.md](DOCUSEAL.md) |
-| draw.io (VM 114) | [DRAWIO.md](DRAWIO.md) |
-| Bukher (VM 116) | [BUKHER.md](BUKHER.md) |
-| SigNoz observability (VM 117) | [OBS_VULTR.md](OBS_VULTR.md) |
-| Neo4j (VM 118) | [NEO4J.md](NEO4J.md) |
-| GitLab and GitLab Runner (VMs 119/120) | [GITLAB.md](GITLAB.md) |
-| Yesod Semantic Graph (VM 121) | [YESOD_SEMANTIC_GRAPH.md](YESOD_SEMANTIC_GRAPH.md) |
+The GitLab-native backup completed successfully at 01:31 Pacific, and the
+semantic graph logical PostgreSQL dump completed at 04:15. Those successful
+application backups are separate from the Proxmox job results.
 
-## Operational notes
+Seykhl still has backup cron entries for old VM IDs and old Dolt/PostgreSQL
+addresses. The migrated production VMs, LiteLLM and expanded runner fleet are
+absent from Sefer's scheduled VM backup lists.
 
-- `docuseal` and `bukher` did not respond to the QEMU guest-agent query during
-  the 2026-08-27 inventory, despite `agent: enabled=1` in their VM
-  configuration. Use SSH or the Proxmox console for those guests until the
-  in-guest agent is repaired.
-- The local `docuseal` and `obs-vultr` SSH aliases have stale host-key entries;
-  verify each new fingerprint through the Proxmox console before replacing the
-  local trusted key. `neo4j` currently has no local SSH alias.
-- The current Dell-host deployment supersedes the planned migration in
-  [DELL_POWEREDGE_NEW_PROXMOX.md](DELL_POWEREDGE_NEW_PROXMOX.md), which is kept
-  as a historical procurement record.
-- VM 121 uses static `192.168.0.172` with MAC `BC:24:11:B8:5D:94`; add the
-  router reservation or exclude `.172` from its DHCP pool.
-- VM 100 uses reserved static `192.168.0.160` with MAC
-  `BC:24:11:69:D9:AB`. It remains `doltsvr-sefer` until the controlled Dolt
-  cutover; do not move the production `doltsvr` identity early.
+Additional observations:
+
+- PostgreSQL was being repaired during this audit. Its stale-address startup
+  failure was corrected in the live drop-in; final listener evidence is in
+  [YESOD_POSTGRES_SERVER.md](YESOD_POSTGRES_SERVER.md).
+- Miniflux is stopped after failing to bind its Tailscale address at startup.
+- Ibur and the main dispatch/refinery services recovered during the database
+  repairs. Other inactive or failed components are recorded per service;
+  VM uptime alone does not establish application health.
+- Nine running Sefer VMs have no responding QEMU guest agent. Stopped legacy
+  copies retain conflicting IPs or autostart flags; see [inventory cautions](INVENTORY.md#configuration-cautions).
+
+## Documentation scope
+
+Current service pages and the live inventory supersede old build logs. Dated
+provisioning records and long-term plans retain historical commands under
+explicit notices; they do not authorize starting old copies. External DNS,
+billing, router reservations and application data correctness were not
+re-audited as part of the host/service inventory. Installed version observations
+are in [VERSION_UPGRADES.md](VERSION_UPGRADES.md).

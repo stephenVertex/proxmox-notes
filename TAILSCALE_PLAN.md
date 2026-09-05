@@ -1,5 +1,11 @@
 # Plan: Join yesod-postgres-server to Tailscale
 
+**Historical setup plan, reviewed 2026-09-05.** PostgreSQL is already
+enrolled at `100.115.10.68`, now on Sefer VM 102 with VLAN address
+`192.168.20.155`. The current listener and boot configuration are documented
+in [YESOD_POSTGRES_SERVER.md](YESOD_POSTGRES_SERVER.md). Do not reenroll or
+reapply this old setup plan to the running service.
+
 ## Goal
 Permanently connect `yesod-postgres-server` (VMID 102, Debian 13) to your Tailscale network so it is reachable from any authenticated device on your tailnet, regardless of its LAN IP.
 

@@ -1,6 +1,6 @@
 # neo4j — Graph Database VM
 
-**Last verified:** 2026-08-27
+**Last verified:** 2026-09-05 (runtime/configuration; projection proofs are historical)
 
 ## Overview
 
@@ -62,10 +62,17 @@ provided by this single-purpose disposable VM and by projector operations being
 limited to `_projection_owner=yesod-semantic-graph`. Use Enterprise or another
 dedicated instance if strong multi-tenant authorization is required.
 
-The accepted sanitized fixture currently has 7 owned nodes (6 domain plus one
-epoch node), 11 owned relationships (5 domain plus 6 epoch memberships), and 23
-label uniqueness constraints. Domain digest:
-`9191fb01d6ab102c629269fbbbd5bb774e51c202c961c1385e34feb8f294db6a`.
+The six-node sanitized fixture described by the August 27 acceptance is a
+historical proof, superseded by the August 30 M3 production acceptance. That
+record reports 138,879 domain nodes, 170,443 domain edges and digest
+`67b8430f3b307ff0e678ca03a28c46d2943038a4def7858fe608aa03c045d9c9`.
+See [YESOD_SEMANTIC_GRAPH.md](YESOD_SEMANTIC_GRAPH.md). No projection count or
+rebuild was performed in the September 5 infrastructure audit.
+
+The live container now configures 6 GiB initial/max heap and 6 GiB page cache.
+Bolt TLS remains `REQUIRED`, with TLS 1.2/1.3, certificates mounted read-only,
+and the existing protected authentication file mount. The container is up;
+service metadata does not establish application-query correctness.
 
 The first live acceptance attempt failed closed before commit because Neo4j
 2026 treated a returned `relationship` alias as a string in `ORDER BY`. The
@@ -75,7 +82,8 @@ the replacement expression's deprecation warning. Repeated delete/rebuild runs
 then produced the identical digest.
 
 VM 118 is included in the nightly 03:30 `sefer-light-services` snapshot job
-to `nas-backups` (7 daily, 4 weekly, 3 monthly). Do not treat a VM snapshot as
+to `nas-backups` (configured 7 daily, 4 weekly, 3 monthly). The September 5
+job encountered NAS pruning failures; see [BACKUPS.md](BACKUPS.md). Do not treat a VM snapshot as
 the only recovery plan for a graph database; use `neo4j-admin database dump`
 or another application-consistent backup before upgrades or destructive work.
 

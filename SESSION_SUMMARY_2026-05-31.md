@@ -1,5 +1,9 @@
 # Session Summary — 2026-05-31
 
+**Historical session summary.** Reviewed during the 2026-09-05 refresh;
+this dated record does not describe the current host layout. See
+[README.md](README.md) for the live deployment.
+
 ## Objective
 Audit and improve backup setup for `yesod-postgres-server` (VMID 102) on Proxmox host `seykhl`.
 

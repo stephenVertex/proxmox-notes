@@ -1,5 +1,10 @@
 # aicoe-social-runner — Social-Media Engagement Monitor Runner
 
+**Last verified:** 2026-09-05. VM 105 remains on Sefer `vmbr0`,
+`192.168.0.147`. Cron is active and retains the four-hour schedule below.
+The monitor log and run-history file were last written at 16:01 UTC on
+September 5. The configured nightly VM backup is not a clean success: September 5 archive transfer completed but NAS pruning failed. See [BACKUPS.md](BACKUPS.md).
+
 ## Overview
 `aicoe-social-runner` (VMID 105) is a Debian 13 VM on Proxmox host `sefer`. It is a
 dedicated, headless cron runner for the **engage-watch** agent
@@ -90,7 +95,9 @@ cd ~/dev/sjb-agentic-social-media-monitor
 synapse-cli doctor        # binding -> token (via resolver) -> ping -> brief.fetch
 uv run smm-monitor doctor # aysp ok, synapse ok, result: ready
 ```
-Both pass green as of 2026-06-04.
+Both passed on 2026-06-04. These application doctor commands were not rerun
+in the 2026-09-05 inventory; cron and recent file timestamps do not prove
+remote API success.
 
 ## Updating the agent
 ```bash
@@ -107,7 +114,7 @@ cd ~/dev/ayrshare-simple && git pull && uv tool install --reinstall .
 - Synapse: https://cnu.synapse-os.ai (project.social-monitoring / team.ai-coe)
 
 ## Notes
-- No `qemu-guest-agent` (not in default Debian 13 repos); IP found via MAC on host ARP.
+- QEMU guest agent is enabled in Proxmox but not running in the guest; SSH verified the current IP.
 - Per-post `aysp analytics` calls are slow over the VM→Supabase link (each spawns
   a fresh Python process). A full run takes a few minutes; fine for a 4h cron.
   Future optimization: a batch analytics read in aysp would cut this dramatically.

@@ -1,254 +1,85 @@
-# sb-edge — Supabase Edge Runtime
+# sb-edge — Supabase APIs and Edge Runtime
 
-**Document Version:** 2026-06-15
-**VM ID:** 111
-**Proxmox Node:** seykhl (192.168.0.202)
+**Last verified:** 2026-09-05 from VM 111, nginx routing, listeners and containers.
 
----
+## Deployment
 
-## Overview
+`sb-edge` now runs as **Sefer VM 111**. Its old Seykhl copy is stopped and
+renamed `do-not-start`. Never start both copies with the same network identity.
 
-`sb-edge` is a Debian 13 VM running a self-hosted **Supabase Edge Runtime** stack. It provides:
+| Setting | Value |
+|---|---|
+| Guest / resources | Debian 13; 2 host vCPU, 4 GiB RAM, 20 GiB disk |
+| Storage | `vmdata:vm-111-disk-0` |
+| Bridge / LAN | Sefer `vmbr0` / `192.168.0.137` |
+| MAC | `BC:24:11:5E:D5:A8` |
+| Tailscale | `100.115.156.68`, `sb-edge.tailb4b58.ts.net` |
+| Boot policy | `onboot` omitted (manual start); QEMU agent configured but not running |
+| Administration | `ssh -o BatchMode=yes stephen@192.168.0.137` |
 
-- **PostgREST** (port 3000) — REST API for PostgreSQL
-- **Edge Runtime** (port 9000) — Deno-based serverless functions
-- **nginx** (port 8000) — Reverse proxy combining both APIs
-- **Tailscale Serve** (port 443) — HTTPS access within the tailnet
+The database service has moved to Sefer VM 102. Its current VLAN address is
+`192.168.20.155`; the existing Tailscale endpoint is `100.115.10.68:5432`.
+The old `192.168.0.155` address is obsolete. This audit did not expose or
+rewrite application DSNs. See [YESOD_POSTGRES_SERVER.md](YESOD_POSTGRES_SERVER.md).
 
-The database backend is `yesod-postgres-server` (192.168.0.155:5432).
+## Current API routes
 
----
+Tailscale Serve has these configured HTTPS routes:
 
-## Network
+| Tailnet route | Local proxy |
+|---|---|
+| `https://sb-edge.tailb4b58.ts.net/` | `http://127.0.0.1:8000` |
+| `https://sb-edge.tailb4b58.ts.net/clip/` | `http://127.0.0.1:8001` |
 
-| Interface | Value |
-|-----------|-------|
-| **LAN IP** | 192.168.0.137 |
-| **Tailscale IP** | 100.115.156.68 |
-| **Tailscale HTTPS** | https://sb-edge.tailb4b58.ts.net |
-| **MAC Address** | bc:24:11:5e:d5:a8 |
-| **Hostname** | sb-edge |
+nginx exposes two stacks:
 
----
+| nginx port / path | Backend | Purpose |
+|---|---|---|
+| 8000 `/rest/v1/` | `localhost:3000` | Original PostgREST / sjbgtd |
+| 8000 `/functions/v1/` | `localhost:9000/functions/v1/` | Original edge functions |
+| 8001 `/rest/v1/` | `localhost:3001` | Clip PostgREST |
+| 8001 `/functions/v1/` | `localhost:9001/functions/v1/` | Clip edge functions |
+| 8001 `/storage/v1/` | `localhost:5000` | Clip Storage API |
+| 8001 `/realtime/v1/` | `localhost:4000` | Clip Realtime |
 
-## Access
+These nginx/backend TCP ports bind all guest interfaces. Realtime publishes
+port 4000 through Docker, which need not appear as a userspace listener in
+`ss`. Routing configuration and process state do not prove authenticated API
+or database operations succeed.
 
-### SSH
-```bash
-ssh stephen@192.168.0.137
-# or via Tailscale
-ssh stephen@100.115.156.68
-```
+## Service state
 
-### HTTPS (Tailscale)
-Any device on the tailnet can reach:
-```
-https://sb-edge.tailb4b58.ts.net/rest/v1/       # PostgREST API
-https://sb-edge.tailb4b58.ts.net/functions/v1/  # Edge Functions
-```
+nginx, `postgrest`, `postgrest-clip`, `storage-clip`, `realtime-clip` and
+`supabase-edge-runtime-clip` were active; ports 9000 and 9001 both listened.
+The `realtime-clip` Docker container uses `supabase/realtime:latest`.
+Both edge-runtime service units are enabled.
 
-### HTTP (LAN only)
-```
-http://192.168.0.137:8000/rest/v1/
-http://192.168.0.137:8000/functions/v1/
-```
+**Degraded component:** `postgrest-sjb-social.service` was in
+`activating/auto-restart`, result `exit-code`, with more than 82,000 recorded
+restarts. Treat social API health separately from the other running components.
+Follow-up: `proxmox-3tg`. No restart or functional API mutation was performed
+during the audit.
 
----
+## Files and functions
 
-## Services
+The original function tree remains `/home/stephen/functions/`, with `main`,
+`available-actions`, `check-capture`, `create-capture`, `template-dag`,
+`update-capture` and `hello`. The original PostgREST configuration lives under
+`/opt/postgrest`; active nginx routing is in `/etc/nginx/sites-enabled/`.
 
-| Service | Port | Type | Description |
-|---------|------|------|-------------|
-| nginx | 8000 | Reverse Proxy | Routes `/rest/v1/` → PostgREST, `/functions/v1/` → Edge Runtime |
-| PostgREST | 3000 | REST API | Auto-generated REST API from PostgreSQL schema |
-| Edge Runtime | 9000 | Function Runtime | Deno-based serverless functions |
-| Tailscale Serve | 443 | HTTPS Proxy | Tailscale-managed HTTPS within tailnet |
+Service environment files contain database/API credentials. Keep those values
+out of documentation and shell output. The older binary installation notes
+remain in [SUPABASE_EDGE_RUNTIME.md](SUPABASE_EDGE_RUNTIME.md) as a historical
+provisioning record; they do not describe the expanded live stack by themselves.
 
----
+## Backups and operations
 
-## Edge Functions
-
-Located in `/home/stephen/functions/`:
-
-| Function | Path | Description |
-|----------|------|-------------|
-| **main** | `/home/stephen/functions/main/index.ts` | Router/entrypoint — dispatches requests to other functions |
-| **available-actions** | `/home/stephen/functions/available-actions/index.ts` | Polling endpoint for agents to discover unblocked actions |
-| **check-capture** | `/home/stephen/functions/check-capture/` | Capture checking logic |
-| **create-capture** | `/home/stephen/functions/create-capture/` | Capture creation logic |
-| **template-dag** | `/home/stephen/functions/template-dag/` | Template DAG processing |
-| **update-capture** | `/home/stephen/functions/update-capture/` | Capture update logic |
-| **hello** | `/home/stephen/functions/hello/` | Test/healthcheck function |
-
----
-
-## Configuration
-
-### Environment Variables
-
-**File:** `/home/stephen/functions/.env`
-
-```
-SUPABASE_URL=http://localhost:8000
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIn0.M4aQ5FdNIpvV2I2kWY5JnLSEErAQoWLMVGlEUQXnKUo
-```
-
-### PostgREST Config
-
-**File:** `/opt/postgrest/postgrest.conf`
-
-```
-db-uri = "$(PGRST_DB_URI)"
-db-schemas = "public"
-db-anon-role = "anon"
-db-pool = 15
-jwt-secret = "$(PGRST_JWT_SECRET)"
-server-port = 3000
-```
-
-The database URI points to `yesod-postgres-server` at 192.168.0.155:5432.
-
-### nginx Config
-
-**File:** `/etc/nginx/sites-available/supabase-proxy`
-
-```nginx
-server {
-    listen 8000;
-    server_name localhost;
-
-    location /rest/v1/ {
-        proxy_pass http://localhost:3000/;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    }
-
-    location /functions/v1/ {
-        proxy_pass http://localhost:9000/functions/v1/;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_read_timeout 60s;
-    }
-}
-```
-
----
-
-## Systemd Services
-
-| Service | File | Status |
-|---------|------|--------|
-| **nginx** | `/etc/systemd/system/nginx.service` | Enabled, Active |
-| **postgrest** | `/etc/systemd/system/postgrest.service` | Enabled, Active |
-| **supabase-edge-runtime** | `/etc/systemd/system/supabase-edge-runtime.service` | Enabled, Active |
-| **tailscale-serve** | `/etc/systemd/system/tailscale-serve.service` | Enabled, Active |
-| **tailscaled** | `/usr/lib/systemd/system/tailscaled.service` | Enabled, Active |
-
----
-
-## Tailscale Setup
-
-**Installed:** 2026-06-15
-**Version:** 1.98.4
+VM 111 is not in either current Sefer backup job. The stopped Seykhl copy is
+not a backup of current state. See [BACKUPS.md](BACKUPS.md).
 
 ```bash
-# Authenticated with auth key
-sudo tailscale up --authkey=<key>
-
-# Serve HTTPS on port 8000
-sudo tailscale serve 8000
-
-# Systemd service for persistence
-sudo systemctl enable tailscale-serve.service
-sudo systemctl start tailscale-serve.service
-```
-
----
-
-## Verification Commands
-
-```bash
-# Check all services
-sudo systemctl status nginx postgrest supabase-edge-runtime tailscale-serve
-
-# Test PostgREST API
-curl https://sb-edge.tailb4b58.ts.net/rest/v1/
-
-# Test Edge Function
-curl https://sb-edge.tailb4b58.ts.net/functions/v1/hello
-
-# Check Tailscale status
-sudo tailscale status
-
-# Check Tailscale serve
-sudo tailscale serve status
-
-# View edge runtime logs
-sudo tail -f /var/log/supabase-edge-runtime.log
-```
-
----
-
-## Troubleshooting
-
-### Service Won't Start
-```bash
-# Check logs
-sudo journalctl -u supabase-edge-runtime.service -f
-sudo journalctl -u postgrest.service -f
-sudo journalctl -u tailscale-serve.service -f
-
-# Check nginx config
-sudo nginx -t
-sudo systemctl restart nginx
-```
-
-### Database Connection Issues
-```bash
-# Test PostgreSQL connection
-psql postgresql://stephen:<redacted-rotate-required>@yesod-postgres-server:5432/stephen -c "SELECT 1"
-
-# Check PostgREST logs
-sudo journalctl -u postgrest.service -n 50
-```
-
-### Tailscale Issues
-```bash
-# Check Tailscale status
-sudo tailscale status
-
-# Reset and restart serve
-sudo tailscale serve reset
-sudo systemctl restart tailscale-serve.service
-
-# Check if port 443 is available
-sudo ss -tlnp | grep 443
-```
-
----
-
-## Related Systems
-
-- **Database:** `yesod-postgres-server` (192.168.0.155:5432)
-- **Proxmox Node:** `seykhl` (192.168.0.202)
-- **Tailscale Network:** `stephen.devices` (tailb4b58.ts.net)
-
----
-
-## Quick Reference
-
-```bash
-# SSH to sb-edge
-ssh stephen@sb-edge
-
-# Restart all services
-sudo systemctl restart nginx postgrest supabase-edge-runtime tailscale-serve
-
-# Test API
-curl https://sb-edge.tailb4b58.ts.net/rest/v1/
-
-# Test function
-curl https://sb-edge.tailb4b58.ts.net/functions/v1/hello
+ssh -o BatchMode=yes stephen@192.168.0.137 \
+  'systemctl show postgrest-sjb-social -p ActiveState -p SubState -p NRestarts -p Result'
+ssh -o BatchMode=yes stephen@192.168.0.137 'sudo -n tailscale serve status'
+ssh -o BatchMode=yes stephen@192.168.0.137 'sudo -n nginx -t; sudo -n docker ps'
 ```

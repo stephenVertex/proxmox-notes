@@ -1,6 +1,10 @@
 # Domain Registry
 
-**Last updated:** 2026-08-27
+**Service placement reviewed:** 2026-09-05. Registrar, DNS, billing and
+non-Proxmox devices below retain their earlier recorded state (2026-08-27);
+those external control planes were not re-audited. Public HTTPS for n8n,
+DocuSeal, draw.io and GitLab returned 200. See [NETWORK.md](NETWORK.md) for
+VLAN addresses and [INVENTORY.md](INVENTORY.md) for current host-qualified IDs.
 
 ---
 
@@ -40,6 +44,9 @@
 | `makor` | CNAME | `ffdf5860-2735-4fe8-89b0-e0ad6c5582e5.cfargotunnel.com` | Yes | GitLab EE (VM 119, `makor`, 192.168.0.170) |
 | `mail` | A | `103.168.172.65` | Yes | Fastmail mail server |
 | `*.meshcrawler.com` | A | `103.168.172.52`, `103.168.172.37` | Yes | Wildcard catch-all |
+
+All four listed service VMs run on Sefer; their guest addresses remain on
+`192.168.0.0/24`.
 
 ### Cloudflare Tunnels
 
@@ -102,14 +109,18 @@
 
 ### Tailscale Nodes
 
-| Hostname | Tailscale IP | VMID | OS |
+| Hostname | Tailscale IP | Host / VMID | OS |
 |----------|-------------|------|----|
-| docuseal | 100.117.77.67 | 113 | Debian 13 |
-| dertog | 100.64.95.60 | 104 | Debian 13 |
-| doltsvr | 100.101.145.38 | 100 | Debian 13 |
-| sb-edge | 100.115.156.68 | 111 | Debian 13 |
-| yesod-dispatch | 100.123.34.77 | 112 | Debian 13 |
-| yesod-postgres-server | 100.115.10.68 | 102 | Debian 13 |
+| docuseal | 100.117.77.67 | Sefer 113 | Debian 13 |
+| dertog | 100.64.95.60 | Sefer 104 | Debian 13 |
+| doltsvr | 100.101.145.38 | Sefer 124 | Debian 13 |
+| sb-edge | 100.115.156.68 | Sefer 111 | Debian 13 |
+| yesod-dispatch (legacy, stopped) | 100.123.34.77 (historical) | Seykhl 112 | Not reverified |
+| yesod-postgres-server | 100.115.10.68 | Sefer 102 | Debian 13 |
+| litellm-gateway | 100.84.120.44 | Sefer 101 | Debian 13 |
+| yesod-semantic-graph | 100.75.244.89 | Sefer 121 | Debian 13 |
+| bukher | 100.77.145.88 | Sefer 116 | Debian 13 |
+| obs-vultr | 100.115.156.60 | Sefer 117 | Debian 13 |
 | homestar | 100.120.51.13 | — | Synology NAS |
 | strongsad | 100.120.185.140 | — | Linux |
 | pompom | 100.83.178.107 | — | macOS |
@@ -121,7 +132,9 @@
 
 | URL | Service |
 |-----|---------|
-| `https://docuseal.tailb4b58.ts.net/` | DocuSeal (via `tailscale serve`) |
+| `https://docuseal.tailb4b58.ts.net/` | DocuSeal (foreground systemd Serve; HTTP 200 verified) |
+| `https://dertog.tailb4b58.ts.net/` | Dertog nginx service router |
+| `https://sb-edge.tailb4b58.ts.net/clip/` | Clip API proxy on 8001 |
 | `https://sb-edge.tailb4b58.ts.net/rest/v1/` | PostgREST API |
 | `https://sb-edge.tailb4b58.ts.net/functions/v1/` | Supabase Edge Functions |
 

@@ -1,10 +1,17 @@
 # GitLab: `makor.meshcrawler.com`
 
+Live recheck: GitLab local health reports `GitLab OK`, public HTTPS returns
+200, cloudflared is active, and GitLab Runner ID 1 is online and accepts
+untagged jobs (`linux-amd64`, `docker`; concurrent capacity 2). Both VMs
+remain on Sefer `vmbr0` at `.170` and `.171`; the host has an additional
+VLAN address as described in [NETWORK.md](NETWORK.md). Native backup service
+completed successfully on September 5 at 01:31 Pacific. The configured nightly VM backup is not a clean success: September 5 archive transfer completed but NAS pruning failed. See [BACKUPS.md](BACKUPS.md).
+
 **Status:** operational. The private `meshcrawler` group, `stevejb`
 administrator account, outbound email, GitLab API/CLI access, and Docker CI
 runner are all in use.
 
-**Last verified:** 2026-08-27
+**Last verified:** 2026-09-05
 
 ## Service summary
 

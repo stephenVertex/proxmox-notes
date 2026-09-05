@@ -1,6 +1,12 @@
 # Supabase Edge Runtime Node — sb-edge
 
-**Provisioned:** 2026-06-12  
+**Historical provisioning record, reviewed 2026-09-05.** The live service
+has moved to Sefer VM 111 on `vmbr0`, with 20 GiB on `vmdata`, and now includes
+separate Clip APIs, Realtime and Storage. Seykhl VM 111 is stopped and named
+`do-not-start`. The current operational runbook is [SB_EDGE.md](SB_EDGE.md).
+The older build/version/next-step notes below are not current service status.
+
+**Provisioned:** 2026-06-12
 **Purpose:** Isolated Supabase Edge Runtime host for sjbgtd Supabase→seykhl migration. Runs [supabase/edge-runtime](https://github.com/supabase/edge-runtime) — a Deno-based server for TypeScript edge functions that mirrors the Supabase hosted edge function API.
 
 ---

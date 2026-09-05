@@ -1,5 +1,12 @@
 # Ubuntu Kids Setup Log
 
+**Historical build log, reviewed 2026-09-05.** Jeffrey-dev remains stopped
+as Seykhl VM 101. Its historical `.147` address is now used by the live social
+runner; do not reuse it. PostgreSQL and Dertog moved to Sefer, and production
+Dolt is Sefer VM 124. Current addresses and host placement are in
+[INVENTORY.md](INVENTORY.md) and [NETWORK.md](NETWORK.md). The installed OS
+of stopped Jeffrey-dev was not rechecked.
+
 ## Objective
 Create an Ubuntu VM named `jeffrey-dev` on Proxmox server `seykhl` (192.168.0.202).
 - No X (headless/server)
@@ -68,7 +75,7 @@ Create an Ubuntu VM named `jeffrey-dev` on Proxmox server `seykhl` (192.168.0.20
 - `lsb_release -d`: `Ubuntu 26.04 LTS`
 
 ### 11. User Setup
-- Set password for `jeffrey`: `jeffrey14!`
+- Set password for `jeffrey`: `<redacted-rotate-required>`
 - Added `jeffrey` to `sudo` group (`usermod -aG sudo jeffrey`).
 - Root password is locked (`*` in `/etc/shadow`); root access only via `sudo`.
 
@@ -115,7 +122,7 @@ VM `jeffrey-dev` (101) is configured on `seykhl`.
 - **CPU:** `host` (AVX/AVX2/AVX-512 passthrough)
 - **Status:** Stopped (ready to start with `qm start 101`)
 - Accessible via SSH when running: `ssh jeffrey@192.168.0.147`
-- Password: `jeffrey14!` / SSH key passwordless
+- Password: `<redacted-rotate-required>` / SSH key passwordless
 - `jeffrey` has `sudo` privileges
 - Console accessible via: `qm terminal 101` from Proxmox
 - Node.js v24.15.0, npm 11.12.1 installed

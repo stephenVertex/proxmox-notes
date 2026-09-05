@@ -1,11 +1,11 @@
 # Historical Proxmox Procurement and Migration Plan — Dell PowerEdge R740xd (Reykhl)
 
-> **Historical record — superseded 2026-08-27.** The delivered and active
-> single-node host is [`sefer`](README.md), not the proposed `reykhl`.
-> `sefer` runs Proxmox VE 9.2.2 at `192.168.0.100`; the migrated services and
-> active backup policy are recorded in the current [infrastructure overview](README.md).
-> Keep the remainder of this document for the purchase decision and original
-> migration rationale, not as an operational runbook.
+**Historical procurement/migration plan, reviewed 2026-09-05.** The Dell
+R740xd is deployed as Sefer. Both Sefer and Seykhl remain active; Sefer has a
+VLAN 20 interface and a separate direct 10 GbE connection. Current deployed
+resources, services and storage are in [README.md](README.md),
+[NETWORK.md](NETWORK.md) and [INVENTORY.md](INVENTORY.md).
+
 
 ## Overview
 

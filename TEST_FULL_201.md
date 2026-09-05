@@ -1,5 +1,10 @@
 # test-full-201 — Test/Experimental VM
 
+**Absent from live inventory, 2026-09-05.** The old `test-full-201` guest
+is not present on either host. Sefer VM 203 is now the unrelated stopped
+`yesod-runner-6-opencode-fw` image. Do not apply the old VM 203 commands below
+to that image. Current assignments are in [INVENTORY.md](INVENTORY.md).
+
 ## Overview
 `test-full-201` (VMID 203) is a test VM on Proxmox host `seykhl`. It is currently stopped and used for experimental purposes.
 

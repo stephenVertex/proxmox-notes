@@ -1,5 +1,10 @@
 # seykhl-actions-runner — Self-Hosted GitHub Actions VM
 
+**Last verified:** 2026-09-05. VM 103 remains on Sefer `vmbr0` at
+`192.168.0.154`; Sefer also has VLAN address `192.168.20.10` (see
+[NETWORK.md](NETWORK.md)). All five runner services are active. QEMU guest
+agent queries fail; SSH works. The configured nightly VM backup is not a clean success: September 5 archive transfer completed but NAS pruning failed. See [BACKUPS.md](BACKUPS.md).
+
 ## Overview
 
 `seykhl-actions-runner` (VMID 103) is a Debian 13 guest on the Proxmox host
@@ -26,7 +31,7 @@ ssh stephen@192.168.0.154
 
 ## GitHub runner registrations
 
-Five runner services were active at the 2026-08-27 inventory:
+Five runner services were active at the 2026-09-05 inventory:
 
 | Systemd service suffix | Runner name |
 |---|---|
@@ -36,9 +41,9 @@ Five runner services were active at the 2026-08-27 inventory:
 | `yesod` | `seykhl-actions-yesod` |
 | `yesodwork` | `seykhl-actions-yesodwork` |
 
-The established repository-to-label mapping below documents the first three;
-confirm the repositories and labels for the `docs` and `yesodwork` registrations
-in GitHub before re-registering or changing their routing.
+The local `.runner` files confirm all five repository registrations. Custom
+labels below are the previously recorded labels; GitHub-side label and
+busy/online state were not queried in this audit.
 
 Each repository has its own runner directory and registration. Workflows
 select purpose-specific labels; they do not select the VM hostname.
@@ -48,9 +53,11 @@ select purpose-specific labels; they do not select the VM hostname.
 | `stephenVertex/yesod-aicoe` | `seykhl-actions-yesod` | `yesod-ci` | `~/actions-runner` |
 | `stephenVertex/clip-together` | `seykhl-actions-clip-together` | `dertog-deploy` | `~/actions-runner-clip-together` |
 | `stephenVertex/sjbis` | `seykhl-actions-sjbis` | `linux-x64`, `sjbis-ci` | `~/actions-runner-sjbis` |
+| `stephenVertex/yesod-aicoe-docs` | `seykhl-actions-docs` | Not reverified | `~/actions-runner-docs` |
+| `stephenVertex/yesod.work` | `seykhl-actions-yesodwork` | Not reverified | `~/actions-runner-yesodwork` |
 
 GitHub automatically adds the read-only `self-hosted`, `Linux`, and `X64`
-labels to all three registrations.
+labels to self-hosted registrations.
 
 ### Workflow routing
 
@@ -78,7 +85,7 @@ capability.
 ## Services and logs
 
 ```bash
-# List all three registrations
+# List all five registrations
 systemctl list-units --type=service 'actions.runner.*'
 
 # Follow one registration
@@ -108,7 +115,7 @@ from the GitHub API immediately before use.
 
 ## Dertog access
 
-This VM can reach dertog over the LAN and all three registration contexts use
+This VM can reach dertog over the LAN and the registration contexts use
 repository-scoped SSH material where required. For Yesod frontend deployment,
 the intended execution path is the `yesod-ci` registration copying a verified,
 content-addressed live-viz artifact to dertog. A successful deploy must verify

@@ -1,271 +1,95 @@
-# Dolt Server - Backup Configuration
+# Dolt production server
 
-> **Phased migration status (2026-08-27):** This VM remains the production
-> write primary. An isolated replacement/standby base now exists as VM 100 on
-> `sefer` at `192.168.0.160`. A fresh cold seed was taken during an authorized
-> pause on 2026-08-27 and passed full validation, but it has no live
-> replication, cluster configuration, or running SQL service. Production was
-> restarted unchanged on Dolt 2.1.10 after the seed. See
-> [DOLT_STANDBY.md](DOLT_STANDBY.md). Do not upgrade or reconfigure this primary
-> outside an explicit maintenance window.
+**Last verified:** 2026-09-05 from Sefer VM 124 and its running guest.
 
-## Overview
-`doltsvr` (VMID 100) is an Ubuntu VM on Proxmox host `seykhl` running the Dolt SQL server. This document covers the backup setup and configuration. (Renamed in Proxmox from `dolt-server` to `doltsvr` on 2026-06-09 to match /etc/hosts, SSH config, and the guest hostname.)
+## Current deployment
 
-## VM Specifications
-| Setting | Value |
-|---------|-------|
-| **VMID** | 100 |
-| **Name** | doltsvr (formerly dolt-server) |
-| **OS** | Ubuntu (latest stable) |
-| **CPU** | host (AVX passthrough) |
-| **Cores** | 2 |
-| **Memory** | 24GB |
-| **Disk** | 64GB (raw on local-lvm) |
-| **Network** | vmbr0 (bridge to LAN) |
-| **Net Model** | virtio |
-| **Display** | none (headless server) |
+Production `doltsvr` has moved from Seykhl VM 100 to **Sefer VM 124**. This
+is the existing Dolt 2.1.10 write primary, moved as a VM; it is not the
+Dolt 2.3.1 static seed on Sefer VM 100. The Seykhl copy is stopped and still
+has autostart enabled. Do not start the old copy alongside production.
 
-## Network Details
-- **MAC Address**: BC:24:11:D0:43:5D
-- **LAN IP**: 192.168.0.150 (DHCP)
-- **Tailscale IP**: 100.101.145.38
-- **Tailscale Hostname**: `doltsvr`
-- **Hostname**: `doltsvr`
-- **DNS**: Added to local `/etc/hosts` on admin machines
+| Setting | Current value |
+|---|---|
+| Host | Sefer, VLAN `192.168.20.10`; direct 10 GbE `192.168.0.100` |
+| VMID / name | 124 / `doltsvr` |
+| Guest OS | Debian 13 (Trixie), as reported by `/etc/os-release` |
+| CPU / memory | 4 host vCPU / 24 GiB fixed RAM |
+| Disk | 64 GiB raw file `local:124/vm-124-disk-0.raw` on mirrored `rpool` |
+| Bridge / MAC | `vmbr1` / `BC:24:11:D0:43:5D` |
+| VLAN IPv4 | `192.168.20.150` (old `192.168.0.150` is obsolete) |
+| Tailscale IPv4 | `100.101.145.38` |
+| Boot policy | `onboot=1`; QEMU guest agent responds |
+| Dolt | 2.1.10 |
+| Service | `dolt-sql-server.service`, enabled and active |
+| Service user / working directory | `dolt` / `/home/doltdb/databases/doltsvr` |
+| Listener | TCP 3306, wildcard listener observed |
 
-## Tailscale Access
-- **Status**: ✅ Joined to tailnet `tailb4b58.ts.net`
-- **Joined**: 2026-06-16
-- **URL**: `https://login.tailscale.com/admin/machines` (admin console)
-- **CLI check**: `tailscale status` on any tailnet node shows `100.101.145.38 doltsvr ... linux -`
+The administrator Mac's `doltsvr` SSH alias still pointed to the old LAN IP
+when inspected. Use the VLAN or Tailscale address and verify the guest's host
+key before updating client aliases. See [NETWORK.md](NETWORK.md).
 
-## Dolt Server Configuration
-- **Service**: `dolt-sql-server` (systemd)
-- **User**: `dolt` (uid=999)
-- **Working Directory**: `/home/doltdb/databases/doltsvr`
-- **Port**: 3306 (MySQL-compatible)
-- **Version**: 2.1.10 (upgraded from 2.1.0 on 2026-06-26)
+## Data and access
 
-## Data Location
+The active unit is `/etc/systemd/system/dolt-sql-server.service`. It runs in
+`/home/doltdb/databases/doltsvr`. The historical moves of `/var/lib/doltdb`
+and `/var/tmp` into `/home` are explained in the incident record below.
+No repository integrity scan, data mutation, service restart or upgrade was
+performed during this audit. A listening service does not prove every database
+or client is healthy.
 
-Dolt data was moved from `/var/lib/doltdb/` to `/home/doltdb/` on 2026-06-25 after
-the `/var` partition (2.9GB) filled up and crashed the service. `/home` has 44GB
-available. A symlink exists at `/var/lib/doltdb -> /home/doltdb` for compatibility,
-but all config files reference `/home/doltdb` directly.
-
-**Partition layout (problematic):**
-| Partition | Size | Mount | Notes |
-|-----------|------|-------|-------|
-| sda1 | 9.1GB | `/` | |
-| sda5 | 2.9GB | `/var` | Too small — Dolt data and autobackups moved off |
-| sda7 | 987MB | `/tmp` | |
-| sda8 | 47GB | `/home` | Dolt data + autobackup tmp live here now |
-
-**Symlinks on `/var`:**
-- `/var/lib/doltdb` → `/home/doltdb` (Dolt databases)
-- `/var/tmp` → `/home/tmp` (beads autobackup output)
-
-## Databases
-The following databases are stored in `/home/doltdb/databases/doltsvr/`:
-- `beads_als`
-- `beads_amplifier`
-- `beads_aysp`
-- `beads_chunkpdf`
-- `beads_clip_together`
-- `beads_hnalg`
-- `beads_mvr`
-- `beads_nbgen`
-- `beads_opensymphony`
-- `beads_ppg_pdf`
-- `beads_scr_rename`
-- `beads_scr_wrap`
-- `beads_shup`
-- `beads_sjbgtd`
-- `beads_submgk`
-- `beads_substack_sjbg_bridge`
-- `beads_synapse`
-- `beads_thmb`
-- `yesod_aicoe`
-
-## Backup Configuration
-
-### Tier 1: In-VM Dolt Dumps (Hourly)
-- **Script**: `/home/doltdb/databases/doltsvr/dolt_backup.sh`
-- **Schedule**: Every hour at `:00` via cron (dolt user)
-- **Location**: `/var/backups/dolt/`
-- **Format**: SQL dumps compressed with gzip
-- **Retention**: 5 days (auto-deletes older)
-
-### Backup Script Contents
 ```bash
-#!/bin/bash
-# Dolt database backup script
-# Dumps all databases in /var/lib/doltdb/databases/doltsvr/ to SQL files
-
-BACKUP_DIR="/var/backups/dolt"
-DATA_DIR="/home/doltdb/databases/doltsvr"
-TIMESTAMP=$(date +%Y%m%d-%H%M)
-
-mkdir -p "$BACKUP_DIR"
-
-# Loop through each database directory and dump it
-for db_dir in "$DATA_DIR"/*; do
-    if [ -d "$db_dir" ] && [ -f "$db_dir/.dolt/config.json" ]; then
-        db_name=$(basename "$db_dir")
-        backup_file="$BACKUP_DIR/${db_name}-${TIMESTAMP}.sql.gz"
-        
-        echo "Backing up $db_name..."
-        
-        # Run dolt dump in the database directory
-        cd "$db_dir"
-        dolt dump -fn "${db_name}.sql" 2>/dev/null
-        
-        if [ -f "${db_name}.sql" ]; then
-            # Compress and move to backup directory
-            gzip -c "${db_name}.sql" > "$backup_file"
-            rm "${db_name}.sql"
-            echo "  -> $backup_file ($(du -h "$backup_file" | cut -f1))"
-        else
-            echo "  -> FAILED for $db_name"
-        fi
-    fi
-done
-
-# Delete backups older than 5 days
-find "$BACKUP_DIR" -name "*.sql.gz" -mtime +5 -delete
-
-echo "Backup complete. Total backups: $(ls -1 "$BACKUP_DIR"/*.sql.gz 2>/dev/null | wc -l)"
+ssh -o BatchMode=yes stephen@192.168.20.150 'dolt version; systemctl is-active dolt-sql-server'
+ssh -o BatchMode=yes root@sefer 'qm status 124; qm guest cmd 124 network-get-interfaces'
+ssh -o BatchMode=yes root@sefer 'qm guest exec 124 -- ss -lntp'
 ```
 
-### Crontab Entry (dolt user)
+The guest's `stephen` login does not have unrestricted passwordless sudo;
+use authenticated Proxmox guest execution for privileged read-only inspection.
+Credentials remain in protected server/client configuration, not this document.
+
+## Static seed and replication
+
+Sefer VM 100 (`doltsvr-sefer`, `192.168.0.160`) still runs no SQL server,
+has no `/etc/dolt/config.yaml`, and retains Dolt 2.3.1. It is a static
+August 27 seed, not a live replica. VMs 122 and 123 remain protected, stopped
+and without NICs as offline rehearsal/seed sources.
+
+[DOLT_STANDBY.md](DOLT_STANDBY.md) retains the seed validation evidence.
+[DOLT_LIVE_REPLICA_PLAN.md](DOLT_LIVE_REPLICA_PLAN.md) is a historical plan
+requiring redesign: the two live Dolt guests now share Sefer. A replica there
+would not protect against losing that physical host.
+
+## Backups
+
+The Dolt user's current crontab still runs hourly:
+
 ```cron
 0 * * * * cd /home/doltdb/databases/doltsvr && bash dolt_backup.sh
 ```
 
-### Beads Autobackup Cleanup (Every 6 Hours)
-Beads clients create temporary Dolt backup snapshots in `/home/tmp/*beads-autobackup/`
-during `bd dolt push` operations. These grow continuously and can fill the disk.
-A cleanup script wipes them every 6 hours; they are recreated automatically on the
-next push from each client.
+Root also schedules `/home/doltdb/cleanup_autobackups.sh` every six hours.
+The audit's read-only listing found no dump files under `/var/backups/dolt`;
+scheduling alone does not prove usable dumps. The SQL-dump script and its
+output location/success need revalidation before relying on this layer.
 
-- **Script**: `/home/doltdb/cleanup_autobackups.sh`
-- **Schedule**: Every 6 hours via cron (root)
-- **Action**: `find /home/tmp -maxdepth 1 -name "*beads-autobackup" -type d -exec rm -rf {} +`
+Seykhl's `/root/sync-doltsvr-backups.sh` still reads the obsolete
+`192.168.0.150:/var/backups/dolt/`. Its weekly `vzdump 100` targets the stopped
+Seykhl copy. **Sefer VM 124 is not in either scheduled Sefer backup job.**
+The nightly Sefer backup of VM 100 protects the static seed, not production.
+See [BACKUPS.md](BACKUPS.md), follow-up `proxmox-uev`.
 
-```cron
-0 */6 * * * /home/doltdb/cleanup_autobackups.sh
-```
+The historic NAS recovery directory is
+`/mnt/proxmox-backups/doltsvr/vzdump/`. Restore archives into an unused,
+isolated VMID with networking disabled; verify date, source VM identity and
+contents before any cutover. Do not restore onto live VM 124 or blindly use
+old VMID 100 instructions.
 
-### Tier 2: NAS Mirror (Hourly)
-- **Script**: `/root/sync-doltsvr-backups.sh` (on Proxmox host)
-- **Schedule**: Every hour at `:10` via cron
-- **Target**: Synology NAS (`homestar.local`, 192.168.0.123)
-- **Path**: `/mnt/proxmox-backups/doltsvr/dolt_dump/`
+## Historical upgrades and incidents
 
-### NAS Sync Script Contents
-```bash
-#!/bin/bash
-# Pull dolt backups from doltsvr to NAS share
-rsync -avz --delete -e 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null' \
-  stephen@192.168.0.150:/var/backups/dolt/ \
-  /mnt/proxmox-backups/doltsvr/dolt_dump/ 2>/dev/null
-```
-
-### Tier 3: VM Snapshots (Weekly)
-- **Schedule**: Every Monday at 2:00 AM
-- **Target**: Synology NAS
-- **Path**: `/mnt/proxmox-backups/doltsvr/vzdump/`
-- **Retention**: 2 snapshots (auto-removes older)
-
-### Crontab Entry (root on Proxmox host)
-```cron
-0 2 * * 1 vzdump 100 --dumpdir /mnt/proxmox-backups/doltsvr/vzdump/ --compress zstd --mode snapshot --remove 1 --maxfiles 2
-```
-
-## NAS Configuration
-- **Host**: `192.168.0.123` (Synology NAS)
-- **Share**: `proxmox-backups`
-- **User**: `proxmox-backup`
-- **WORM**: Enabled (compliance mode) — files cannot be deleted or modified after writing
-
-### Mount Configuration
-```bash
-# Mount command (also in /etc/fstab on seykhl)
-mount -t cifs //192.168.0.123/proxmox-backups /mnt/proxmox-backups \
-  -o username=proxmox-backup,password=Pmxb2122!,vers=3.0,iocharset=utf8,_netdev
-```
-
-### fstab Entry
-```
-//192.168.0.123/proxmox-backups /mnt/proxmox-backups cifs username=proxmox-backup,password=Pmxb2122!,vers=3.0,iocharset=utf8,_netdev 0 0
-```
-
-## Backup Locations Summary
-
-| Tier | Type | Location | Retention | Size |
-|------|------|----------|-----------|------|
-| 1 | In-VM dolt dumps | `/var/backups/dolt/` (VM) | 5 days | ~468 KB |
-| 2 | NAS dolt dumps | `/mnt/proxmox-backups/doltsvr/dolt_dump/` | Mirrors VM | ~468 KB |
-| 3 | NAS VM snapshots | `/mnt/proxmox-backups/doltsvr/vzdump/` | 2 snapshots | ~2.5 GB each |
-
-## Restore Procedures
-
-### Restore a Single Database from SQL Dump
-```bash
-# On doltsvr
-zcat /var/backups/dolt/yesod_aicoe-20260601-1200.sql.gz | dolt sql
-```
-
-### Restore from VM Snapshot
-```bash
-# On Proxmox host (seykhl)
-qmrestore /mnt/proxmox-backups/doltsvr/vzdump/vzdump-qemu-100-YYYY_MM_DD-HH_MM_SS.vma.zst 100
-```
-
-## Troubleshooting
-
-### Check Backup Status
-```bash
-# On doltsvr
-ls -la /var/backups/dolt/
-
-# On Proxmox host
-ls -la /mnt/proxmox-backups/doltsvr/
-```
-
-### Check Cron Jobs
-```bash
-# On doltsvr (as dolt user)
-crontab -l
-
-# On Proxmox host
-crontab -l
-```
-
-### Manual Backup Test
-```bash
-# On doltsvr (as dolt user)
-cd /var/lib/doltdb/databases/doltsvr
-bash dolt_backup.sh
-
-# On Proxmox host
-bash /root/sync-doltsvr-backups.sh
-```
-
-## Resources
-- Proxmox Host: `seykhl` (192.168.0.202)
-- VM Disk: `local-lvm:vm-100-disk-0`
-- Data Directory: `/home/doltdb/databases/doltsvr/` (symlinked from `/var/lib/doltdb/`)
-- Dolt Version: 2.1.10
-- Dolt Documentation: https://docs.dolthub.com/
-
-## Notes
-- CPU type `host` is critical for modern tool compatibility
-- Dolt SQL server runs as user `dolt` with working directory at `/home/doltdb/databases/doltsvr`
-- The `dolt_backup.sh` script must be run as the `dolt` user to access database files
-- `rsync` was installed on both the VM and host for backup synchronization
-- WORM protection on the NAS ensures backups are immutable once written
+The following dated records describe the pre-migration service. Their version,
+size and database-count observations are historical, not current acceptance
+results. Any rollback requires a new maintenance plan and current backup.
 
 ## Upgrade History
 

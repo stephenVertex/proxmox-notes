@@ -1,7 +1,15 @@
 # Plan: Activate the Sefer Dolt live read replica
 
-**Created:** 2026-08-27  
-**Status:** Approved as a plan; execution not started  
+**Topology update, 2026-09-05:** production Dolt has already moved to Sefer
+VM 124 at `192.168.20.150`, retaining Dolt 2.1.10. Sefer VM 100 at `.160`
+still has SQL disabled and no cluster config; no live replica is established.
+The old Seykhl-primary placement and `.150` LAN endpoint in the plan below
+are historical. Do not execute it unchanged. Both current Dolt VMs share one
+physical host, so replication between them would not provide host redundancy.
+See [DOLT_SERVER.md](DOLT_SERVER.md) and [DOLT_STANDBY.md](DOLT_STANDBY.md).
+
+**Created:** 2026-08-27
+**Status:** Historical plan; requires redesign for the migrated topology
 **Change window:** Reserve 30–45 minutes; expected interruption should be
 shorter after rehearsal
 
@@ -15,7 +23,7 @@ and analytics uses a separate, read-only endpoint on Sefer.
 This plan does not move the canonical `doltsvr` identity or promote Sefer to
 primary. That remains a later, separately approved cutover.
 
-## Current state
+## State when planned on 2026-08-27
 
 | Component | Current state | Required activation state |
 |---|---|---|

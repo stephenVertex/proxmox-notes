@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "embedded",
+  "dolt_database": "proxmox",
+  "project_id": "d6340be4-2f35-482d-b16d-078a10dc12ba"
+}

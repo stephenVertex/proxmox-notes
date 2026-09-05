@@ -1,6 +1,11 @@
 # Yesod Semantic Graph controller VM
 
-**Last verified:** 2026-08-30
+The deployed symlink still targets `releases/dac21c562713`. Local PostgreSQL
+17.11 is running, and the 04:15 Pacific logical backup completed successfully
+on September 5. The M3 graph counts/digests below are historical acceptance
+results, not a fresh projection audit. No rebuild or source-data query was run.
+
+**Last verified:** 2026-09-05 (infrastructure; M3 acceptance remains dated August 30)
 
 ## Overview
 
@@ -55,6 +60,10 @@ repository's `docs/deployment.md`.
 
 ## PostgreSQL boundary
 
+The authentication/role assertions below are the retained August acceptance
+record. September checks verified the running local PostgreSQL listener and
+backup result, not every role grant.
+
 PostgreSQL 17 runs on VM 121 and listens only on `127.0.0.1` and `::1`. The
 database is `yesod_semantic_graph`, schema `pipeline`, and the matching Linux
 and PostgreSQL account is `yesod_semantic_graph_pipeline`.
@@ -85,8 +94,10 @@ resumability, lineage, and promotion reports.
 ## Production source connectivity
 
 The production catalog runs on VM 102 (`yesod-postgres-server`) on Proxmox host
-`seykhl`. PostgreSQL listens on the server's Tailscale address
-`100.115.10.68:5432`, not its LAN address `192.168.0.155:5432`. Live preflight
+`sefer`. Its observed guest IPv4 is now `192.168.20.155`; PostgreSQL client
+traffic uses the server's Tailscale address
+`100.115.10.68:5432`. The source now also listens on the VLAN address; see
+[YESOD_POSTGRES_SERVER.md](YESOD_POSTGRES_SERVER.md). Historical preflight
 from VM 121 initially found:
 
 - `192.168.0.155:5432`: connection refused;
@@ -97,9 +108,10 @@ Tailscale 1.102.3 is installed from its stable Debian 13 repository on VM 121,
 disabled on this guest; the protected DSN uses the explicit source Tailscale
 address to avoid the LAN hostname collision.
 
-The source DBA created only the restricted reader role described in the
+The August acceptance recorded the restricted reader role described in the
 application repository's `docs/source-boundary.md`. TCP reachability and
-`ysg source-audit` both pass.
+`ysg source-audit` passed then; this September infrastructure audit did not
+repeat that application capability audit.
 
 The current production application password was also found in tracked
 infrastructure Markdown. The plaintext copies are redacted in the current
@@ -154,7 +166,7 @@ report. Raw fixture body/comment text is absent from the mode-`0600` artifact.
 
 ## Production M3 rebuild proof
 
-The active epoch is `epoch:ff074c8537e13d748f2cab6b`, produced by release
+The August 30 acceptance recorded epoch `epoch:ff074c8537e13d748f2cab6b`, produced by release
 `dac21c562713` from 24,077 immutable source units and eight checkpoints. It
 contains 138,879 domain nodes, 170,443 domain edges, and 389,993 resolved
 evidence assertions. Its canonical digest is:
@@ -191,7 +203,9 @@ removes files older than 14 days.
 
 Sefer has a separate Proxmox job also named `yesod-semantic-graph`. It contains
 only VM 121, runs at 04:30 Pacific, writes `zstd` snapshots to `nas-backups`,
-and retains 7 daily, 4 weekly, and 3 monthly backups. The initial snapshot on
+and is configured to retain 7 daily, 4 weekly, and 3 monthly backups.
+The September 5 VM backup wrote its archive but failed during NAS pruning;
+see [BACKUPS.md](BACKUPS.md). The initial snapshot on
 2026-08-27 completed successfully and used guest-agent filesystem freeze/thaw.
 
 ```bash

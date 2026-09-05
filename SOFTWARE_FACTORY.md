@@ -1,5 +1,11 @@
 # Software Factory — Cluster Architecture & Workload Plan
 
+**Planning record, reviewed 2026-09-05.** The current deployment is two
+active standalone Proxmox hosts: Sefer and Seykhl. Seykhl was repurposed for
+g2 gates rather than decommissioned. The proposed multi-R740xd/DGX architecture
+below is not a claim about installed capacity. See [README.md](README.md)
+and [YESOD-RUNNER.md](YESOD-RUNNER.md) for the live fleet.
+
 ## Overview
 
 - **Document Version:** 2026-07-25

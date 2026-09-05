@@ -1,279 +1,139 @@
-# Yesod Postgres Server - Build Plan
+# Yesod PostgreSQL production server
 
-## Overview
-Create `yesod-postgres-server` on Proxmox host `seykhl` as a Debian 13 VM running latest stable PostgreSQL.
+**Last verified:** 2026-09-05, including a recheck after the operator's
+in-progress VLAN/startup repair. This audit made no changes to the running service.
 
-## VM Specifications
-| Setting | Value |
-|---------|-------|
-| **VMID** | 102 |
-| **Name** | yesod-postgres-server |
-| **OS** | Debian 13 "Trixie" (latest stable) |
-| **CPU** | host (AVX passthrough required for modern tools) |
-| **Cores** | 2 |
-| **Memory** | 6GB |
-| **Disk** | 60GB (raw on local-lvm; resized from 30GB on 2026-06-29) |
-| **Network** | vmbr0 (bridge to LAN) |
-| **Net Model** | virtio |
-| **Display** | none (headless server) |
+## Current deployment
 
-## Build Steps
+The server now runs as **Sefer VM 102**. The old Seykhl VM 102 is stopped
+but still has autostart enabled; do not start both copies.
 
-### 1. Download Debian 13 Cloud Image (if not present)
+| Setting | Current value |
+|---|---|
+| Host | Sefer: VLAN `192.168.20.10`, direct 10 GbE `192.168.0.100` |
+| Guest | Debian 13 (Trixie), hostname `yesod-postgres-server` |
+| VM resources | 2 host vCPU / 6 GiB RAM / 120 GiB disk |
+| Disk | `local:102/vm-102-disk-0.raw`, mirrored `rpool` |
+| Bridge / MAC | `vmbr1` / `BC:24:11:00:88:F5` |
+| Guest IPv4 | `192.168.20.155/24` (DHCP, observed after repair) |
+| Tailscale IPv4 | `100.115.10.68` |
+| Boot | Autostart enabled; QEMU guest agent responding |
+| PostgreSQL | 17.11 (`17.11-0+deb13u1`) |
+| Cluster | `17/main`, active/running, data `/var/lib/postgresql/17/main` |
+| pgvector package | `postgresql-17-pgvector` 0.8.0-1 installed |
+
+The old guest LAN address `192.168.0.155` is obsolete. The VM briefly used
+`192.168.20.108` during the audit; the final observed address is `.20.155`.
+The administrator Mac's `yesod-postgres-server` SSH alias still used the old
+LAN address when inspected. See [NETWORK.md](NETWORK.md).
+
+## Listeners and access rules
+
+The final read-only query returned `listen_addresses = '*'`; `ss` showed
+`0.0.0.0:5432` and `[::]:5432`. This supersedes the older Tailscale-only and
+explicit-old-LAN binding descriptions.
+
+| Endpoint | Purpose |
+|---|---|
+| `192.168.20.155:5432` | VLAN SQL endpoint |
+| `100.115.10.68:5432` | Existing Tailscale SQL endpoint |
+| Local Unix socket | Peer-authenticated administration |
+
+The inspected `pg_hba.conf` permits password-authenticated connections using
+`scram-sha-256` from localhost, `100.64.0.0/10`, `192.168.0.0/24` and
+`192.168.20.0/24`. It also retains a redundant specific Tailscale-address
+rule. Local socket access uses peer authentication. Replication permits local
+connections and `realtime_admin` from `192.168.0.0/24`.
+
+A matching HBA rule still requires valid role credentials and network access;
+this audit did not test every application's permissions or firewall route.
+Use credentials from the protected client configuration or an interactive
+password prompt, not a password embedded in documentation:
+
 ```bash
-# On seykhl (Proxmox host)
-ssh root@seykhl
-
-cd /var/lib/vz/template/iso/
-# Download Debian 13 generic cloud image
-wget https://cdimage.debian.org/images/cloud/trixie/latest/debian-13-generic-amd64.qcow2
+psql -h 100.115.10.68 -U stephen -d stephen -W
 ```
 
-### 2. Create VM on Proxmox
-```bash
-# Create empty VM
-qm create 102 \
-  --name yesod-postgres-server \
-  --memory 6144 \
-  --cores 2 \
-  --cpu host \
-  --net0 virtio,bridge=vmbr0 \
-  --scsihw virtio-scsi-single \
-  --boot order=scsi0 \
-  --ostype l26 \
-  --agent enabled=1
+## Boot ordering and September 5 repair
 
-# Import Debian 13 disk
-qm disk import 102 /var/lib/vz/template/iso/debian-13-generic-amd64.qcow2 local-lvm
+`postgresql@17-main.service` requests and starts after `tailscaled.service`.
+Its current drop-in is:
 
-# Attach disk to VM
-qm set 102 --scsi0 local-lvm:vm-102-disk-0
-
-# Resize disk to 30GB
-qm disk resize 102 scsi0 30G
-```
-
-### 3. Configure Cloud-Init
-```bash
-# Create cloud-init drive
-qm set 102 --ide2 local-lvm:cloudinit
-
-# Configure cloud-init user data (NO SSH key injection - user will handle manually)
-qm set 102 --ciuser stephen
-qm set 102 --cipassword <redacted-rotate-required>
-
-# Set IP (DHCP)
-qm set 102 --ipconfig0 ip=dhcp
-```
-
-### 4. Start VM and PAUSE
-```bash
-qm start 102
-```
-
-**STOP HERE.** Wait for user to:
-1. Confirm VM is fully booted
-2. Add VM IP to local `/etc/hosts` as `yesod-postgres-server`
-3. Set up passwordless SSH for this agent
-
-**DO NOT PROCEED until user confirms.**
-
-### 5. Post-Install Setup
-
-#### 5.1 Update System
-```bash
-ssh stephen@<IP>
-sudo apt update
-sudo apt upgrade -y
-```
-
-#### 5.2 Install PostgreSQL
-```bash
-# Install latest stable PostgreSQL from Debian repos
-sudo apt install -y postgresql postgresql-contrib
-
-# Enable and start service
-sudo systemctl enable postgresql
-sudo systemctl start postgresql
-
-# Verify
-sudo systemctl status postgresql
-psql --version
-```
-
-#### 5.3 Configure PostgreSQL
-```bash
-# Switch to postgres user for initial setup
-sudo -u postgres psql
-
-# Create database and user for applications
-CREATE USER stephen WITH PASSWORD '<redacted-rotate-required>' CREATEDB;
-CREATE DATABASE stephen OWNER stephen;
-\q
-
-# Configure pg_hba.conf for local connections
-sudo nano /etc/postgresql/15/main/pg_hba.conf
-# Ensure: local all all trust (for local unix socket connections)
-
-# Restart PostgreSQL
-sudo systemctl restart postgresql
-```
-
-#### 5.4 Harden SSH
-```bash
-# Edit /etc/ssh/sshd_config
-sudo nano /etc/ssh/sshd_config
-
-# Set:
-PermitRootLogin no
-PasswordAuthentication yes  # (keep yes for now, can switch to key-only later)
-PubkeyAuthentication yes
-
-# Restart SSH
-sudo systemctl restart sshd
-```
-
-### 6. Verification Checklist
-- [x] VM boots successfully
-- [x] User `stephen` can login via SSH with password `<redacted-rotate-required>`
-- [x] `sudo` works for stephen
-- [x] PostgreSQL service is running (PostgreSQL 17.10)
-- [x] `psql` connects as stephen
-- [x] Database `stephen` exists
-- [x] VM responds to ping from LAN
-- [x] Proxmox agent reports IP address
-
-## Network Details
-- **MAC Address**: BC:24:11:00:88:F5
-- **LAN IP**: 192.168.0.155 (DHCP)
-- **Tailscale IP**: 100.115.10.68
-- **Tailscale Hostname**: `yesod-postgres-server`
-- **Hostname**: `yesod-postgres-server`
-- **IP Assignment**: DHCP from LAN router
-- **DNS**: Added to local `/etc/hosts` on admin machines
-
-## Tailscale Access
-- **Status**: ✅ Joined to tailnet `tailb4b58.ts.net`
-- **URL**: `https://login.tailscale.com/admin/machines` (admin console)
-- **CLI check**: `tailscale status` on any tailnet node shows `100.115.10.68 yesod-postgres-server ... linux -`
-
-## Boot hardening
-
-PostgreSQL binds explicitly to both its Tailscale and LAN addresses. A systemd
-drop-in for `postgresql@17-main.service` requests and orders itself after
-`tailscaled.service`, then waits up to 90 seconds for `100.115.10.68` and
-`192.168.0.155` before starting PostgreSQL. This prevents the boot-time bind
-failure that occurs when PostgreSQL starts before either address exists.
-
-The tracked sources are
-[`systemd/postgresql@17-main.service.d/tailscale.conf`](systemd/postgresql@17-main.service.d/tailscale.conf)
-and
-[`scripts/wait-for-postgresql-listen-addresses`](scripts/wait-for-postgresql-listen-addresses).
-
-## PostgreSQL Connection
-
-### Listen Addresses
 ```ini
-listen_addresses = '100.115.10.68, 192.168.0.155, localhost'
+[Unit]
+Wants=tailscaled.service
+After=tailscaled.service
+
+[Service]
+ExecStartPre=/usr/local/sbin/wait-for-postgresql-listen-addresses 100.115.10.68
 ```
 
-### Access Rules (pg_hba.conf)
-```ini
-# Local socket
-local   all             all                                     peer
+The previous drop-in also waited for `192.168.0.155`, which is no longer
+assigned. During the operator's repair, startup failed twice after the
+90-second address wait. The live drop-in was corrected and the service started
+at 17:33:11 UTC. Later checks confirmed PostgreSQL 17.11 and wildcard listeners.
+No repair or restart was performed by this documentation audit.
 
-# Localhost TCP
-host    all             all             127.0.0.1/32            scram-sha-256
-host    all             all             ::1/128                 scram-sha-256
+The repository copy of the drop-in is synchronized with that observed live
+configuration at [systemd/postgresql@17-main.service.d/tailscale.conf](systemd/postgresql@17-main.service.d/tailscale.conf).
+The wait helper is [scripts/wait-for-postgresql-listen-addresses](scripts/wait-for-postgresql-listen-addresses).
+It waits for the explicitly supplied addresses; it does not discover the SQL
+listener configuration automatically.
 
-# LAN access
-host    all             all             192.168.0.0/24          scram-sha-256
+## Databases
 
-# Tailscale access
-host    all             all             100.64.0.0/10           scram-sha-256
-host    all             all             100.115.10.68/32        scram-sha-256
-```
+The read-only catalog query found 24 non-template databases. Established
+application databases include `stephen`, `sjbgtd`, `sjbis`, `sjb_social`,
+`clip`, `bukher`, `instasort` and `ttrac`, alongside `postgres`,
+`yesod_claimdiag`, `yesod_gate` and temporary gate/recovery databases. Counts
+of these temporary databases change with test activity.
 
-### Connection Parameters for Clients
-| Parameter | Value |
-|-----------|-------|
-| **Host** | `yesod-postgres-server` (MagicDNS) or `100.115.10.68` or `192.168.0.155` |
-| **Port** | `5432` |
-| **Database** | `stephen` |
-| **Username** | `stephen` |
-| **Password** | `<redacted-rotate-required>` |
-| **SSL** | `disable` (Tailscale encrypts the tunnel) |
+The `stephen` database is the production Yesod catalog. `bukher` backs
+Miniflux; `clip` and `sjb_social` support Supabase integrations. A dedicated
+semantic graph reader was established in the August acceptance work; that
+capability audit was not rerun here. See [YESOD_SEMANTIC_GRAPH.md](YESOD_SEMANTIC_GRAPH.md).
 
-### psql
+## Backups
+
+The guest's current cron still runs `/home/stephen/pg_backup.sh` hourly at
+`:00`. The guest timezone is UTC. The script discovers connectable databases
+and dumps them using the PostgreSQL superuser (needed for complete RLS-covered
+backups), plus a globals dump. Files are under `/var/backups/postgresql`.
+September 5 17:00 UTC database dumps and a nonzero globals dump were present.
+That is file-creation evidence, not a completed restore test.
+
+The historical local retention is roughly six hours of hourly dumps plus
+30 days of midnight dumps; the prior script record is retained below.
+Current off-VM delivery is **not established**: Seykhl's hourly NAS sync still
+points at `192.168.0.155`, and its monthly `vzdump 102` backs up the stopped
+Seykhl copy. Sefer VM 102 is absent from both scheduled Sefer backup lists.
+See [BACKUPS.md](BACKUPS.md), follow-up `proxmox-uev`.
+
+The historic NAS paths are:
+
+- `/mnt/proxmox-backups/yesod-postgres-server/pg_dump/`
+- `/mnt/proxmox-backups/yesod-postgres-server/vzdump/`
+
+The earlier NAS WORM configuration prevented normal deletion/rotation. Do not
+claim effective retention or copy an old host cron entry unchanged to Sefer.
+NAS credentials must stay in a protected credentials file, never a Markdown
+mount command.
+
+## Read-only verification
+
 ```bash
-psql -U stephen -d stephen -h yesod-postgres-server
+ssh -o BatchMode=yes root@sefer 'qm status 102; qm guest cmd 102 network-get-interfaces'
+ssh -o BatchMode=yes root@sefer 'qm guest exec 102 -- pg_lsclusters'
+ssh -o BatchMode=yes root@sefer 'qm guest exec 102 -- ss -lnt sport = :5432'
+ssh -o BatchMode=yes stephen@192.168.20.155 \
+  'sudo -n systemctl show postgresql@17-main -p ActiveState -p SubState -p ExecStartPre'
 ```
 
-### Connection Strings
-**Python:**
-```python
-DATABASE_URL = "postgresql://stephen:<redacted-rotate-required>@yesod-postgres-server:5432/stephen"
-```
+## Historical backup implementation
 
-**Node.js:**
-```javascript
-{ host: 'yesod-postgres-server', port: 5432, database: 'stephen', user: 'stephen', password: '<redacted-rotate-required>' }
-```
-
-**Go:**
-```go
-"host=yesod-postgres-server port=5432 user=stephen password=<redacted-rotate-required> dbname=stephen sslmode=disable"
-```
-
-### Other Databases
-
-#### sjb_social
-| Parameter | Value |
-|-----------|-------|
-| **Database** | `sjb_social` |
-| **Username** | `sjb_social_owner` |
-| **Password** | `SjbSocial2026!` |
-| **Connection string** | `postgres://sjb_social_owner:SjbSocial2026!@yesod-postgres-server:5432/sjb_social` |
-
-> **Note:** The `sjb_social` database has row-level security (RLS) policies. The backup script uses the `postgres` superuser to dump it, bypassing RLS. The `sjb_social_owner` role cannot dump all tables directly.
-
-#### bukher
-| Parameter | Value |
-|-----------|-------|
-| **Database** | `bukher` |
-| **Username** | `bukher` |
-| **Password** | `bukher2026` |
-| **Connection string** | `postgres://bukher:bukher2026@yesod-postgres-server:5432/bukher` |
-| **Owner** | `bukher` |
-| **Purpose** | RSS ingestion backend for the `bukher` Proxmox VM (Miniflux) |
-
-## Resources
-- Proxmox Host: `seykhl` (192.168.0.202)
-- Cloud Image: `/var/lib/vz/template/iso/debian-13-generic-amd64.qcow2`
-- VM Disk: `local-lvm:vm-102-disk-0`
-
-## Notes
-- CPU type `host` is critical — previous `jeffrey-dev` build failed with `kvm64` due to missing AVX instructions required by modern runtimes
-- Debian 13 is current stable as of May 2026
-- PostgreSQL version from Debian 13 repos is 17.10 (not 15.x as originally estimated)
-- Keep cloud-init SSH key injection — if it fails, mount disk from host and manually inject
-
-## Backup Configuration
-
-### Tiered pg_dump Backup (Inside VM)
-- **Script:** `/home/stephen/pg_backup.sh`
-- **Schedule:** Every hour at `:00` via cron
-- **Databases backed up:** Every connectable database, discovered dynamically at runtime. As of 2026-08-09: `bukher`, `clip`, `instasort`, `postgres`, `sjb_social`, `sjbgtd`, `sjbis`, `stephen`, `template1`, `ttrac`, `yesod_claimdiag`, and `yesod_gate`.
-- **Cluster-wide objects:** PostgreSQL roles and other global objects via `globals-YYYYMMDD-HHMM.sql.gz`
-- **Location:** `/var/backups/postgresql/{database}-YYYYMMDD-HHMM.sql.gz`
-- **Dump method:** `sudo -n -u postgres pg_dump <database>` (superuser, to include every database and bypass RLS policies)
-- **Template exception:** `template0` is not connectable by design (`datallowconn=false`) and is recreated by PostgreSQL; it is not dumped.
-- **Access check (2026-08-09):** `stephen` can connect to all 12 connectable databases; no privilege grants were changed. The backup job uses the `postgres` role so it does not depend on application-user table privileges.
-- **Retention:**
-  - **Hourly (local VM):** kept for roughly the last 6 hours while the current 120GB guest disk is capacity-constrained; several hourly restore points remain available
-  - **Daily:** midnight backups kept for the last 30 days
-  - **Capacity note:** restore the longer hourly window after the replacement Proxmox host and larger guest storage are in service. The NAS retains the midnight copies off-VM.
-- **Observed compressed sizes (2026-08-09):** `stephen` ~518 MB, `sjbgtd` ~789 MB, `sjb_social` ~11 MB, and the remaining databases are each ~1.2 MB or smaller in the first all-database run. Sizes will grow with data.
+This retained script/restore record describes the earlier implementation. The
+hourly schedule and output files were rechecked, but the entire deployed
+script and restore procedure were not re-executed in this documentation audit.
 
 ### Backup Script Contents
 ```bash
@@ -357,90 +217,3 @@ zcat /var/backups/postgresql/sjb_social-20260709-1721.sql.gz | sudo -u postgres 
 # Restore bukher database
 zcat /var/backups/postgresql/bukher-20260805-2311.sql.gz | sudo -u postgres psql -d bukher
 ```
-
-### Off-VM Backup via NAS (Active)
-**Status:** Active as of 2026-06-01
-**Target:** Synology NAS (`homestar.local`, 192.168.0.123) — `proxmox-backups` share (WORM enabled)
-**Mount:** `/mnt/proxmox-backups` on `seykhl` via CIFS
-
-### NAS Share Details
-- **Host:** `192.168.0.123` (Synology NAS)
-- **Share:** `proxmox-backups`
-- **User:** `proxmox-backup`
-- **WORM:** Enabled (compliance mode) — files cannot be deleted or modified after writing
-
-### Mount Configuration
-```bash
-# Mount command (also in /etc/fstab)
-mount -t cifs //192.168.0.123/proxmox-backups /mnt/proxmox-backups \
-  -o username=proxmox-backup,password=Pmxb2122!,vers=3.0,iocharset=utf8,_netdev
-```
-
-### fstab Entry
-```
-//192.168.0.123/proxmox-backups /mnt/proxmox-backups cifs username=proxmox-backup,password=Pmxb2122!,vers=3.0,iocharset=utf8,_netdev 0 0
-```
-
-### Host Backup Script
-- **Script:** `/root/sync-yesod-backups.sh`
-- **Schedule:** Every hour at `:05` via cron
-- **Action:** Pulls daily (midnight) pg_dump backups from VM to NAS for every database plus `globals`.
-- **Note:** Only syncs `*-0000.sql.gz` files. Hourly backups are NOT synced to NAS
-  to avoid WORM accumulation. `--ignore-existing` prevents attempts to rewrite immutable files;
-  `--delete` is intentionally absent because WORM prevents deletion.
-
-```bash
-#!/bin/bash
-set -Eeuo pipefail
-
-# Pull daily pg_dump backups from yesod-postgres-server to NAS share
-# Only syncs midnight (00:00) backups to reduce WORM accumulation
-# --delete removed: WORM compliance mode prevents file deletion
-rsync -az --ignore-existing \
-  -e 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null' \
-  --include='*-0000.sql.gz' --exclude='*' \
-  stephen@192.168.0.155:/var/backups/postgresql/ \
-  /mnt/proxmox-backups/yesod-postgres-server/pg_dump/
-```
-
-### Host Crontab Entries
-```cron
-5 * * * * /root/sync-yesod-backups.sh
-0 2 1 * * vzdump 102 --dumpdir /mnt/proxmox-backups/yesod-postgres-server/vzdump/ --compress zstd --mode snapshot --remove 1 --maxfiles 2
-```
-
-### Backup Locations on NAS
-| Type | Path | Retention |
-|------|------|-----------|
-| pg_dump | `/mnt/proxmox-backups/yesod-postgres-server/pg_dump/` | Daily midnight backups only (~170 MB each, accumulates on WORM) |
-| vzdump | `/mnt/proxmox-backups/yesod-postgres-server/vzdump/` | Monthly snapshots (WORM prevents `--maxfiles` rotation) |
-
-### WORM Limitation and Rotation Failure (Fixed 2026-06-29)
-The NAS WORM compliance mode prevents all file deletion, which caused both rotation
-mechanisms to silently fail:
-- **rsync `--delete`** had no effect — 195 hourly backups accumulated over 7 days (23 GB)
-- **vzdump `--maxfiles 2`** had no effect — 4 weekly snapshots accumulated (42 GB)
-
-**Fix applied:**
-1. rsync now only syncs daily midnight backups (`*-0000.sql.gz`), reducing growth from
-   ~4 GB/day to ~170 MB/day. `--delete` flag removed.
-2. vzdump changed from weekly to monthly (1st of month at 02:00), reducing accumulation
-   to ~1 snapshot/month (~15-20 GB each).
-
-**Note:** Old WORM-locked files on the NAS cannot be removed. They will remain until
-the WORM retention period expires (check Synology DSM settings for the WORM quota/retention
-configuration on the `proxmox-backups` share).
-
-### Why WORM Matters
-The NAS share is configured with **WORM (Write Once Read Many)** in compliance mode. This means:
-- Once a file is written, it **cannot be deleted, modified, or renamed**
-- Protection is enforced at the filesystem level, not just permissions
-- Even if the Proxmox host is compromised, the attacker cannot destroy or encrypt your backups
-- This is the gold standard for immutable backup storage
-
-### Previous Failed Attempt
-**Attempted:** 2026-05-31
-**Disk:** `/dev/sda` (WDC WD5000LPLX-08ZNTT0, 500 GB)
-**Issue:** Disk failed during first write test. SMART shows `FAILED` with 2,840 reallocated sectors.
-**Action:** Disk unmounted, removed from `/etc/fstab`, and declared unusable.
-**Resolution:** Switched to NAS-based off-VM backups instead of host disk.

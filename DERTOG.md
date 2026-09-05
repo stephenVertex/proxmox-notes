@@ -1,7 +1,16 @@
 # Dertog — Debian 13 Dashboard Server
 
+**Last verified:** 2026-09-05. Dertog has moved to Sefer VM 104 and VLAN
+address `192.168.20.138` (Tailscale `100.64.95.60`). Its stopped Seykhl copy
+still has autostart enabled; do not start both. nginx validates successfully,
+the two router config copies match, and the index returns HTTP 200. All
+dashboard/API units listed below are active. The health-dashboard source still
+labels Seykhl as `192.168.0.202` and queries `root@seykhl`; this is a stale
+application label, not the current host address. VM 104 is absent from Sefer
+backup jobs; see [BACKUPS.md](BACKUPS.md).
+
 ## Overview
-`dertog` (VMID 104) is a Debian 13 VM on Proxmox host `seykhl`. Named after the Yiddish *"der tog"* (the day/newspaper), it's a platform for hosting various dashboards and distilled data visualizations.
+`dertog` (VMID 104) is a Debian 13 VM on Proxmox host `sefer`. Named after the Yiddish *"der tog"* (the day/newspaper), it's a platform for hosting various dashboards and distilled data visualizations.
 
 ## VM Specifications
 | Setting | Value |
@@ -12,14 +21,14 @@
 | **CPU** | host (AVX passthrough) |
 | **Cores** | 2 |
 | **Memory** | 6GB (with ballooning) |
-| **Disk** | 30GB (raw on local-lvm) |
-| **Network** | vmbr0 (bridge to LAN) |
+| **Disk** | 30 GiB (raw file on Sefer `local`, mirrored `rpool`) |
+| **Network** | Sefer `vmbr1` (VLAN 20) |
 | **Net Model** | virtio |
 | **Display** | none (headless server) |
 
 ## Network Details
 - **MAC Address**: BC:24:11:90:A9:CC
-- **LAN IP**: 192.168.0.138 (DHCP)
+- **LAN IP**: 192.168.20.138 (DHCP)
 - **Hostname**: dertog
 - **DNS**: Will be added to local `/etc/hosts` on admin machines
 
@@ -36,17 +45,17 @@ ssh stephen@dertog
 Passwordless SSH via offline disk mount technique (see SSH_ENABLE_HOWTO.md).
 
 ## Resources
-- Proxmox Host: `seykhl` (192.168.0.202)
+- Proxmox Host: `sefer` (VLAN `192.168.20.10`, direct 10 GbE `192.168.0.100`)
 - Cloud Image: `/var/lib/vz/template/iso/debian-13-generic-amd64.qcow2`
-- VM Disk: `local-lvm:vm-104-disk-0`
+- VM Disk: `local:104/vm-104-disk-0.raw`
 
-## Build Log
+## Historical build log on Seykhl
 
 ### Creation (2026-05-18)
 1. Created VM 104 on Proxmox with Debian 13 cloud image
 2. Configured cloud-init with user `stephen`
 3. Enabled memory ballooning (6GB max, 2GB min)
-4. Started VM and got IP `192.168.0.138`
+4. Started VM and got IP `192.168.20.138`
 
 ### SSH Key Injection (Offline Disk Mount)
 Following SSH_ENABLE_HOWTO.md technique:
@@ -279,11 +288,11 @@ curl -sS -N --max-time 5 -D - -o /dev/null \
 - **Process**: `/opt/perf-dashboard/dashboard_server.py` (root)
 - **Purpose**: System performance monitoring dashboard
 
-## Current Status
-- **SSH**: ✅ `ssh stephen@192.168.0.138` works with key auth
+## Observed service status — 2026-09-05
+- **SSH**: ✅ `ssh stephen@192.168.20.138` works with key auth
 - **Sudo**: ✅ Passwordless sudo configured
-- **Memory**: Ballooning enabled (2GB current, up to 6GB max)
-- **Disk**: 30GB total, 28GB free
+- **Memory**: 6 GiB maximum, balloon minimum 4 GiB in the current VM configuration
+- **Disk**: 30 GiB configured; see the live filesystem for current free space
 - **nginx**: ✅ Active on port 8088 (reverse proxy for HTTPS routing)
 - **tailscale serve**: ✅ Background, 443 → 8088
 - **cluster-services**: ✅ Active on port 8092
@@ -311,7 +320,7 @@ curl -sS -N --max-time 5 -D - -o /dev/null \
 ## Notes
 - CPU type `host` for modern tool compatibility
 - Ballooning enabled for memory efficiency
-- `qemu-guest-agent` not available in default Debian 13 repos (not critical for basic operation)
+- QEMU guest agent is configured but not running; use SSH for guest inspection.
 - **Do not install node/npm** on dertog — the frontend is built on `seykhl-actions-runner` and copied as static files
 - **HTTPS routing**: nginx strips path prefixes via `proxy_pass` trailing-slash syntax. Direct HTTP access to all ports is unchanged.
 - To change `VITE_*` env vars, the frontend must be **rebuilt** (env vars are baked into the bundle at build time)

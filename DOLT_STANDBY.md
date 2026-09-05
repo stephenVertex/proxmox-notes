@@ -1,17 +1,24 @@
 # Dolt standby on Sefer
 
-**Last verified:** 2026-08-27
+Live checks confirm Dolt 2.3.1, disabled/inactive `dolt-sql-server`, missing
+`/etc/dolt/config.yaml`, and UFW allowing only LAN SSH/mDNS. Production now
+runs on the same physical Sefer host; the earlier Seykhl-to-Sefer cutover plan
+does not describe the present topology. The configured nightly VM backup is not a clean success: September 5 archive transfer completed but NAS pruning failed. See [BACKUPS.md](BACKUPS.md).
+
+**Last verified:** 2026-09-05 (runtime; seed validation remains dated August 27)
 
 ## Safety boundary
 
-The production `doltsvr` at `192.168.0.150` remains the only write primary.
+The production `doltsvr` is now Sefer VM 124 at `192.168.20.150`
+(Tailscale `100.101.145.38`) and remains the only write primary.
 An authorized pause on 2026-08-27 was used to take a cold backup and fresh
 seed; the production service was then restarted unchanged. Its Dolt version,
 configuration, data directory, hostname, and client routing must not be changed
 outside another explicit maintenance window.
 
-VM 100 on `sefer` is an isolated migration target. It must remain under the
-temporary guest hostname `doltsvr-sefer` until a controlled cutover. Do not
+VM 100 on `sefer` remains an isolated static seed, separate from the migrated
+production VM 124. It must remain under the
+temporary guest hostname `doltsvr-sefer` unless deliberately repurposed. Do not
 assign it the production `doltsvr` DNS, mDNS, or Tailscale identity early.
 
 ## VM inventory
@@ -42,12 +49,12 @@ backup transferred the sparse 100 GiB disk in 83 seconds and produced a
 3.49 GiB archive.
 
 The service unit has a `ConditionPathExists=/etc/dolt/config.yaml` guard. The
-cluster configuration does not yet exist, so the standby cannot accidentally
+cluster configuration is still absent, so the standby cannot accidentally
 start or contact production.
 
-## Migration phases
+## Original migration phases (August 27 plan; topology superseded)
 
-The executable activation and rollback checklist is maintained in
+The historical activation and rollback checklist is retained in
 [DOLT_LIVE_REPLICA_PLAN.md](DOLT_LIVE_REPLICA_PLAN.md).
 
 1. **Isolated base — complete.** Provision and harden the VM, pin Dolt 2.3.1,
@@ -105,7 +112,7 @@ this newer backup completed.
 ## Analytics access
 
 VM 100 currently contains a **static snapshot**, not a live read replica. It
-does not receive production changes. The SQL service is disabled and inactive,
+does not receive production changes. The September 5 check confirms the SQL service is disabled and inactive,
 UFW does not allow port 3306, and no analytics credential exists yet.
 
 For analytics that can use the 2026-08-27 snapshot, connect over SSH and run
