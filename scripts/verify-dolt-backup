@@ -1,0 +1,73 @@
+#!/usr/bin/env python3
+"""Read a native backup tar.gz on stdin and restore every DB into scratch space."""
+import datetime
+import hashlib
+import json
+import os
+from pathlib import Path
+import shutil
+import subprocess
+import sys
+import tarfile
+import tempfile
+
+os.umask(0o077)
+DOLT = '/usr/local/bin/dolt'
+SPOOL = Path('/home/dolt-backups')
+if shutil.disk_usage(SPOOL).free < 10 * 1024**3:
+    raise SystemExit('restore verification requires 10 GiB free')
+workspace = Path(tempfile.mkdtemp(prefix='.restore-', dir=SPOOL))
+try:
+    archive = workspace / 'input.tar.gz'
+    with archive.open('wb') as target:
+        shutil.copyfileobj(sys.stdin.buffer, target)
+    payload = workspace / 'payload'
+    with tarfile.open(archive, 'r:gz') as source:
+        source.extractall(payload, filter='data')
+    metadata = json.loads((payload / 'manifest.json').read_text())
+    files_verified = 0
+    for line in (payload / 'SHA256SUMS').read_text().splitlines():
+        expected, name = line.split('  ', 1)
+        target = (payload / name).resolve()
+        if not target.is_relative_to(payload.resolve()):
+            raise RuntimeError('unsafe checksum path')
+        with target.open('rb') as stream:
+            actual = hashlib.file_digest(stream, 'sha256').hexdigest()
+        if actual != expected:
+            raise RuntimeError(f'checksum mismatch: {name}')
+        files_verified += 1
+    restored = workspace / 'restored'
+    restored.mkdir()
+    # Only the isolated scratch workspace is made accessible to the Dolt account.
+    shutil.chown(workspace, user='dolt', group='dolt')
+    for path in workspace.rglob('*'):
+        shutil.chown(path, user='dolt', group='dolt')
+    results = []
+    for name in metadata['repositories']:
+        native = payload / 'native' / name
+        if not native.resolve().is_relative_to((payload / 'native').resolve()):
+            raise RuntimeError('unsafe database name')
+        print(f'Restoring and checking {name}', file=sys.stderr, flush=True)
+        prefix = ['/usr/sbin/runuser', '-u', 'dolt', '--', DOLT]
+        subprocess.run(prefix + ['backup', 'restore', native.as_uri(), name],
+                       cwd=restored, check=True, stdout=subprocess.DEVNULL)
+        check = subprocess.run(prefix + ['fsck'], cwd=restored / name,
+                               check=True, capture_output=True, text=True)
+        # Opening SQL checks the restored working set, not merely archive syntax.
+        sql = subprocess.run(prefix + ['sql', '-r', 'json', '-q',
+                             'SELECT COUNT(*) AS table_count FROM information_schema.tables '
+                             "WHERE table_schema = DATABASE() AND table_type = 'BASE TABLE'"],
+                             cwd=restored / name, check=True, capture_output=True, text=True)
+        results.append({'database': name, 'fsck': 'passed',
+                        'sql': json.loads(sql.stdout)})
+    with archive.open('rb') as stream:
+        checksum = hashlib.file_digest(stream, 'sha256').hexdigest()
+    report = {'checked_utc': datetime.datetime.now(datetime.timezone.utc).isoformat(),
+              'backup_created_utc': metadata['created_utc'], 'archive_sha256': checksum,
+              'payload_files_verified': files_verified, 'restored_databases': results,
+              'method': 'NAS archive streamed back; isolated native restores, fsck and SQL open on every repository; production data untouched.'}
+    text = json.dumps(report, indent=2) + '\n'
+    (SPOOL / 'last-restore-report.json').write_text(text)
+    print(text)
+finally:
+    shutil.rmtree(workspace)

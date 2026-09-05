@@ -1,0 +1,12 @@
+[Unit]
+Description=Create and verify native production Dolt backups on the NAS
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/backup-dolt-to-nas
+TimeoutStartSec=50min
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7

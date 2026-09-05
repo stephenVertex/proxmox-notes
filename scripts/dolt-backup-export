@@ -1,0 +1,163 @@
+#!/usr/bin/env python3
+"""Restricted SSH endpoint on production Dolt: create, hash, read, acknowledge."""
+import datetime
+import csv
+import io
+import fcntl
+import hashlib
+import json
+import os
+from pathlib import Path
+import re
+import shutil
+import signal
+import subprocess
+import sys
+import tarfile
+import tempfile
+
+BASE = Path('/home/doltdb/databases/doltsvr')
+SPOOL = Path('/home/dolt-backups')
+DOLT = '/usr/local/bin/dolt'
+ENV = dict(os.environ, PATH='/usr/local/bin:/usr/bin:/bin', HOME='/home/doltdb')
+os.umask(0o077)
+
+
+def run(args, cwd=None):
+    return subprocess.run(args, cwd=cwd, env=ENV, check=True,
+                          stdout=subprocess.PIPE, stderr=sys.stderr, text=True).stdout
+
+
+def log(message):
+    print(message, file=sys.stderr, flush=True)
+
+
+def create():
+    pending = sorted(SPOOL.glob('doltsvr-????????T??????Z.tar.gz'))
+    if pending:
+        log('Retrying delivery of existing unacknowledged archive')
+        print(pending[0].name, flush=True)
+        return
+    if shutil.disk_usage(SPOOL).free < 10 * 1024**3:
+        raise RuntimeError('less than 10 GiB free in backup spool filesystem')
+    stamp = datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+    filename = f'doltsvr-{stamp}.tar.gz'
+    destination = SPOOL / filename
+    if destination.exists():
+        raise RuntimeError('backup name already exists')
+    stage = Path(tempfile.mkdtemp(prefix='.stage-', dir=SPOOL))
+    partial = SPOOL / (filename + '.partial')
+    try:
+        # Only this scratch tree is writable by the database service account.
+        shutil.chown(stage, user='dolt', group='dolt')
+        native = stage / 'native'
+        native.mkdir(mode=0o700)
+        shutil.chown(native, user='dolt', group='dolt')
+        repositories = sorted(p for p in BASE.iterdir() if (p / '.dolt' / 'noms').is_dir())
+        if (BASE / '.dolt' / 'noms').is_dir():
+            repositories.insert(0, BASE)  # The parent is also a database.
+        if not repositories:
+            raise RuntimeError('no Dolt repositories discovered')
+        inventory = run(['/usr/sbin/runuser', '-u', 'dolt', '--', DOLT,
+                         'sql', '-r', 'csv', '-q', 'SHOW DATABASES'], cwd=BASE)
+        live_names = {row[0] for row in list(csv.reader(io.StringIO(inventory)))[1:]
+                      if row and row[0] not in ('information_schema', 'mysql', 'dolt_cluster')}
+        if live_names != {repo.name for repo in repositories}:
+            raise RuntimeError('SQL database inventory differs from filesystem backup inventory')
+        names = []
+        for repo in repositories:
+            if not re.fullmatch(r'[A-Za-z0-9_.-]+', repo.name):
+                raise RuntimeError('unsupported repository name')
+            log(f'Backing up {repo.name}')
+            run(['/usr/sbin/runuser', '-u', 'dolt', '--', DOLT, 'backup',
+                 'sync-url', (native / repo.name).as_uri()], cwd=repo)
+            if not (native / repo.name / 'manifest').is_file():
+                raise RuntimeError(f'native manifest missing: {repo.name}')
+            names.append(repo.name)
+        # Capture configuration separately; full VM backups cover the entire OS.
+        config = stage / 'configuration'
+        paths = [Path('/etc/dolt'), Path('/home/doltdb/.dolt'),
+                 Path('/etc/systemd/system/dolt-sql-server.service'),
+                 Path('/etc/systemd/system/dolt-sql-server.service.d'),
+                 Path('/var/spool/cron/crontabs/dolt'), BASE / 'config.yaml', BASE / '.doltcfg']
+        paths += [repo / '.dolt' / name for repo in repositories
+                  for name in ('config.json', 'repo_state.json')]
+        for source in paths:
+            if source.exists():
+                target = config / source.relative_to('/')
+                target.parent.mkdir(parents=True, exist_ok=True)
+                if source.is_dir():
+                    shutil.copytree(source, target)
+                else:
+                    shutil.copy2(source, target)
+        metadata = {'created_utc': stamp, 'vmid': 124, 'host': 'sefer',
+                    'dolt_version': run([DOLT, 'version']).splitlines()[0],
+                    'repositories': names,
+                    'consistency': 'Per-database native snapshots taken sequentially; not a cross-database transaction.'}
+        (stage / 'manifest.json').write_text(json.dumps(metadata, indent=2) + '\n')
+        # Hash every payload, including configuration, before packing.
+        with (stage / 'SHA256SUMS').open('w') as checksums:
+            for path in sorted(stage.rglob('*')):
+                if path.is_file() and path.name != 'SHA256SUMS':
+                    with path.open('rb') as stream:
+                        digest = hashlib.file_digest(stream, 'sha256').hexdigest()
+                    checksums.write(f'{digest}  {path.relative_to(stage)}\n')
+        with tarfile.open(partial, 'w:gz', compresslevel=1) as archive:
+            for child in sorted(stage.iterdir()):
+                archive.add(child, arcname=child.name)
+        # Force write errors to surface before publishing the completed filename.
+        with partial.open('rb') as stream:
+            os.fsync(stream.fileno())
+        partial.rename(destination)
+        log(f'Completed {len(names)} repositories; {destination.stat().st_size} bytes')
+        print(filename, flush=True)
+    finally:
+        shutil.rmtree(stage)
+        partial.unlink(missing_ok=True)
+
+
+def main():
+    if os.geteuid() != 0:
+        raise RuntimeError('must run as root')
+    SPOOL.mkdir(mode=0o750, exist_ok=True)
+    shutil.chown(SPOOL, user='root', group='dolt')
+    SPOOL.chmod(0o750)
+    command = os.environ.get('SSH_ORIGINAL_COMMAND', ' '.join(sys.argv[1:])).split()
+    with (SPOOL / '.lock').open('a') as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        if command == ['verify']:
+            subprocess.run(['/usr/local/sbin/verify-dolt-backup'], check=True)
+            return
+        if command == ['create']:
+            create()
+            return
+        if len(command) != 2 or command[0] not in ('sha256', 'read', 'ack'):
+            raise RuntimeError('allowed commands: create, sha256/read/ack <archive>')
+        name = command[1]
+        if not re.fullmatch(r'doltsvr-\d{8}T\d{6}Z\.tar\.gz', name):
+            raise RuntimeError('invalid archive name')
+        path = SPOOL / name
+        if path.is_symlink() or not path.is_file():
+            raise RuntimeError('archive missing or invalid')
+        if command[0] == 'sha256':
+            with path.open('rb') as stream:
+                print(hashlib.file_digest(stream, 'sha256').hexdigest())
+        elif command[0] == 'read':
+            with path.open('rb') as stream:
+                shutil.copyfileobj(stream, sys.stdout.buffer)
+        else:
+            path.unlink()  # Host acknowledges only after verified NAS delivery.
+
+
+def interrupted(signum, frame):
+    raise RuntimeError(f'backup interrupted by signal {signum}')
+
+
+if __name__ == '__main__':
+    signal.signal(signal.SIGTERM, interrupted)
+    signal.signal(signal.SIGHUP, interrupted)
+    try:
+        main()
+    except Exception as error:
+        log(f'Dolt backup FAILED: {error}')
+        sys.exit(1)

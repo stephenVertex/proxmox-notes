@@ -81,14 +81,15 @@ longer all on `vmdata`; free space is a snapshot, not reserved capacity.
 
 ## Backups and observed issues
 
-The configured Sefer jobs still cover only the original 12 guests:
+The configured Sefer jobs cover 13 guests after adding production Dolt:
 
 | Job | Schedule (Pacific) | VMs | Configured retention |
 |---|---|---|---|
+| `doltsvr-production` | Daily 02:30 | 124 | Keep all; NAS retention pending |
 | `sefer-light-services` | Daily 03:30 | 100,103,105,107,113,114,116,117,118,119,120 | 7 daily / 4 weekly / 3 monthly |
 | `yesod-semantic-graph` | Daily 04:30 | 121 | 7 daily / 4 weekly / 3 monthly |
 
-Both September 5 jobs reported **job errors during pruning**: archive transfer
+The two original September 5 jobs reported **job errors during pruning**: archive transfer
 completed, but deleting older NAS archives returned `Operation not supported`.
 Configured retention must not be described as successfully enforced. See
 [BACKUPS.md](BACKUPS.md) for the evidence and coverage gaps.
@@ -97,9 +98,11 @@ The GitLab-native backup completed successfully at 01:31 Pacific, and the
 semantic graph logical PostgreSQL dump completed at 04:15. Those successful
 application backups are separate from the Proxmox job results.
 
-Seykhl still has backup cron entries for old VM IDs and old Dolt/PostgreSQL
-addresses. The migrated production VMs, LiteLLM and expanded runner fleet are
-absent from Sefer's scheduled VM backup lists.
+Dolt now has hourly native NAS backups and a daily VM124 backup on Sefer.
+All 34 databases were restored from the NAS copy and passed integrity/SQL
+checks during the September 5 repair.
+The obsolete Seykhl Dolt jobs were retired. PostgreSQL/Dertog, LiteLLM and
+the expanded runner fleet still need backup coverage; see [BACKUPS.md](BACKUPS.md).
 
 Additional observations:
 

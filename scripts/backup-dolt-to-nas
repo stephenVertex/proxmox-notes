@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+# Runs on Sefer. NAS generations are append-only; NAS retention is separate.
+set -euo pipefail
+umask 077
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+readonly nas_mount=/mnt/proxmox-backups
+readonly destination="$nas_mount/doltsvr/native"
+readonly state=/var/lib/dolt-nas-backup
+readonly ssh_key=/root/.ssh/dolt-nas-backup
+readonly known_hosts=/root/.ssh/dolt-nas-backup.known_hosts
+readonly guest=192.168.20.150
+mkdir -p "$state"
+exec 9>"$state/lock"
+flock -n 9
+mountpoint -q "$nas_mount" || { echo 'NAS is not mounted' >&2; exit 1; }
+# Fail before creating more data if NAS free capacity is below 200 GiB.
+(( $(df -Pk "$nas_mount" | awk 'NR==2 {print $4}') > 209715200 )) || {
+    echo 'NAS has less than 200 GiB free' >&2; exit 1;
+}
+mkdir -p "$destination"
+remote() {
+    ssh -i "$ssh_key" -o IdentitiesOnly=yes -o BatchMode=yes \
+        -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$known_hosts" \
+        -o ConnectTimeout=15 -o ServerAliveInterval=30 -o ServerAliveCountMax=6 \
+        "root@$guest" "$@"
+}
+# Retry the same generation after transfer failure instead of filling the guest.
+if [[ -f "$state/pending" ]]; then
+    filename=$(cat "$state/pending")
+else
+    filename=$(remote create)
+    [[ "$filename" =~ ^doltsvr-[0-9]{8}T[0-9]{6}Z\.tar\.gz$ ]]
+    printf '%s\n' "$filename" > "$state/pending.tmp"
+    mv -f "$state/pending.tmp" "$state/pending"
+fi
+[[ "$filename" =~ ^doltsvr-[0-9]{8}T[0-9]{6}Z\.tar\.gz$ ]]
+expected=$(remote sha256 "$filename")
+[[ "$expected" =~ ^[a-f0-9]{64}$ ]]
+# Unique attempt names allow retries even when NAS WORM disallows overwrites.
+if [[ -f "$destination/$filename" ]]; then
+    actual=$(sha256sum "$destination/$filename" | awk '{print $1}')
+    [[ "$actual" == "$expected" ]]
+else
+    partial="$destination/.$filename.$(date +%s%N).partial"
+    remote read "$filename" > "$partial"
+    actual=$(sha256sum "$partial" | awk '{print $1}')
+    [[ "$actual" == "$expected" ]]
+    gzip -t "$partial"
+    mv -n "$partial" "$destination/$filename"
+    [[ $(sha256sum "$destination/$filename" | awk '{print $1}') == "$expected" ]]
+fi
+if [[ ! -f "$destination/$filename.sha256" ]]; then
+    printf '%s  %s\n' "$expected" "$filename" > "$destination/$filename.sha256"
+fi
+# Mark delivery before cleanup, so lost ack replies do not cause endless retries.
+printf '%s %s %s\n' "$(date -u +%FT%TZ)" "$expected" "$filename" > "$state/last-success.tmp"
+mv -f "$state/last-success.tmp" "$state/last-success"
+rm -f "$state/pending"
+remote ack "$filename" || echo 'WARNING: NAS verified; guest cleanup failed' >&2
+echo "Verified NAS backup: $destination/$filename sha256=$expected"

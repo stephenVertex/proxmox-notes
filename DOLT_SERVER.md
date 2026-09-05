@@ -62,89 +62,171 @@ would not protect against losing that physical host.
 
 ## Backups
 
-**Traced live on 2026-09-05, approximately 13:15 Pacific. No backup job or
-service was changed, no backup was triggered, and no restore was performed.**
+**Repaired 2026-09-05.** Production stays on Dolt 2.1.10. The hourly backup now
+uses Dolt-native snapshots, and Sefer also schedules a full VM124 backup.
 
-The intended chain is hourly guest SQL dumps, an hourly Seykhl pull to the NAS,
-and a weekly full VM archive. None currently establishes a recent production
-backup after migration.
-
-| Layer | Configuration | Observed result |
+| Layer | Schedule (Pacific) | Destination |
 |---|---|---|
-| Guest SQL dumps | `dolt` user cron at minute 0, every hour | Cron invokes the script; `/var/backups/dolt` is empty |
-| NAS SQL copy | Seykhl root cron at minute 10, every hour | Still pulls the obsolete `.0.150`; NAS `dolt_dump` directory is empty |
-| Weekly production VM archive | Seykhl Monday 02:00, VM 100 | August 31 failed with `VM is locked (migrate)`; targets the old VM |
-| Current production VM 124 | Sefer scheduled VM backups | Not included in either configured job |
-| Static seed VM 100 | Sefer daily 03:30 | Protects the August 27 seed, not ongoing production writes |
+| Native database backups | Hourly at :05; Sefer `dolt-nas-backup.timer` | `/mnt/proxmox-backups/doltsvr/native/` |
+| Full VM124 archive | Daily 02:30; Proxmox `doltsvr-production` job | `/mnt/proxmox-backups/dump/vzdump-qemu-124-*.vma.zst` |
+| Static seed VM100 | Existing daily 03:30 job | Separate historical seed; not current production protection |
 
-### Hourly guest dump script
+### Native hourly backup
 
-The Dolt user's crontab is:
+Sefer runs [backup-dolt-to-nas](scripts/backup-dolt-to-nas) through
+[dolt-nas-backup.service](systemd/dolt-nas-backup.service) and its
+[timer](systemd/dolt-nas-backup.timer). The host connects to
+`192.168.20.150` using a dedicated SSH key at `/root/.ssh/dolt-nas-backup`.
+The guest host key was obtained through authenticated Proxmox guest execution
+and pinned in `/root/.ssh/dolt-nas-backup.known_hosts`.
 
-```cron
-0 * * * * cd /home/doltdb/databases/doltsvr && bash dolt_backup.sh
+The public key on VM124 is restricted to source `192.168.20.10`, with forwarding
+and interactive access disabled, and a forced
+[dolt-backup-export](scripts/dolt-backup-export) command. Only create, checksum,
+read, acknowledge, and isolated verification operations are available. Private
+keys and database credentials are not stored in this repository.
+
+For each run:
+
+1. Check NAS mount and capacity, then acquire exclusive host/guest locks.
+2. Compare the filesystem database inventory with `SHOW DATABASES`. Include
+   the parent `doltsvr` database as well as the 33 child databases.
+3. As the `dolt` account, call `/usr/local/bin/dolt backup sync-url` for every
+   database into a unique staging directory under `/home/dolt-backups`.
+4. Include server YAML/unit settings, global Dolt configuration, `.doltcfg`,
+   and each database's local configuration and repository-state files. Produce
+   a JSON inventory and SHA-256 checksums for every payload file.
+5. Pack the completed generation as `doltsvr-<UTC timestamp>.tar.gz`, transfer
+   it to the NAS, check its SHA-256 against the guest, test gzip integrity,
+   and publish the final name plus a `.sha256` sidecar.
+6. Record `/var/lib/dolt-nas-backup/last-success` on Sefer, then acknowledge
+   delivery and remove the guest archive. Retain failed transfers for retry.
+
+Native snapshots preserve committed history, branches, tags and working sets.
+They are taken sequentially per database, not as one cross-database transaction.
+The whole-VM backup additionally captures the complete machine environment.
+See the [official Dolt backup semantics](https://www.dolthub.com/docs/sql-reference/server/backups/).
+
+The guest uses `/home` rather than the small `/var` filesystem. New generation
+creation requires 10 GiB free there; host delivery requires 200 GiB free on the
+NAS. The service has a 50-minute timeout. Errors reach the systemd journal and
+fail the service, rather than being silently discarded by cron. This adds
+observable failure state; no external alert destination was configured.
+
+### Full VM backup and retention
+
+The new `doltsvr-production` job targets **Sefer VM124**, in snapshot mode with
+zstd compression and QEMU guest-agent freeze/thaw. It does not stop the Dolt
+SQL service. A missed daily run is caught up by Proxmox.
+
+Both new backup destinations currently retain every completed generation.
+The VM job explicitly uses `remove=0` / `keep-all=1`; the native script does
+not delete NAS archives. This avoids the existing NAS pruning failures without
+claiming that a time-based retention policy is enforced. At approximately
+2 GB per hourly native archive, native backups alone add roughly 48 GB/day;
+allow for full VM archives too. Reconcile NAS retention and capacity under
+`proxmox-cba`. Older archives and failed partial transfers are not silently
+removed by these scripts.
+
+### Verification and recovery
+
+Use [verify-dolt-backup](scripts/verify-dolt-backup) to stream a NAS generation
+back to a scratch directory, verify its payload checksums, restore every
+native database, run `dolt fsck`, and open the restored working sets through
+SQL. It never writes to the production data directory. Scratch data is removed
+when verification exits; the report remains in VM124
+`/home/dolt-backups/last-restore-report.json`.
+
+From Sefer, run a backup or inspect status:
+
+```bash
+systemctl start dolt-nas-backup.service
+systemctl status dolt-nas-backup.service --no-pager
+journalctl -u dolt-nas-backup.service -n 60 --no-pager
+systemctl list-timers dolt-nas-backup.timer --no-pager
+cat /var/lib/dolt-nas-backup/last-success
+pvesh get /cluster/backup/doltsvr-production --output-format json
 ```
 
-`/home/doltdb/databases/doltsvr/dolt_backup.sh` enumerates child directories
-containing `.dolt/config.json`; all 33 current repository directories match.
-For each, it changes into the repository and invokes
-`dolt dump -fn "${db_name}.sql" 2>/dev/null`. If that file exists, it gzips it
-into `/var/backups/dolt/<database>-<YYYYMMDD-HHMM>.sql.gz` and removes the
-intermediate SQL file. Finally, it deletes dumps matching `-mtime +5`.
+To verify the latest NAS copy from Sefer (avoid overlapping a scheduled run):
 
-The installed `dolt dump --help` describes a working-set table export. These
-SQL files would not preserve the complete Dolt commit/branch history and are
-not a replacement for a full repository or VM backup.
+```bash
+filename=$(awk '{print $3}' /var/lib/dolt-nas-backup/last-success)
+ssh -i /root/.ssh/dolt-nas-backup -o IdentitiesOnly=yes -o BatchMode=yes \
+  -o StrictHostKeyChecking=yes \
+  -o UserKnownHostsFile=/root/.ssh/dolt-nas-backup.known_hosts \
+  root@192.168.20.150 verify \
+  < "/mnt/proxmox-backups/doltsvr/native/$filename" \
+  > /var/lib/dolt-nas-backup/restore-report.json
+```
 
-The immediate likely failure is command lookup: Dolt exists only at
-`/usr/local/bin/dolt`, while the user crontab and script set no PATH. A
-read-only reproduction as user `dolt` with `PATH=/usr/bin:/bin` cannot find
-`dolt`. The PATH lines in system crontab files do not configure this separate
-user crontab. The backup directory is owned by `dolt`, writable by that user,
-and has 2.1 GiB filesystem space available, so those checks do not explain the
-empty output. An actual dump was not executed during diagnosis; additional
-failures may become visible once command lookup is corrected.
+For actual recovery, restore to a new isolated directory or VM first. Use
+`dolt backup restore file:///.../native/<database> <new-directory>` for native
+repositories. Review the accompanying configuration before restoring it, and
+use the full VM archive when the OS, service identities and complete server
+state are required. Never restore over the active primary.
 
-Failure reporting is also broken: dump stderr is discarded, command exit
-status is not checked, and the script can finish with a success message even
-when no database was dumped. The 11:00, 12:00 and 13:00 Pacific cron journal
-entries confirm invocation and report `No MTA installed, discarding output`.
-There is no retained per-run output from those invocations.
+### September 5 backup evidence
 
-### NAS synchronization and retained archives
-
-Seykhl `/root/sync-doltsvr-backups.sh` uses `rsync --delete` to pull:
+The new native generation is:
 
 ```text
-stephen@192.168.0.150:/var/backups/dolt/
-  -> /mnt/proxmox-backups/doltsvr/dolt_dump/
+/mnt/proxmox-backups/doltsvr/native/doltsvr-20260905T210440Z.tar.gz
 ```
 
-It suppresses stderr and disables SSH host-key verification. The source IP is
-obsolete; production is `192.168.20.150` / Tailscale `100.101.145.38`.
-The NAS destination was confirmed empty through Sefer's working mount.
-Changing the address alone will not fix the empty source or failure reporting.
+The earlier `20260905T205942Z` generation was a 33-child-database test and is
+marked with an `.INCOMPLETE.txt` sidecar on the NAS; do not use it for full
+recovery.
 
-The newest `.vma.zst` found in the production-specific NAS directory is:
+The `20260905T210440Z` generation contains all 34 databases and accompanying
+configuration, is 2,000,476,733
+bytes, and was delivered successfully at 14:07:07 Pacific. Its SHA-256 is:
 
 ```text
-/mnt/proxmox-backups/doltsvr/vzdump/vzdump-qemu-100-2026_08_27-22_50_11.vma.zst
+6422e890b1643381772f646411c230aff8436a6dc28169cffe90451592a07511
 ```
 
-It is 18,303,329,616 bytes; its log reports `Finished Backup of VM 100` at
-22:54:07 on August 27. This is the documented cold backup from before the
-migration. The August 31 log reports a stopped VM followed by
-`Backup of VM 100 failed - VM is locked (migrate)` and has no matching archive.
-No VM124 archive was found in Sefer's standard NAS `dump` directory. These
-checks establish files and log results, not present-day restorability or the
-absence of every possible manual backup elsewhere.
+At 14:14:08 Pacific, the NAS archive was streamed back and all **34 databases
+restored successfully into scratch space** using Dolt 2.1.10. Every repository
+passed `dolt fsck` and a SQL table-inventory query; all **219 payload files**
+passed SHA-256 verification. The scratch restore was then removed. The report
+is retained on Sefer at `/var/lib/dolt-nas-backup/restore-report-20260905.json`
+and beside the NAS archives as `restore-report-20260905T210440Z.json`.
+The restricted SSH endpoint also rejected an attempted path outside the
+archive spool. Production Dolt remained active throughout.
 
-Root's separate six-hour `/home/doltdb/cleanup_autobackups.sh` deletes temporary
-`*beads-autobackup` directories under `/home/tmp`. It creates no backup and
-must not be counted as a durable recovery layer.
+The full VM backup completed at 14:03:41 Pacific, with a successful
+`zstd -t` integrity check afterward:
 
-Repair tracking: `proxmox-uev`; see [BACKUPS.md](BACKUPS.md). Before a production
-upgrade, establish a fresh recoverable backup and rehearse restoring it.
+```text
+/mnt/proxmox-backups/dump/vzdump-qemu-124-2026_09_05-14_00_12.vma.zst
+```
+
+It is 18,762,035,393 bytes. QEMU guest-agent freeze/thaw was recorded in the
+backup log. This archive has not been boot-restored as a VM during this repair;
+the separate native restore exercise validates the database recovery path.
+The VM snapshot preceded the final backup-script revisions and cron retirement;
+if restoring that particular VM archive, reapply the current backup scripts
+and retired-cron changes from this runbook before returning it to service.
+
+### Retired broken workflow
+
+The old Dolt-user hourly SQL-dump cron entry was removed. It called bare
+`dolt` outside the default cron PATH, suppressed errors, discarded output via
+cron's missing MTA, and skipped the parent database. Both its local dump
+directory and the NAS SQL-dump destination were empty.
+
+Seykhl's obsolete hourly Dolt rsync and Monday VM100 backup cron entries were
+removed. Its old sync script now exits with a retirement notice instead of
+pulling `.0.150` with `--delete`. Original crontabs and the old sync script are
+saved under `/root/dolt-backup-repair-20260905` on the relevant machines.
+The unrelated PostgreSQL/DocuSeal cron entries were preserved. Root's six-hour
+cleanup of temporary Beads autobackups was also preserved; it is not a durable
+backup layer.
+
+Before repair, the newest production-specific NAS archive found was the
+August 27 cold backup. The August 31 attempt failed with `VM is locked
+(migrate)`. Current verification evidence below supersedes that coverage gap.
 
 ## Historical upgrades and incidents
 
