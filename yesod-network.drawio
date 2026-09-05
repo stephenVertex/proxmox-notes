@@ -1,0 +1,381 @@
+<mxfile host="Electron" agent="Codex" pages="4">
+  <diagram name="1 - Current cabling" id="0">
+    <mxGraphModel dx="2071" dy="1765" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1240" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#64748b;fontSize=16;spacing=10;strokeColor=none;fontSize=25;fontStyle=1;" value="PREV&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;&amp;nbsp;• Physical cabling as described&lt;/span&gt;" vertex="1">
+          <mxGeometry height="55" width="1180" x="30" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="internet" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f1f5f9;strokeColor=#64748b;fontSize=16;spacing=10;" value="Internet" vertex="1">
+          <mxGeometry height="55" width="200" x="510" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="router" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#64748b;fontSize=16;spacing=10;" value="ER7206 router" vertex="1">
+          <mxGeometry height="85" width="380" x="420" y="210" as="geometry" />
+        </mxCell>
+        <mxCell id="core" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#64748b;fontSize=16;spacing=10;" value="TL-SX105&lt;br&gt;10G unmanaged switch" vertex="1">
+          <mxGeometry height="75" width="310" x="170" y="410" as="geometry" />
+        </mxCell>
+        <mxCell id="shelf" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#64748b;fontSize=16;spacing=10;" value="Bookshelf TL-SG108&lt;br&gt;1G unmanaged switch" vertex="1">
+          <mxGeometry height="75" width="330" x="790" y="410" as="geometry" />
+        </mxCell>
+        <mxCell id="desk" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#64748b;fontSize=16;spacing=10;" value="Desk TL-SG108&lt;br&gt;1G unmanaged switch" vertex="1">
+          <mxGeometry height="75" width="330" x="790" y="565" as="geometry" />
+        </mxCell>
+        <mxCell id="pom" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#64748b;fontSize=16;spacing=10;" value="pompom" vertex="1">
+          <mxGeometry height="70" width="160" x="60" y="565" as="geometry" />
+        </mxCell>
+        <mxCell id="nas" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#64748b;fontSize=16;spacing=10;" value="NAS" vertex="1">
+          <mxGeometry height="70" width="145" x="245" y="565" as="geometry" />
+        </mxCell>
+        <mxCell id="sefer" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#64748b;fontSize=16;spacing=10;" value="sefer" vertex="1">
+          <mxGeometry height="70" width="170" x="415" y="565" as="geometry" />
+        </mxCell>
+        <mxCell id="sey" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#64748b;fontSize=16;spacing=10;" value="seykhl&lt;br&gt;Yesod hosts / guests" vertex="1">
+          <mxGeometry height="65" width="215" x="720" y="695" as="geometry" />
+        </mxCell>
+        <mxCell id="mac" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#64748b;fontSize=16;spacing=10;" value="Mac runner" vertex="1">
+          <mxGeometry height="65" width="190" x="975" y="695" as="geometry" />
+        </mxCell>
+        <mxCell id="e0" edge="1" parent="1" source="internet" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=13;labelBackgroundColor=#ffffff;" target="router" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="router" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=13;labelBackgroundColor=#ffffff;" target="core" value="Ethernet uplink">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="router" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=13;labelBackgroundColor=#ffffff;" target="shelf" value="Ethernet uplink">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="core" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=13;labelBackgroundColor=#ffffff;" target="pom" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="core" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=13;labelBackgroundColor=#ffffff;" target="nas" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="core" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=13;labelBackgroundColor=#ffffff;" target="sefer" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" edge="1" parent="1" source="shelf" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=13;labelBackgroundColor=#ffffff;" target="desk" value="1G cable">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" edge="1" parent="1" source="desk" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=13;labelBackgroundColor=#ffffff;" target="sey" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" edge="1" parent="1" source="desk" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=13;labelBackgroundColor=#ffffff;" target="mac" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="notes" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#64748b;fontSize=16;spacing=10;align=left;fontSize=16;" value="&lt;b&gt;What this tells us&lt;/b&gt;&lt;br&gt;The two SG108s and the SX105 do not provide configurable per-port VLAN separation.&lt;br&gt;The bookshelf-to-desk cable is shared by every desk device.&lt;br&gt;&lt;br&gt;&lt;b&gt;Lower-change option:&lt;/b&gt; if every device behind the bookshelf can join Yesod, dedicate that router port to Yesod&lt;br&gt;and keep both SG108s. This alone does not move Sefer’s guests into the same VLAN.&lt;br&gt;&lt;br&gt;The previously reported DHCP issue needs fresh diagnosis; creating a VLAN is not itself a proven fix." vertex="1">
+          <mxGeometry height="230" width="1175" x="35" y="820" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram name="Copy of 1 - Current cabling" id="qTIUa4r121VkcDG51Guc">
+    <mxGraphModel dx="2189" dy="1500" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2160" pageHeight="1020" math="0" shadow="0">
+      <root>
+        <mxCell id="bUVAuwb-jT9W5OZjnAOs-0" />
+        <mxCell id="bUVAuwb-jT9W5OZjnAOs-1" parent="bUVAuwb-jT9W5OZjnAOs-0" />
+        <mxCell id="bUVAuwb-jT9W5OZjnAOs-2" parent="bUVAuwb-jT9W5OZjnAOs-1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#64748b;spacing=10;strokeColor=none;fontStyle=1;fontSize=16;fontSize=26;" value="CURRENT • Physical network cabling" vertex="1">
+          <mxGeometry height="55" width="2100" x="30" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="mE0cwJeWGliuBBYeEMQD-5" edge="1" parent="bUVAuwb-jT9W5OZjnAOs-1" source="bUVAuwb-jT9W5OZjnAOs-4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;startArrow=none;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=14;labelBackgroundColor=#ffffff;exitX=1;exitY=0.8;entryX=0.5;entryY=0;" target="mE0cwJeWGliuBBYeEMQD-2" value="1GbE uplink&lt;br&gt;Port / VLAN: unconfirmed">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="870" y="280" />
+              <mxPoint x="870" y="380" />
+              <mxPoint x="1590" y="380" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="bUVAuwb-jT9W5OZjnAOs-3" parent="bUVAuwb-jT9W5OZjnAOs-1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f1f5f9;strokeColor=#64748b;spacing=10;fontSize=16;" value="Internet" vertex="1">
+          <mxGeometry height="55" width="200" x="530" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="mE0cwJeWGliuBBYeEMQD-12" edge="1" parent="bUVAuwb-jT9W5OZjnAOs-1" source="bUVAuwb-jT9W5OZjnAOs-4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;startArrow=none;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=14;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="mE0cwJeWGliuBBYeEMQD-11" value="1GbE uplink&lt;br&gt;Port / VLAN: unconfirmed">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="bUVAuwb-jT9W5OZjnAOs-4" parent="bUVAuwb-jT9W5OZjnAOs-1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#64748b;spacing=10;fontSize=16;" value="&lt;b&gt;ER7206 router&lt;/b&gt;&lt;br&gt;LAN: 192.168.0.1 • VLAN 20: 192.168.20.1&lt;br&gt;1GbE ports" vertex="1">
+          <mxGeometry height="100" width="400" x="430" y="200" as="geometry" />
+        </mxCell>
+        <mxCell id="bUVAuwb-jT9W5OZjnAOs-5" parent="bUVAuwb-jT9W5OZjnAOs-1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#64748b;spacing=10;fontSize=16;" value="&lt;b&gt;TL-SX105&lt;/b&gt;&lt;br&gt;10GbE unmanaged switch&lt;br&gt;Trusted LAN • 192.168.0.0/24" vertex="1">
+          <mxGeometry height="100" width="360" x="150" y="440" as="geometry" />
+        </mxCell>
+        <mxCell id="bUVAuwb-jT9W5OZjnAOs-7" parent="bUVAuwb-jT9W5OZjnAOs-1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#64748b;spacing=10;fontSize=16;" value="&lt;b&gt;Desk TL-SG108&lt;/b&gt;&lt;br&gt;1GbE unmanaged switch&lt;br&gt;VLAN 20 • 192.168.20.0/24" vertex="1">
+          <mxGeometry height="100" width="340" x="900" y="600" as="geometry" />
+        </mxCell>
+        <mxCell id="bUVAuwb-jT9W5OZjnAOs-8" parent="bUVAuwb-jT9W5OZjnAOs-1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#64748b;spacing=10;fontSize=16;" value="&lt;b&gt;pompom&lt;/b&gt;" vertex="1">
+          <mxGeometry height="80" width="170" x="40" y="640" as="geometry" />
+        </mxCell>
+        <mxCell id="bUVAuwb-jT9W5OZjnAOs-9" parent="bUVAuwb-jT9W5OZjnAOs-1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#64748b;spacing=10;fontSize=16;" value="&lt;b&gt;NAS&lt;/b&gt;&lt;br&gt;192.168.0.123" vertex="1">
+          <mxGeometry height="80" width="180" x="250" y="640" as="geometry" />
+        </mxCell>
+        <mxCell id="mE0cwJeWGliuBBYeEMQD-1" edge="1" parent="bUVAuwb-jT9W5OZjnAOs-1" source="bUVAuwb-jT9W5OZjnAOs-10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;startArrow=none;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=14;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0;entryY=0.65;strokeColor=#0f766e;" target="bUVAuwb-jT9W5OZjnAOs-7" value="1GbE&lt;br&gt;vmbr1 / nic0">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="bUVAuwb-jT9W5OZjnAOs-10" parent="bUVAuwb-jT9W5OZjnAOs-1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;spacing=10;fontSize=16;" value="&lt;b&gt;sefer&lt;/b&gt;&lt;br&gt;vmbr0 / nic3: 192.168.0.100&lt;br&gt;vmbr1 / nic0: 192.168.20.10" vertex="1">
+          <mxGeometry height="110" width="310" x="490" y="610" as="geometry" />
+        </mxCell>
+        <mxCell id="bUVAuwb-jT9W5OZjnAOs-11" parent="bUVAuwb-jT9W5OZjnAOs-1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;spacing=10;fontSize=16;" value="&lt;b&gt;seykhl&lt;/b&gt;&lt;br&gt;vmbr0 / nic0&lt;br&gt;192.168.20.202" vertex="1">
+          <mxGeometry height="100" width="250" x="840" y="790" as="geometry" />
+        </mxCell>
+        <mxCell id="bUVAuwb-jT9W5OZjnAOs-12" parent="bUVAuwb-jT9W5OZjnAOs-1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#64748b;spacing=10;fontSize=16;" value="&lt;b&gt;Mac runner&lt;/b&gt;&lt;br&gt;VLAN 20" vertex="1">
+          <mxGeometry height="100" width="210" x="1150" y="790" as="geometry" />
+        </mxCell>
+        <mxCell id="bUVAuwb-jT9W5OZjnAOs-13" edge="1" parent="bUVAuwb-jT9W5OZjnAOs-1" source="bUVAuwb-jT9W5OZjnAOs-3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;startArrow=none;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=14;labelBackgroundColor=#ffffff;" target="bUVAuwb-jT9W5OZjnAOs-4" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="bUVAuwb-jT9W5OZjnAOs-14" edge="1" parent="bUVAuwb-jT9W5OZjnAOs-1" source="bUVAuwb-jT9W5OZjnAOs-4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;startArrow=none;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=14;labelBackgroundColor=#ffffff;exitX=0.2;exitY=1;entryX=0.5;entryY=0;" target="bUVAuwb-jT9W5OZjnAOs-5" value="1GbE uplink">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="510" y="370" />
+              <mxPoint x="330" y="370" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="bUVAuwb-jT9W5OZjnAOs-15" edge="1" parent="bUVAuwb-jT9W5OZjnAOs-1" source="bUVAuwb-jT9W5OZjnAOs-4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;startArrow=none;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=14;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;strokeColor=#0f766e;" target="bUVAuwb-jT9W5OZjnAOs-7" value="Port 5 • 1GbE&lt;br&gt;VLAN 20 • untagged access">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="630" y="500" />
+              <mxPoint x="1070" y="500" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="bUVAuwb-jT9W5OZjnAOs-16" edge="1" parent="bUVAuwb-jT9W5OZjnAOs-1" source="bUVAuwb-jT9W5OZjnAOs-5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;startArrow=none;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=14;labelBackgroundColor=#ffffff;exitX=0.2;exitY=1;entryX=0.5;entryY=0;" target="bUVAuwb-jT9W5OZjnAOs-8" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="222" y="590" />
+              <mxPoint x="125" y="590" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="bUVAuwb-jT9W5OZjnAOs-17" edge="1" parent="bUVAuwb-jT9W5OZjnAOs-1" source="bUVAuwb-jT9W5OZjnAOs-5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;startArrow=none;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=14;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" target="bUVAuwb-jT9W5OZjnAOs-9" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="bUVAuwb-jT9W5OZjnAOs-18" edge="1" parent="bUVAuwb-jT9W5OZjnAOs-1" source="bUVAuwb-jT9W5OZjnAOs-5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;startArrow=none;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=14;labelBackgroundColor=#ffffff;exitX=0.8;exitY=1;entryX=0.5;entryY=0;strokeColor=#2563eb;" target="bUVAuwb-jT9W5OZjnAOs-10" value="10GbE • vmbr0 / nic3">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="438" y="580" />
+              <mxPoint x="645" y="580" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="bUVAuwb-jT9W5OZjnAOs-20" edge="1" parent="bUVAuwb-jT9W5OZjnAOs-1" source="bUVAuwb-jT9W5OZjnAOs-7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;startArrow=none;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=14;labelBackgroundColor=#ffffff;exitX=0.25;exitY=1;entryX=0.5;entryY=0;strokeColor=#0f766e;" target="bUVAuwb-jT9W5OZjnAOs-11" value="1GbE">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="bUVAuwb-jT9W5OZjnAOs-21" edge="1" parent="bUVAuwb-jT9W5OZjnAOs-1" source="bUVAuwb-jT9W5OZjnAOs-7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;startArrow=none;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=14;labelBackgroundColor=#ffffff;exitX=0.75;exitY=1;entryX=0.5;entryY=0;strokeColor=#0f766e;" target="bUVAuwb-jT9W5OZjnAOs-12" value="1GbE">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="mE0cwJeWGliuBBYeEMQD-4" edge="1" parent="bUVAuwb-jT9W5OZjnAOs-1" source="mE0cwJeWGliuBBYeEMQD-2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;startArrow=none;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=14;labelBackgroundColor=#ffffff;" target="mE0cwJeWGliuBBYeEMQD-3" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="mE0cwJeWGliuBBYeEMQD-7" edge="1" parent="bUVAuwb-jT9W5OZjnAOs-1" source="mE0cwJeWGliuBBYeEMQD-2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;startArrow=none;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=14;labelBackgroundColor=#ffffff;" target="mE0cwJeWGliuBBYeEMQD-6" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="mE0cwJeWGliuBBYeEMQD-2" parent="bUVAuwb-jT9W5OZjnAOs-1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#64748b;spacing=10;fontSize=16;" value="&lt;b&gt;Bookshelf TL-SG108&lt;/b&gt;&lt;br&gt;1GbE unmanaged switch" vertex="1">
+          <mxGeometry height="100" width="320" x="1430" y="600" as="geometry" />
+        </mxCell>
+        <mxCell id="mE0cwJeWGliuBBYeEMQD-3" parent="bUVAuwb-jT9W5OZjnAOs-1" style="whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#64748b;rounded=1;spacing=10;fontSize=16;" value="Eero Wi-Fi&lt;br&gt;AP mode" vertex="1">
+          <mxGeometry height="80" width="200" x="1470" y="810" as="geometry" />
+        </mxCell>
+        <mxCell id="mE0cwJeWGliuBBYeEMQD-9" edge="1" parent="bUVAuwb-jT9W5OZjnAOs-1" source="mE0cwJeWGliuBBYeEMQD-6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;startArrow=none;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=14;labelBackgroundColor=#ffffff;" target="mE0cwJeWGliuBBYeEMQD-8" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="mE0cwJeWGliuBBYeEMQD-6" parent="bUVAuwb-jT9W5OZjnAOs-1" style="whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#64748b;rounded=1;spacing=10;fontSize=16;" value="Netgear PoE switch" vertex="1">
+          <mxGeometry height="80" width="220" x="1870" y="610" as="geometry" />
+        </mxCell>
+        <mxCell id="mE0cwJeWGliuBBYeEMQD-8" parent="bUVAuwb-jT9W5OZjnAOs-1" style="ellipse;whiteSpace=wrap;html=1;shapeInside=1;fillColor=#f8cecc;strokeColor=#b85450;rounded=1;spacing=10;fontSize=16;" value="Security&lt;br&gt;cameras" vertex="1">
+          <mxGeometry height="100" width="140" x="1910" y="790" as="geometry" />
+        </mxCell>
+        <mxCell id="mE0cwJeWGliuBBYeEMQD-13" edge="1" parent="bUVAuwb-jT9W5OZjnAOs-1" source="mE0cwJeWGliuBBYeEMQD-11" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;startArrow=none;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=14;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0;entryY=0.5;strokeColor=#9333ea;" target="mE0cwJeWGliuBBYeEMQD-15" value="Coax">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="mE0cwJeWGliuBBYeEMQD-11" parent="bUVAuwb-jT9W5OZjnAOs-1" style="whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#64748b;rounded=1;spacing=10;fontSize=16;" value="Coax bridge&lt;br&gt;2.5Gbps rated" vertex="1">
+          <mxGeometry height="80" width="190" x="1050" y="210" as="geometry" />
+        </mxCell>
+        <mxCell id="mE0cwJeWGliuBBYeEMQD-17" edge="1" parent="bUVAuwb-jT9W5OZjnAOs-1" source="mE0cwJeWGliuBBYeEMQD-15" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;startArrow=none;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=14;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="mE0cwJeWGliuBBYeEMQD-16" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="mE0cwJeWGliuBBYeEMQD-15" parent="bUVAuwb-jT9W5OZjnAOs-1" style="rounded=1;whiteSpace=wrap;html=1;absoluteArcSize=1;arcSize=14;strokeWidth=2;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=16;" value="Coax bridge&lt;br&gt;2.5Gbps rated" vertex="1">
+          <mxGeometry height="80" width="190" x="1390" y="210" as="geometry" />
+        </mxCell>
+        <mxCell id="mE0cwJeWGliuBBYeEMQD-19" edge="1" parent="bUVAuwb-jT9W5OZjnAOs-1" source="mE0cwJeWGliuBBYeEMQD-16" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;startArrow=none;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=14;labelBackgroundColor=#ffffff;" target="mE0cwJeWGliuBBYeEMQD-18" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="mE0cwJeWGliuBBYeEMQD-21" edge="1" parent="bUVAuwb-jT9W5OZjnAOs-1" source="mE0cwJeWGliuBBYeEMQD-16" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;startArrow=none;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=14;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="mE0cwJeWGliuBBYeEMQD-20" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="mE0cwJeWGliuBBYeEMQD-16" parent="bUVAuwb-jT9W5OZjnAOs-1" style="whiteSpace=wrap;html=1;rounded=1;absoluteArcSize=1;arcSize=14;strokeWidth=2;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=16;" value="Netgear 8-port&lt;br&gt;PoE switch" vertex="1">
+          <mxGeometry height="80" width="210" x="1710" y="210" as="geometry" />
+        </mxCell>
+        <mxCell id="mE0cwJeWGliuBBYeEMQD-18" parent="bUVAuwb-jT9W5OZjnAOs-1" style="whiteSpace=wrap;html=1;rounded=1;absoluteArcSize=1;arcSize=14;strokeWidth=2;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=16;" value="Eero Wi-Fi&lt;br&gt;AP mode" vertex="1">
+          <mxGeometry height="80" width="200" x="1720" y="360" as="geometry" />
+        </mxCell>
+        <mxCell id="mE0cwJeWGliuBBYeEMQD-20" parent="bUVAuwb-jT9W5OZjnAOs-1" style="ellipse;whiteSpace=wrap;html=1;shapeInside=1;rounded=1;absoluteArcSize=1;arcSize=14;strokeWidth=2;fillColor=#f8cecc;strokeColor=#b85450;fontSize=16;" value="Security&lt;br&gt;cameras" vertex="1">
+          <mxGeometry height="100" width="130" x="2000" y="200" as="geometry" />
+        </mxCell>
+        <mxCell id="physical-review-notes" parent="bUVAuwb-jT9W5OZjnAOs-1" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontSize=15;fontColor=#475569;spacing=10;" value="Physical cabling • Updated 2026-09-05&lt;br&gt;Speeds describe link/interface capacity, not measured throughput. Coax and bookshelf branch VLANs are not yet confirmed.&lt;br&gt;Sefer’s two NICs attach to separate Proxmox bridges. Same-LAN traffic on the TL-SX105 stays on the switch; router paths use 1GbE ports." vertex="1">
+          <mxGeometry height="80" width="2070" x="40" y="920" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram name="2 - Proposed VLAN layout" id="1">
+    <mxGraphModel dx="1240" dy="1100" grid="1" gridSize="10" page="1" pageScale="1" pageWidth="1240" pageHeight="1100">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="PROPOSED • Yesod VLAN across both sides of the house" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#64748b;fontSize=16;spacing=10;strokeColor=none;fontSize=25;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="30" y="20" width="1180" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="internet" value="Internet" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f1f5f9;strokeColor=#64748b;fontSize=16;spacing=10;" vertex="1" parent="1">
+          <mxGeometry x="510" y="100" width="200" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="router" value="ER7206 router&lt;br&gt;VLAN gateways • DHCP • access rules" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#64748b;fontSize=16;spacing=10;" vertex="1" parent="1">
+          <mxGeometry x="420" y="210" width="380" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="leftzone" value="TRUSTED / SHARED + SEFER GUESTS" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#64748b;fontSize=16;spacing=10;verticalAlign=top;fontStyle=1;align=left;" vertex="1" parent="1">
+          <mxGeometry x="35" y="365" width="580" height="410" as="geometry" />
+        </mxCell>
+        <mxCell id="rightzone" value="YESOD VLAN 30 • illustrative ID" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ecfdf5;strokeColor=#64748b;fontSize=16;spacing=10;verticalAlign=top;fontStyle=1;align=left;" vertex="1" parent="1">
+          <mxGeometry x="660" y="510" width="550" height="265" as="geometry" />
+        </mxCell>
+        <mxCell id="core" value="VLAN-aware 10G switch&lt;br&gt;REPLACES TL-SX105" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#64748b;fontSize=16;spacing=10;" vertex="1" parent="1">
+          <mxGeometry x="170" y="410" width="310" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="shelf" value="VLAN-aware bookshelf switch&lt;br&gt;REPLACES bookshelf SG108" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#64748b;fontSize=16;spacing=10;" vertex="1" parent="1">
+          <mxGeometry x="790" y="410" width="330" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="desk" value="Desk TL-SG108 • KEEP&lt;br&gt;All ports serve Yesod VLAN" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#64748b;fontSize=16;spacing=10;" vertex="1" parent="1">
+          <mxGeometry x="790" y="565" width="330" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="pom" value="pompom&lt;br&gt;Trusted LAN" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#64748b;fontSize=16;spacing=10;" vertex="1" parent="1">
+          <mxGeometry x="60" y="565" width="160" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="nas" value="NAS&lt;br&gt;Trusted LAN" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#64748b;fontSize=16;spacing=10;" vertex="1" parent="1">
+          <mxGeometry x="245" y="565" width="145" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="sefer" value="sefer&lt;br&gt;Admin + VLAN guests" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#64748b;fontSize=16;spacing=10;" vertex="1" parent="1">
+          <mxGeometry x="415" y="565" width="170" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="sey" value="seykhl&lt;br&gt;Yesod hosts / guests" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#64748b;fontSize=16;spacing=10;" vertex="1" parent="1">
+          <mxGeometry x="720" y="695" width="215" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="mac" value="Mac runner" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#64748b;fontSize=16;spacing=10;" vertex="1" parent="1">
+          <mxGeometry x="975" y="695" width="190" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="e0" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=13;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="internet" target="router">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" value="Tagged VLAN trunk" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=13;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="router" target="core">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" value="Tagged VLAN trunk" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=13;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="router" target="shelf">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=13;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="core" target="pom">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=13;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="core" target="nas">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" value="Trunk*" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=13;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="core" target="sefer">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" value="Access port: untagged VLAN 30" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=none;strokeWidth=2;strokeColor=#16a34a;fontSize=13;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="shelf" target="desk">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=13;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="desk" target="sey">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=13;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="desk" target="mac">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="notes" value="&lt;b&gt;Traffic crosses the ER7206 under explicit rules&lt;/b&gt;&lt;br&gt;pompom → Yesod: management access • Yesod → NAS: required storage services&lt;br&gt;Return traffic allowed; other cross-VLAN access restricted. Use DNS across VLANs; do not assume .local discovery.&lt;br&gt;&lt;br&gt;&lt;b&gt;*Sefer:&lt;/b&gt; VLAN-aware host bridge / VM NICs; management can remain on the trusted LAN.&lt;br&gt;Desk devices share one VLAN in this design. Separate management or guest VLANs at the desk require a managed desk switch.&lt;br&gt;&lt;br&gt;&lt;b&gt;Tradeoff:&lt;/b&gt; cross-VLAN storage traffic takes the router’s gigabit path. This drawing is a proposal, not deployed configuration." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#64748b;fontSize=16;spacing=10;align=left;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="35" y="820" width="1175" height="230" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram name="Copy of 2 - Proposed VLAN layout" id="FuUar9efb4I3hzTHYFAl">
+    <mxGraphModel dx="1760" dy="1500" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1240" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="4pOgHDq0Nz2RlTCsoZjO-0" />
+        <mxCell id="4pOgHDq0Nz2RlTCsoZjO-1" parent="4pOgHDq0Nz2RlTCsoZjO-0" />
+        <mxCell id="4pOgHDq0Nz2RlTCsoZjO-2" parent="4pOgHDq0Nz2RlTCsoZjO-1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#64748b;fontSize=16;spacing=10;strokeColor=none;fontSize=25;fontStyle=1;" value="PROPOSED • Yesod VLAN across both sides of the house" vertex="1">
+          <mxGeometry height="55" width="1180" x="30" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="4pOgHDq0Nz2RlTCsoZjO-3" parent="4pOgHDq0Nz2RlTCsoZjO-1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f1f5f9;strokeColor=#64748b;fontSize=16;spacing=10;" value="Internet" vertex="1">
+          <mxGeometry height="55" width="200" x="510" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="4pOgHDq0Nz2RlTCsoZjO-4" parent="4pOgHDq0Nz2RlTCsoZjO-1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#64748b;fontSize=16;spacing=10;" value="ER7206 router&lt;br&gt;VLAN gateways • DHCP • access rules" vertex="1">
+          <mxGeometry height="85" width="380" x="420" y="210" as="geometry" />
+        </mxCell>
+        <mxCell id="4pOgHDq0Nz2RlTCsoZjO-5" parent="4pOgHDq0Nz2RlTCsoZjO-1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eff6ff;strokeColor=#64748b;fontSize=16;spacing=10;verticalAlign=top;fontStyle=1;align=left;" value="TRUSTED / SHARED + SEFER GUESTS" vertex="1">
+          <mxGeometry height="410" width="580" x="35" y="365" as="geometry" />
+        </mxCell>
+        <mxCell id="4pOgHDq0Nz2RlTCsoZjO-6" parent="4pOgHDq0Nz2RlTCsoZjO-1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ecfdf5;strokeColor=#64748b;fontSize=16;spacing=10;verticalAlign=top;fontStyle=1;align=left;" value="YESOD VLAN 20&lt;div&gt;&amp;nbsp;• illustrative ID&lt;/div&gt;" vertex="1">
+          <mxGeometry height="265" width="550" x="660" y="510" as="geometry" />
+        </mxCell>
+        <mxCell id="4pOgHDq0Nz2RlTCsoZjO-7" parent="4pOgHDq0Nz2RlTCsoZjO-1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#64748b;fontSize=16;spacing=10;" value="" vertex="1">
+          <mxGeometry height="75" width="310" x="170" y="410" as="geometry" />
+        </mxCell>
+        <mxCell id="4pOgHDq0Nz2RlTCsoZjO-8" parent="4pOgHDq0Nz2RlTCsoZjO-1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#64748b;fontSize=16;spacing=10;" value="VLAN-aware bookshelf switch&lt;br&gt;REPLACES bookshelf SG108" vertex="1">
+          <mxGeometry height="75" width="330" x="790" y="410" as="geometry" />
+        </mxCell>
+        <mxCell id="4pOgHDq0Nz2RlTCsoZjO-9" parent="4pOgHDq0Nz2RlTCsoZjO-1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#64748b;fontSize=16;spacing=10;" value="Desk TL-SG108 • KEEP&lt;br&gt;All ports serve Yesod VLAN" vertex="1">
+          <mxGeometry height="75" width="330" x="790" y="565" as="geometry" />
+        </mxCell>
+        <mxCell id="4pOgHDq0Nz2RlTCsoZjO-10" parent="4pOgHDq0Nz2RlTCsoZjO-1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#64748b;fontSize=16;spacing=10;" value="pompom&lt;br&gt;Trusted LAN" vertex="1">
+          <mxGeometry height="70" width="160" x="60" y="565" as="geometry" />
+        </mxCell>
+        <mxCell id="4pOgHDq0Nz2RlTCsoZjO-11" parent="4pOgHDq0Nz2RlTCsoZjO-1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#64748b;fontSize=16;spacing=10;" value="NAS&lt;br&gt;Trusted LAN" vertex="1">
+          <mxGeometry height="70" width="145" x="245" y="565" as="geometry" />
+        </mxCell>
+        <mxCell id="4pOgHDq0Nz2RlTCsoZjO-12" parent="4pOgHDq0Nz2RlTCsoZjO-1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#64748b;fontSize=16;spacing=10;" value="sefer&lt;br&gt;Admin + VLAN guests" vertex="1">
+          <mxGeometry height="70" width="170" x="415" y="565" as="geometry" />
+        </mxCell>
+        <mxCell id="4pOgHDq0Nz2RlTCsoZjO-13" parent="4pOgHDq0Nz2RlTCsoZjO-1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#64748b;fontSize=16;spacing=10;" value="seykhl&lt;br&gt;Yesod hosts / guests" vertex="1">
+          <mxGeometry height="65" width="215" x="720" y="695" as="geometry" />
+        </mxCell>
+        <mxCell id="4pOgHDq0Nz2RlTCsoZjO-14" parent="4pOgHDq0Nz2RlTCsoZjO-1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#64748b;fontSize=16;spacing=10;" value="Mac runner" vertex="1">
+          <mxGeometry height="65" width="190" x="975" y="695" as="geometry" />
+        </mxCell>
+        <mxCell id="4pOgHDq0Nz2RlTCsoZjO-15" edge="1" parent="4pOgHDq0Nz2RlTCsoZjO-1" source="4pOgHDq0Nz2RlTCsoZjO-3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=13;labelBackgroundColor=#ffffff;" target="4pOgHDq0Nz2RlTCsoZjO-4" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="4pOgHDq0Nz2RlTCsoZjO-16" edge="1" parent="4pOgHDq0Nz2RlTCsoZjO-1" source="4pOgHDq0Nz2RlTCsoZjO-4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=13;labelBackgroundColor=#ffffff;" target="4pOgHDq0Nz2RlTCsoZjO-7" value="Tagged VLAN trunk">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="4pOgHDq0Nz2RlTCsoZjO-17" edge="1" parent="4pOgHDq0Nz2RlTCsoZjO-1" source="4pOgHDq0Nz2RlTCsoZjO-4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=13;labelBackgroundColor=#ffffff;" target="4pOgHDq0Nz2RlTCsoZjO-8" value="Tagged VLAN trunk">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="670" y="352.5" />
+              <mxPoint x="955" y="352.5" />
+            </Array>
+            <mxPoint x="700" y="300" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="4pOgHDq0Nz2RlTCsoZjO-18" edge="1" parent="4pOgHDq0Nz2RlTCsoZjO-1" source="4pOgHDq0Nz2RlTCsoZjO-7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=13;labelBackgroundColor=#ffffff;" target="4pOgHDq0Nz2RlTCsoZjO-10" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="4pOgHDq0Nz2RlTCsoZjO-19" edge="1" parent="4pOgHDq0Nz2RlTCsoZjO-1" source="4pOgHDq0Nz2RlTCsoZjO-7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=13;labelBackgroundColor=#ffffff;" target="4pOgHDq0Nz2RlTCsoZjO-11" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="4pOgHDq0Nz2RlTCsoZjO-20" edge="1" parent="4pOgHDq0Nz2RlTCsoZjO-1" source="4pOgHDq0Nz2RlTCsoZjO-7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=13;labelBackgroundColor=#ffffff;" target="4pOgHDq0Nz2RlTCsoZjO-12" value="Trunk*">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="4pOgHDq0Nz2RlTCsoZjO-21" edge="1" parent="4pOgHDq0Nz2RlTCsoZjO-1" source="4pOgHDq0Nz2RlTCsoZjO-8" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=none;strokeWidth=2;strokeColor=#16a34a;fontSize=13;labelBackgroundColor=#ffffff;" target="4pOgHDq0Nz2RlTCsoZjO-9" value="Access port: untagged VLAN 30">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="4pOgHDq0Nz2RlTCsoZjO-22" edge="1" parent="4pOgHDq0Nz2RlTCsoZjO-1" source="4pOgHDq0Nz2RlTCsoZjO-9" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=13;labelBackgroundColor=#ffffff;" target="4pOgHDq0Nz2RlTCsoZjO-13" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="4pOgHDq0Nz2RlTCsoZjO-23" edge="1" parent="4pOgHDq0Nz2RlTCsoZjO-1" source="4pOgHDq0Nz2RlTCsoZjO-9" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=13;labelBackgroundColor=#ffffff;" target="4pOgHDq0Nz2RlTCsoZjO-14" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="4pOgHDq0Nz2RlTCsoZjO-24" parent="4pOgHDq0Nz2RlTCsoZjO-1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8fafc;strokeColor=#64748b;fontSize=16;spacing=10;align=left;fontSize=16;" value="&lt;b&gt;Traffic crosses the ER7206 under explicit rules&lt;/b&gt;&lt;br&gt;pompom → Yesod: management access • Yesod → NAS: required storage services&lt;br&gt;Return traffic allowed; other cross-VLAN access restricted. Use DNS across VLANs; do not assume .local discovery.&lt;br&gt;&lt;br&gt;&lt;b&gt;*Sefer:&lt;/b&gt; VLAN-aware host bridge / VM NICs; management can remain on the trusted LAN.&lt;br&gt;Desk devices share one VLAN in this design. Separate management or guest VLANs at the desk require a managed desk switch.&lt;br&gt;&lt;br&gt;&lt;b&gt;Tradeoff:&lt;/b&gt; cross-VLAN storage traffic takes the router’s gigabit path. This drawing is a proposal, not deployed configuration." vertex="1">
+          <mxGeometry height="230" width="1175" x="35" y="820" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
