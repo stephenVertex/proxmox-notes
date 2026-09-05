@@ -9,6 +9,8 @@ in [INVENTORY.md](INVENTORY.md), with network details in [NETWORK.md](NETWORK.md
 The editable [network diagram](yesod-network.drawio) includes the current
 physical layout on its single **current** tab.
 
+![Current physical network diagram showing device locations, cabling, VLAN 20, and Eero repeaters](yesod-network.png)
+
 ## Hosts and networks
 
 | Setting | Sefer | Seykhl |

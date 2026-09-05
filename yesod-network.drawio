@@ -1,4 +1,4 @@
-<mxfile host="Electron" agent="Codex" pages="1">
+<mxfile host="Electron" agent="Codex">
   <diagram name="current" id="qTIUa4r121VkcDG51Guc">
     <mxGraphModel dx="2189" dy="1500" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2160" pageHeight="1340" math="0" shadow="0">
       <root>
@@ -144,29 +144,29 @@
         <mxCell id="physical-review-notes" parent="bUVAuwb-jT9W5OZjnAOs-1" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontSize=15;fontColor=#475569;spacing=10;" value="Physical cabling • Updated 2026-09-05&lt;br&gt;Speeds describe link/interface capacity, not measured throughput. Coax and bookshelf branch VLANs are not yet confirmed.&lt;br&gt;Sefer’s two NICs attach to separate Proxmox bridges. Same-LAN traffic on the TL-SX105 stays on the switch; router paths use 1GbE ports.&lt;br&gt;Neutral repeater cards identify other named locations. Wireless mesh uplink peers are not specified." vertex="1">
           <mxGeometry height="100" width="2070" x="40" y="1200" as="geometry" />
         </mxCell>
-        <mxCell id="physical-location-legend-0" parent="bUVAuwb-jT9W5OZjnAOs-1" vertex="1" value="Office" style="rounded=1;whiteSpace=wrap;html=1;fontSize=16;fontStyle=1;fillColor=#dae8fc;strokeColor=#64748b;">
-          <mxGeometry x="40" y="1140" width="340" height="45" as="geometry" />
+        <mxCell id="physical-location-legend-0" parent="bUVAuwb-jT9W5OZjnAOs-1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=16;fontStyle=1;fillColor=#dae8fc;strokeColor=#64748b;" value="Office" vertex="1">
+          <mxGeometry height="45" width="340" x="40" y="1140" as="geometry" />
         </mxCell>
-        <mxCell id="physical-location-legend-1" parent="bUVAuwb-jT9W5OZjnAOs-1" vertex="1" value="Laundry room / home lab" style="rounded=1;whiteSpace=wrap;html=1;fontSize=16;fontStyle=1;fillColor=#d5e8d4;strokeColor=#82b366;">
-          <mxGeometry x="400" y="1140" width="500" height="45" as="geometry" />
+        <mxCell id="physical-location-legend-1" parent="bUVAuwb-jT9W5OZjnAOs-1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=16;fontStyle=1;fillColor=#d5e8d4;strokeColor=#82b366;" value="Laundry room / home lab" vertex="1">
+          <mxGeometry height="45" width="500" x="400" y="1140" as="geometry" />
         </mxCell>
-        <mxCell id="physical-location-legend-2" parent="bUVAuwb-jT9W5OZjnAOs-1" vertex="1" value="Garage" style="rounded=1;whiteSpace=wrap;html=1;fontSize=16;fontStyle=1;fillColor=#e1d5e7;strokeColor=#9673a6;">
-          <mxGeometry x="920" y="1140" width="340" height="45" as="geometry" />
+        <mxCell id="physical-location-legend-2" parent="bUVAuwb-jT9W5OZjnAOs-1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=16;fontStyle=1;fillColor=#e1d5e7;strokeColor=#9673a6;" value="Garage" vertex="1">
+          <mxGeometry height="45" width="340" x="920" y="1140" as="geometry" />
         </mxCell>
-        <mxCell id="physical-location-legend-3" parent="bUVAuwb-jT9W5OZjnAOs-1" vertex="1" value="Outside" style="rounded=1;whiteSpace=wrap;html=1;fontSize=16;fontStyle=1;fillColor=#f8cecc;strokeColor=#b85450;">
-          <mxGeometry x="1280" y="1140" width="340" height="45" as="geometry" />
+        <mxCell id="physical-location-legend-3" parent="bUVAuwb-jT9W5OZjnAOs-1" style="rounded=1;whiteSpace=wrap;html=1;fontSize=16;fontStyle=1;fillColor=#f8cecc;strokeColor=#b85450;" value="Outside" vertex="1">
+          <mxGeometry height="45" width="340" x="1280" y="1140" as="geometry" />
         </mxCell>
-        <mxCell id="standalone-eero-heading" parent="bUVAuwb-jT9W5OZjnAOs-1" vertex="1" value="Standalone Eero repeaters • wireless mesh • uplink peers unspecified" style="text;html=1;align=left;verticalAlign=middle;fontSize=18;fontStyle=1;fontColor=#334155;">
-          <mxGeometry x="40" y="940" width="1800" height="40" as="geometry" />
+        <mxCell id="standalone-eero-heading" parent="bUVAuwb-jT9W5OZjnAOs-1" style="text;html=1;align=left;verticalAlign=middle;fontSize=18;fontStyle=1;fontColor=#334155;" value="Standalone Eero repeaters • wireless mesh • uplink peers unspecified" vertex="1">
+          <mxGeometry height="40" width="1800" x="40" y="940" as="geometry" />
         </mxCell>
-        <mxCell id="standalone-eero-0" parent="bUVAuwb-jT9W5OZjnAOs-1" vertex="1" value="&lt;b&gt;Eero repeater&lt;/b&gt;&lt;br&gt;Pool shed&lt;br&gt;Wireless mesh" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f1f5f9;strokeColor=#64748b;fontSize=16;spacing=10;">
-          <mxGeometry x="40" y="995" width="580" height="110" as="geometry" />
+        <mxCell id="standalone-eero-0" parent="bUVAuwb-jT9W5OZjnAOs-1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=16;spacing=10;" value="&lt;b&gt;Eero repeater&lt;/b&gt;&lt;br&gt;Pool shed&lt;br&gt;Wireless mesh" vertex="1">
+          <mxGeometry height="110" width="150" x="40" y="995" as="geometry" />
         </mxCell>
-        <mxCell id="standalone-eero-1" parent="bUVAuwb-jT9W5OZjnAOs-1" vertex="1" value="&lt;b&gt;Eero repeater&lt;/b&gt;&lt;br&gt;Downstairs living room&lt;br&gt;Wireless mesh" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f1f5f9;strokeColor=#64748b;fontSize=16;spacing=10;">
-          <mxGeometry x="690" y="995" width="580" height="110" as="geometry" />
+        <mxCell id="standalone-eero-1" parent="bUVAuwb-jT9W5OZjnAOs-1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=16;spacing=10;" value="&lt;b&gt;Eero repeater&lt;/b&gt;&lt;br&gt;Downstairs living room&lt;br&gt;Wireless mesh" vertex="1">
+          <mxGeometry height="110" width="150" x="210" y="995" as="geometry" />
         </mxCell>
-        <mxCell id="standalone-eero-2" parent="bUVAuwb-jT9W5OZjnAOs-1" vertex="1" value="&lt;b&gt;Eero repeater&lt;/b&gt;&lt;br&gt;Master bathroom&lt;br&gt;Wireless mesh" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f1f5f9;strokeColor=#64748b;fontSize=16;spacing=10;">
-          <mxGeometry x="1340" y="995" width="580" height="110" as="geometry" />
+        <mxCell id="standalone-eero-2" parent="bUVAuwb-jT9W5OZjnAOs-1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=16;spacing=10;" value="&lt;b&gt;Eero repeater&lt;/b&gt;&lt;br&gt;Master bathroom&lt;br&gt;Wireless mesh" vertex="1">
+          <mxGeometry height="110" width="150" x="380" y="995" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
