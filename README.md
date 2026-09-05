@@ -7,8 +7,7 @@ production services and most execution infrastructure; Seykhl hosts nine g2
 gate VMs and retains stopped legacy guests. The complete current inventory is
 in [INVENTORY.md](INVENTORY.md), with network details in [NETWORK.md](NETWORK.md).
 The editable [network diagram](yesod-network.drawio) includes the current
-physical layout on the **Copy of 1 - Current cabling** tab; the other tabs
-retain earlier layouts and proposals.
+physical layout on its single **current** tab.
 
 ## Hosts and networks
 
