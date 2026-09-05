@@ -71,7 +71,7 @@
     </mxGraphModel>
   </diagram>
   <diagram name="Copy of 1 - Current cabling" id="qTIUa4r121VkcDG51Guc">
-    <mxGraphModel dx="2189" dy="1500" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2160" pageHeight="1020" math="0" shadow="0">
+    <mxGraphModel dx="2189" dy="1500" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2160" pageHeight="1120" math="0" shadow="0">
       <root>
         <mxCell id="bUVAuwb-jT9W5OZjnAOs-0" />
         <mxCell id="bUVAuwb-jT9W5OZjnAOs-1" parent="bUVAuwb-jT9W5OZjnAOs-0" />
@@ -93,7 +93,7 @@
         <mxCell id="mE0cwJeWGliuBBYeEMQD-12" edge="1" parent="bUVAuwb-jT9W5OZjnAOs-1" source="bUVAuwb-jT9W5OZjnAOs-4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;startArrow=none;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=14;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="mE0cwJeWGliuBBYeEMQD-11" value="1GbE uplink&lt;br&gt;Port / VLAN: unconfirmed">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="bUVAuwb-jT9W5OZjnAOs-4" parent="bUVAuwb-jT9W5OZjnAOs-1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#64748b;spacing=10;fontSize=16;" value="&lt;b&gt;ER7206 router&lt;/b&gt;&lt;br&gt;LAN: 192.168.0.1 • VLAN 20: 192.168.20.1&lt;br&gt;1GbE ports" vertex="1">
+        <mxCell id="bUVAuwb-jT9W5OZjnAOs-4" parent="bUVAuwb-jT9W5OZjnAOs-1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#64748b;spacing=10;fontSize=16;" value="&lt;b&gt;ER7206 router&lt;/b&gt;&lt;br&gt;LAN: 192.168.0.1 • VLAN 20: 192.168.20.1&lt;br&gt;1GbE ports" vertex="1">
           <mxGeometry height="100" width="400" x="430" y="200" as="geometry" />
         </mxCell>
         <mxCell id="bUVAuwb-jT9W5OZjnAOs-5" parent="bUVAuwb-jT9W5OZjnAOs-1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#64748b;spacing=10;fontSize=16;" value="&lt;b&gt;TL-SX105&lt;/b&gt;&lt;br&gt;10GbE unmanaged switch&lt;br&gt;Trusted LAN • 192.168.0.0/24" vertex="1">
@@ -108,7 +108,7 @@
         <mxCell id="bUVAuwb-jT9W5OZjnAOs-9" parent="bUVAuwb-jT9W5OZjnAOs-1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#64748b;spacing=10;fontSize=16;" value="&lt;b&gt;NAS&lt;/b&gt;&lt;br&gt;192.168.0.123" vertex="1">
           <mxGeometry height="80" width="180" x="250" y="640" as="geometry" />
         </mxCell>
-        <mxCell id="mE0cwJeWGliuBBYeEMQD-1" edge="1" parent="bUVAuwb-jT9W5OZjnAOs-1" source="bUVAuwb-jT9W5OZjnAOs-10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;startArrow=none;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=14;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0;entryY=0.65;strokeColor=#0f766e;" target="bUVAuwb-jT9W5OZjnAOs-7" value="1GbE&lt;br&gt;vmbr1 / nic0">
+        <mxCell id="mE0cwJeWGliuBBYeEMQD-1" edge="1" parent="bUVAuwb-jT9W5OZjnAOs-1" source="bUVAuwb-jT9W5OZjnAOs-10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;startArrow=none;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=14;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0;entryY=0.65;strokeColor=#475569;" target="bUVAuwb-jT9W5OZjnAOs-7" value="1GbE&lt;br&gt;vmbr1 / nic0">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="bUVAuwb-jT9W5OZjnAOs-10" parent="bUVAuwb-jT9W5OZjnAOs-1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;spacing=10;fontSize=16;" value="&lt;b&gt;sefer&lt;/b&gt;&lt;br&gt;vmbr0 / nic3: 192.168.0.100&lt;br&gt;vmbr1 / nic0: 192.168.20.10" vertex="1">
@@ -131,7 +131,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="bUVAuwb-jT9W5OZjnAOs-15" edge="1" parent="bUVAuwb-jT9W5OZjnAOs-1" source="bUVAuwb-jT9W5OZjnAOs-4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;startArrow=none;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=14;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;strokeColor=#0f766e;" target="bUVAuwb-jT9W5OZjnAOs-7" value="Port 5 • 1GbE&lt;br&gt;VLAN 20 • untagged access">
+        <mxCell id="bUVAuwb-jT9W5OZjnAOs-15" edge="1" parent="bUVAuwb-jT9W5OZjnAOs-1" source="bUVAuwb-jT9W5OZjnAOs-4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;startArrow=none;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=14;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;strokeColor=#475569;" target="bUVAuwb-jT9W5OZjnAOs-7" value="Port 5 • 1GbE&lt;br&gt;VLAN 20 • untagged access">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
               <mxPoint x="630" y="500" />
@@ -150,7 +150,7 @@
         <mxCell id="bUVAuwb-jT9W5OZjnAOs-17" edge="1" parent="bUVAuwb-jT9W5OZjnAOs-1" source="bUVAuwb-jT9W5OZjnAOs-5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;startArrow=none;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=14;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" target="bUVAuwb-jT9W5OZjnAOs-9" value="">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="bUVAuwb-jT9W5OZjnAOs-18" edge="1" parent="bUVAuwb-jT9W5OZjnAOs-1" source="bUVAuwb-jT9W5OZjnAOs-5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;startArrow=none;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=14;labelBackgroundColor=#ffffff;exitX=0.8;exitY=1;entryX=0.5;entryY=0;strokeColor=#2563eb;" target="bUVAuwb-jT9W5OZjnAOs-10" value="10GbE • vmbr0 / nic3">
+        <mxCell id="bUVAuwb-jT9W5OZjnAOs-18" edge="1" parent="bUVAuwb-jT9W5OZjnAOs-1" source="bUVAuwb-jT9W5OZjnAOs-5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;startArrow=none;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=14;labelBackgroundColor=#ffffff;exitX=0.8;exitY=1;entryX=0.5;entryY=0;strokeColor=#475569;" target="bUVAuwb-jT9W5OZjnAOs-10" value="10GbE • vmbr0 / nic3">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
               <mxPoint x="438" y="580" />
@@ -158,10 +158,10 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="bUVAuwb-jT9W5OZjnAOs-20" edge="1" parent="bUVAuwb-jT9W5OZjnAOs-1" source="bUVAuwb-jT9W5OZjnAOs-7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;startArrow=none;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=14;labelBackgroundColor=#ffffff;exitX=0.25;exitY=1;entryX=0.5;entryY=0;strokeColor=#0f766e;" target="bUVAuwb-jT9W5OZjnAOs-11" value="1GbE">
+        <mxCell id="bUVAuwb-jT9W5OZjnAOs-20" edge="1" parent="bUVAuwb-jT9W5OZjnAOs-1" source="bUVAuwb-jT9W5OZjnAOs-7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;startArrow=none;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=14;labelBackgroundColor=#ffffff;exitX=0.25;exitY=1;entryX=0.5;entryY=0;strokeColor=#475569;" target="bUVAuwb-jT9W5OZjnAOs-11" value="1GbE">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="bUVAuwb-jT9W5OZjnAOs-21" edge="1" parent="bUVAuwb-jT9W5OZjnAOs-1" source="bUVAuwb-jT9W5OZjnAOs-7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;startArrow=none;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=14;labelBackgroundColor=#ffffff;exitX=0.75;exitY=1;entryX=0.5;entryY=0;strokeColor=#0f766e;" target="bUVAuwb-jT9W5OZjnAOs-12" value="1GbE">
+        <mxCell id="bUVAuwb-jT9W5OZjnAOs-21" edge="1" parent="bUVAuwb-jT9W5OZjnAOs-1" source="bUVAuwb-jT9W5OZjnAOs-7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;startArrow=none;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=14;labelBackgroundColor=#ffffff;exitX=0.75;exitY=1;entryX=0.5;entryY=0;strokeColor=#475569;" target="bUVAuwb-jT9W5OZjnAOs-12" value="1GbE">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="mE0cwJeWGliuBBYeEMQD-4" edge="1" parent="bUVAuwb-jT9W5OZjnAOs-1" source="mE0cwJeWGliuBBYeEMQD-2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;startArrow=none;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=14;labelBackgroundColor=#ffffff;" target="mE0cwJeWGliuBBYeEMQD-3" value="">
@@ -185,10 +185,10 @@
         <mxCell id="mE0cwJeWGliuBBYeEMQD-8" parent="bUVAuwb-jT9W5OZjnAOs-1" style="ellipse;whiteSpace=wrap;html=1;shapeInside=1;fillColor=#f8cecc;strokeColor=#b85450;rounded=1;spacing=10;fontSize=16;" value="Security&lt;br&gt;cameras" vertex="1">
           <mxGeometry height="100" width="140" x="1910" y="790" as="geometry" />
         </mxCell>
-        <mxCell id="mE0cwJeWGliuBBYeEMQD-13" edge="1" parent="bUVAuwb-jT9W5OZjnAOs-1" source="mE0cwJeWGliuBBYeEMQD-11" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;startArrow=none;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=14;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0;entryY=0.5;strokeColor=#9333ea;" target="mE0cwJeWGliuBBYeEMQD-15" value="Coax">
+        <mxCell id="mE0cwJeWGliuBBYeEMQD-13" edge="1" parent="bUVAuwb-jT9W5OZjnAOs-1" source="mE0cwJeWGliuBBYeEMQD-11" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;startArrow=none;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=14;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0;entryY=0.5;strokeColor=#475569;" target="mE0cwJeWGliuBBYeEMQD-15" value="Coax">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="mE0cwJeWGliuBBYeEMQD-11" parent="bUVAuwb-jT9W5OZjnAOs-1" style="whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#64748b;rounded=1;spacing=10;fontSize=16;" value="Coax bridge&lt;br&gt;2.5Gbps rated" vertex="1">
+        <mxCell id="mE0cwJeWGliuBBYeEMQD-11" parent="bUVAuwb-jT9W5OZjnAOs-1" style="whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#64748b;rounded=1;spacing=10;fontSize=16;" value="Coax bridge&lt;br&gt;2.5Gbps rated" vertex="1">
           <mxGeometry height="80" width="190" x="1050" y="210" as="geometry" />
         </mxCell>
         <mxCell id="mE0cwJeWGliuBBYeEMQD-17" edge="1" parent="bUVAuwb-jT9W5OZjnAOs-1" source="mE0cwJeWGliuBBYeEMQD-15" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;startArrow=none;endArrow=none;strokeWidth=2;strokeColor=#475569;fontSize=14;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="mE0cwJeWGliuBBYeEMQD-16" value="">
@@ -213,9 +213,9 @@
           <mxGeometry height="100" width="130" x="2000" y="200" as="geometry" />
         </mxCell>
         <mxCell id="physical-review-notes" parent="bUVAuwb-jT9W5OZjnAOs-1" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontSize=15;fontColor=#475569;spacing=10;" value="Physical cabling • Updated 2026-09-05&lt;br&gt;Speeds describe link/interface capacity, not measured throughput. Coax and bookshelf branch VLANs are not yet confirmed.&lt;br&gt;Sefer’s two NICs attach to separate Proxmox bridges. Same-LAN traffic on the TL-SX105 stays on the switch; router paths use 1GbE ports." vertex="1">
-          <mxGeometry height="80" width="2070" x="40" y="920" as="geometry" />
+          <mxGeometry height="80" width="2070" x="40" y="995" as="geometry" />
         </mxCell>
-      </root>
+      <mxCell id="physical-location-legend-0" parent="bUVAuwb-jT9W5OZjnAOs-1" vertex="1" value="Office" style="rounded=1;whiteSpace=wrap;html=1;fontSize=16;fontStyle=1;fillColor=#dae8fc;strokeColor=#64748b;"><mxGeometry x="40" y="935" width="340" height="45" as="geometry" /></mxCell><mxCell id="physical-location-legend-1" parent="bUVAuwb-jT9W5OZjnAOs-1" vertex="1" value="Laundry room / home lab" style="rounded=1;whiteSpace=wrap;html=1;fontSize=16;fontStyle=1;fillColor=#d5e8d4;strokeColor=#82b366;"><mxGeometry x="400" y="935" width="500" height="45" as="geometry" /></mxCell><mxCell id="physical-location-legend-2" parent="bUVAuwb-jT9W5OZjnAOs-1" vertex="1" value="Garage" style="rounded=1;whiteSpace=wrap;html=1;fontSize=16;fontStyle=1;fillColor=#e1d5e7;strokeColor=#9673a6;"><mxGeometry x="920" y="935" width="340" height="45" as="geometry" /></mxCell><mxCell id="physical-location-legend-3" parent="bUVAuwb-jT9W5OZjnAOs-1" vertex="1" value="Outside" style="rounded=1;whiteSpace=wrap;html=1;fontSize=16;fontStyle=1;fillColor=#f8cecc;strokeColor=#b85450;"><mxGeometry x="1280" y="935" width="340" height="45" as="geometry" /></mxCell></root>
     </mxGraphModel>
   </diagram>
   <diagram name="2 - Proposed VLAN layout" id="1">
