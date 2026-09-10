@@ -1,7 +1,8 @@
-# LAN DNS and DHCP (dnsmasq on Seykhl)
+# LAN DNS and DHCP (dnsmasq on Seykhl + Sefer)
 
-**Last verified:** 2026-09-10 from the running service on Seykhl, the ER7206
-web UI, and live resolution tests executed on gate demons on both VLANs.
+**Last verified:** 2026-09-10 from the running services on both hosts, the
+ER7206 web UI, live resolution tests executed on gate demons on both VLANs, and
+a failover test with the primary resolver stopped.
 
 > **Interim by design.** This service exists because the fleet had no LAN name
 > resolution and a names-only contract began to fail closed. It is expected to
@@ -35,22 +36,41 @@ forbids. Tracked as yesod note `ys-yes-81xu`.
 
 ## Where it runs
 
-**dnsmasq 2.91 on the Seykhl host** (not in a guest), alongside chrony.
+**dnsmasq 2.91 on BOTH Proxmox hosts**, alongside chrony on each. Seykhl is
+the primary and Sefer the secondary (added 2026-09-10).
 
-Seykhl was chosen for the same reasons it hosts NTP: it is a separate physical
-machine, its single NIC is already on VLAN 20, and it is stable across the
-guest cutovers currently in progress on Sefer.
+Seykhl was chosen as primary for the same reasons it hosts NTP: separate
+physical machine, single NIC already on VLAN 20, stable across the guest
+cutovers in progress on Sefer.
+
+| Role | Host | Resolver address | NTP |
+|---|---|---|---|
+| Primary | Seykhl | `192.168.20.202` (`vmbr0`) | `ntp1` |
+| Secondary | Sefer | `192.168.20.10` (`vmbr1`), also `192.168.0.100` (`vmbr0`) | `ntp2` |
+
+**Sefer's bridges are the opposite way round from Seykhl's** — `vmbr1` is
+VLAN 20 and `vmbr0` is the trusted LAN — which is exactly why the dnsmasq
+config is split into a shared file and a per-host interface file rather than
+copied. Sefer listens on both of its bridges on purpose: VLAN 20 clients use
+it as their secondary, and the trusted segment gains a local resolver that
+knows the internal zone (the router cannot answer `internal.yesod.work` at
+all).
 
 | Item | Value |
 |---|---|
-| Service address | `192.168.20.202:53`, UDP and TCP |
-| Listening interfaces | `vmbr0` and `lo` only (`bind-interfaces`); **not** `tailscale0` |
-| Server config | `/etc/dnsmasq.d/yesod-lan-dns.conf` |
-| Host inventory | `/etc/yesod/dns/infra.hosts` |
-| Phase 2 (staged, inactive) | `/etc/yesod/dns/phase2-dhcp.conf.staged` |
+| Shared config | `/etc/dnsmasq.d/10-yesod-lan-common.conf` |
+| Per-host interfaces | `/etc/dnsmasq.d/11-yesod-lan-iface.conf` |
+| Host inventory | `/etc/yesod/dns/infra.hosts` (identical on both, checksum-verified) |
+| Bind mode | `bind-dynamic`, restricted by `interface=`; **never** `tailscale0` |
+| Phase 2 (staged, inactive, Seykhl only) | `/etc/yesod/dns/phase2-dhcp.conf.staged` |
 | Resolvconf suppression | `IGNORE_RESOLVCONF=yes` in `/etc/default/dnsmasq` |
 | Log | `/var/log/dnsmasq.log` |
-| Unit state | `enabled` and `active` — survives reboot |
+| Unit state | `enabled`, `active`, `Restart=on-failure` on both |
+| Chrony server config | `/etc/chrony/conf.d/yesod-lan-server.conf`, from `ntp/` |
+
+**The repo is the source of truth, not the hosts.** All of the above is
+deployed from `dns/` by `scripts/deploy-lan-dns.sh`; editing the files
+directly on a host will be silently overwritten on the next deploy.
 
 Trusted-LAN clients reach it directly because trusted → VLAN 20 is already
 open and stateful, so no firewall change was required.
@@ -159,17 +179,26 @@ clients fell back to the router itself.
 
 | Field | Before | After |
 |---|---|---|
-| Primary DNS | *(empty)* | `192.168.20.202` |
-| Secondary DNS | *(empty)* | `192.168.20.1` |
+| Primary DNS | *(empty)* | `192.168.20.202` (Seykhl) |
+| Secondary DNS | *(empty)* | `192.168.20.10` (Sefer) |
 | Default Domain | *(empty)* | `internal.yesod.work` |
 
 Unchanged: DHCP Mode `DHCP Server`, Status `Enable`, pool
 `192.168.20.20`–`192.168.20.119`, Lease Time `120` minutes, Default Gateway
 empty.
 
-Two DNS entries, in that order: dnsmasq first so it is actually used, the
-router second so a dnsmasq outage degrades to the previous behaviour rather
-than to no DNS at all.
+Both entries are real resolvers that know the internal zone. The secondary was
+briefly `192.168.20.1` (the router itself) between the first and second edit on
+2026-09-10, and that was a mistake worth naming: **the router cannot answer
+`internal.yesod.work` at all**, so falling back to it would have turned a
+dnsmasq outage into a subtler "internal names silently vanished" failure while
+external DNS kept working. Once Sefer became a real second resolver the
+secondary was repointed at `192.168.20.10`.
+
+Caution when editing: the ER7206 web session expires quietly, and a save
+submitted against an expired session redirects to the login page **without
+applying the change**. Verify by asking a client what it actually received
+(`dhclient` renew, then read `/etc/resolv.conf`) rather than trusting the form.
 
 **The trusted LAN (VLAN 1, `192.168.0.1`) was not touched** and still runs its
 own DHCP server. Phase 2 does not change that either — it moves VLAN 20 only.
@@ -238,7 +267,15 @@ behaviour.
 
 ## Read-only verification
 
-Service and inventory, on Seykhl:
+Everything at once, from the workstation — checks both hosts, compares
+inventory checksums, probes eight names on each, and confirms the public
+parent domain is not shadowed:
+
+```bash
+cd ~/dev3/proxmox-exper && ./scripts/deploy-lan-dns.sh --check
+```
+
+Service and inventory, per host (`192.168.20.202` Seykhl, `192.168.20.10` Sefer):
 
 ```bash
 ssh -o BatchMode=yes root@192.168.20.202 'systemctl is-active dnsmasq; systemctl is-enabled dnsmasq'
@@ -297,13 +334,50 @@ kept `192.168.20.73` and received the new resolver, domain and search list.
 Bare names then resolved with no FQDN and no explicit server, and external DNS
 still worked.
 
-## Known gaps
+## Redundancy (added 2026-09-10)
 
-- **Single point of failure.** Seykhl now carries both DNS and NTP for the
-  fleet. A second dnsmasq on Sefer's `vmbr1` sharing the same inventory file is
-  the cheap answer when it matters.
-- **The inventory is hand-curated.** It was built from a live audit of both
-  hypervisors and will drift as guests move. See below.
+Seykhl was initially the only resolver *and* the only time source. That is now
+fixed: Sefer runs a second dnsmasq and a second chrony server.
+
+**DNS.** Both resolvers hold an identical inventory (checksum-compared by
+`scripts/deploy-lan-dns.sh --check`) and answer independently — this is two
+full copies, not a forwarder chain, so neither depends on the other. Clients
+receive both via DHCP.
+
+*Failover verified* by stopping dnsmasq on Seykhl and querying from
+`yesod-gate-dg5-ziz-b33d`: the primary refused, `192.168.20.10` answered
+`postgres` correctly, and the primary resumed on restart.
+
+**NTP.** Sefer now carries the same `allow`/`local stratum 10` directives and
+the two hosts are **symmetric chrony peers**, so they agree with each other
+rather than drifting independently. After the change both settled at stratum 3
+on the same reference (`ntps2-01.bji01.0150n.net`) with sub-millisecond
+offsets.
+
+**Naming.** `dns1`/`ntp1` are Seykhl, `dns2`/`ntp2` are Sefer. The bare `dns`
+and `ntp` names deliberately still resolve to **Seykhl only** — the dg5
+inventory contract was validated against those, and a name that suddenly
+returns two addresses could change behaviour in anything that hashes or
+compares the resolved value. Use the numbered names to address a specific
+server.
+
+**Both services are crash-safe as well as reboot-safe.** Debian ships dnsmasq
+and chrony with `Restart=no`, meaning a single failed bind at boot or any later
+crash would leave the service silently dead — worst of all on the *secondary*,
+where nobody would notice until the primary also failed. Both now carry a
+drop-in with `Restart=on-failure`, `RestartSec=2s` and
+`StartLimitIntervalSec=0` (keep retrying rather than giving up after a burst).
+Verified with `kill -9` on dnsmasq: systemd restored it with a new PID inside
+six seconds.
+
+`bind-dynamic` replaced `bind-interfaces` plus a hardcoded `listen-address` for
+the same reason — the old form required the address to already exist at
+startup, so a bridge coming up a moment late at boot meant a permanent failure.
+
+## Known gaps
+- **The inventory is hand-curated.** It lives in the repo at `dns/infra.hosts`
+  and is deployed to both hosts, so the two cannot drift from each other — but
+  it can still drift from reality as guests move. See below.
 - **`yesod-runner-g1-dispatch` is absent on purpose.** It is mid-cutover
   between `192.168.0.192` and `192.168.20.192`; a confidently wrong record is
   worse than a missing one. Add `192.168.20.192` once the move sticks.

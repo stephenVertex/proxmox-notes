@@ -1,0 +1,63 @@
+# ============================================================================
+# PHASE 2 -- STAGED, NOT ACTIVE. This file is deliberately NOT in
+# /etc/dnsmasq.d/ so dnsmasq cannot load it by accident.
+#
+# Moves VLAN 20 DHCP from the ER7206 to dnsmasq, which is what makes ephemeral
+# guests resolvable by name: a DHCP request carries the client's own hostname
+# (option 12 / option 81), and dnsmasq answers DNS for that name as soon as it
+# issues the lease. No inventory file, no zone edit, no reservation, and no
+# Proxmox API call -- the guest is the source of truth for its own name.
+#
+# ACTIVATION, in this order, in one window:
+#   1. Stephen DISABLES the ER7206's DHCP server for VLAN 20. Two DHCP servers
+#      on one L2 segment is worse than none. This must happen FIRST.
+#   2. cp /etc/yesod/dns/phase2-dhcp.conf.staged /etc/dnsmasq.d/yesod-lan-dhcp.conf
+#   3. dnsmasq --test && systemctl restart dnsmasq
+#   4. Verify: a guest renew yields the same address and its name resolves.
+# ROLLBACK: rm /etc/dnsmasq.d/yesod-lan-dhcp.conf, restart dnsmasq, re-enable
+# DHCP on the router. Existing leases keep working throughout.
+# ============================================================================
+
+# --- the ephemeral pool, unchanged from the router's policy
+dhcp-range=192.168.20.20,192.168.20.119,255.255.255.0,120m  # matches the ER7206's current lease time; do not silently change it at handover
+
+# --- we are the only DHCP server on this segment once the router is off
+dhcp-authoritative
+dhcp-leasefile=/var/lib/misc/dnsmasq.leases
+
+# --- options handed to every VLAN 20 client
+dhcp-option=option:router,192.168.20.1
+# DNS: both real resolvers. The router is NOT listed -- it cannot answer
+# internal.yesod.work at all, so falling back to it turns a DNS outage into
+# a silent "internal names vanished" outage, which is harder to diagnose.
+# Updated 2026-09-10 when sefer became the second resolver.
+dhcp-option=option:dns-server,192.168.20.202,192.168.20.10
+dhcp-option=option:domain-search,internal.yesod.work
+# NTP by DHCP -- this is what lets the inventory contract stop hardcoding a
+# literal 192.168.20.202 for time (see ys-yes-19c3 / the names-only rule)
+# Both time sources, so a seykhl outage does not leave the fleet with none.
+dhcp-option=option:ntp-server,192.168.20.202,192.168.20.10
+
+# --- register DHCP names into DNS under our domain
+dhcp-fqdn
+
+# ----------------------------------------------------------------------------
+# LONG-LIVED HOSTS -- these replace the ER7206's VLAN 20 reservations, in text,
+# in a file we can version and edit without a router console. Each one passes
+# the test in vlan-cutover.md §18: long-lived AND reached by literal address.
+# Addresses are in the reservation half (.120-.254), never the pool.
+#
+# EPHEMERAL GUESTS ARE DELIBERATELY ABSENT. Gate demons, test databases and
+# runners get no entry here and never should -- they are born into the pool and
+# name themselves. Adding one is the mistake §18 retracted.
+# ----------------------------------------------------------------------------
+dhcp-host=BC:24:11:00:88:F5,192.168.20.155,yesod-postgres-server
+dhcp-host=BC:24:11:6C:CF:B7,192.168.20.154,seykhl-actions-runner
+dhcp-host=BC:24:11:90:A9:CC,192.168.20.138,dertog
+dhcp-host=BC:24:11:D0:43:5D,192.168.20.150,doltsvr
+dhcp-host=BC:24:11:85:BD:D3,192.168.20.157,litellm-gateway
+dhcp-host=BC:24:11:C5:6C:AA,192.168.20.163,obs-vultr
+dhcp-host=BC:24:11:B6:A5:A4,192.168.20.167,neo4j
+dhcp-host=BC:24:11:B8:5D:94,192.168.20.172,yesod-semantic-graph
+# The controller. The one guest that genuinely earns a fixed address.
+dhcp-host=BC:24:11:CF:6E:EC,192.168.20.192,yesod-runner-g1-dispatch

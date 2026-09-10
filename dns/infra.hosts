@@ -1,0 +1,58 @@
+# Long-lived infrastructure names for the yesod fleet.
+# network-guy, 2026-09-10. Source: live audit of both hypervisors.
+#
+# CANONICAL DOMAIN: internal.yesod.work (Stephen owns yesod.work; the subdomain is
+# unused publicly and has no wildcard, so local authority shadows nothing).
+# lan.planetbarr.com is a TRANSITIONAL alias only -- it was in the first
+# build and was mailed to the mayor before the domain was settled. Remove it
+# once nothing references it.
+#
+# RULE: only hosts that are long-lived AND stably addressed belong here.
+# Ephemeral guests (gate demons, test databases, runners) are DELIBERATELY
+# ABSENT -- they live in the DHCP pool .20.20-.119, are reborn into whatever
+# address the pool hands out, and once dnsmasq owns VLAN 20 DHCP they register
+# their own names at lease time. Adding one by hand is the same mistake as
+# giving it a router reservation (vlan-cutover.md 18).
+
+# --- physical hosts and appliances
+192.168.20.202  seykhl.internal.yesod.work seykhl.lan.planetbarr.com seykhl.lan seykhl
+192.168.20.10   sefer.internal.yesod.work sefer.lan.planetbarr.com sefer.lan sefer
+192.168.0.100   sefer-trusted.internal.yesod.work sefer-trusted.lan.planetbarr.com sefer-trusted.lan sefer-trusted
+192.168.0.123   nas.internal.yesod.work nas.lan.planetbarr.com nas.lan nas synology
+192.168.20.1    router.internal.yesod.work router.lan.planetbarr.com router.lan router gateway gw
+192.168.0.1     router-trusted.internal.yesod.work router-trusted.lan.planetbarr.com router-trusted.lan router-trusted gw-trusted
+
+# --- service endpoint names (ys-yes-81xu) -- the dg5 inventory declares endpoints BY NAME and forbids literal_ip_addresses, so each shared service needs a name, including this resolver
+192.168.20.202  dns.internal.yesod.work dns.lan.planetbarr.com dns.lan dns ns resolver
+192.168.20.202  ntp.internal.yesod.work ntp.lan.planetbarr.com ntp.lan ntp
+192.168.20.1    dhcp.internal.yesod.work dhcp.lan.planetbarr.com dhcp.lan dhcp
+# Explicit per-server names for the redundant pair, added 2026-09-10 when
+# sefer became the second resolver and second time source.
+# NOTE: the bare 'dns' and 'ntp' names above deliberately still resolve to
+# SEYKHL ONLY (.20.202). The dg5 fleet inventory contract was validated
+# against those, and a name that suddenly returns two addresses could change
+# behaviour in something that hashes or compares the resolved value. Use the
+# numbered names when you specifically want the second server.
+192.168.20.202  dns1.internal.yesod.work dns1.lan dns1
+192.168.20.10   dns2.internal.yesod.work dns2.lan dns2
+192.168.20.202  ntp1.internal.yesod.work ntp1.lan ntp1
+192.168.20.10   ntp2.internal.yesod.work ntp2.lan ntp2
+
+# --- VLAN 20 services (reservation range .120-.254)
+192.168.20.138  dertog.internal.yesod.work dertog.lan.planetbarr.com dertog.lan dertog
+192.168.20.150  doltsvr.internal.yesod.work doltsvr.lan.planetbarr.com doltsvr.lan doltsvr
+192.168.20.154  seykhl-actions-runner.internal.yesod.work seykhl-actions-runner.lan.planetbarr.com seykhl-actions-runner.lan seykhl-actions-runner
+192.168.20.155  yesod-postgres-server.internal.yesod.work yesod-postgres-server.lan.planetbarr.com yesod-postgres-server.lan yesod-postgres-server postgres pg
+192.168.20.157  litellm-gateway.internal.yesod.work litellm-gateway.lan.planetbarr.com litellm-gateway.lan litellm-gateway litellm
+192.168.20.163  obs-vultr.internal.yesod.work obs-vultr.lan.planetbarr.com obs-vultr.lan obs-vultr
+192.168.20.167  neo4j.internal.yesod.work neo4j.lan.planetbarr.com neo4j.lan neo4j
+192.168.20.172  yesod-semantic-graph.internal.yesod.work yesod-semantic-graph.lan.planetbarr.com yesod-semantic-graph.lan yesod-semantic-graph
+
+# --- trusted-LAN services (not yet migrated)
+192.168.0.139   docuseal.internal.yesod.work docuseal.lan.planetbarr.com docuseal.lan docuseal
+192.168.0.145   n8n-server.internal.yesod.work n8n-server.lan.planetbarr.com n8n-server.lan n8n-server n8n
+192.168.0.147   aicoe-social-runner.internal.yesod.work aicoe-social-runner.lan.planetbarr.com aicoe-social-runner.lan aicoe-social-runner
+192.168.0.149   drawio.internal.yesod.work drawio.lan.planetbarr.com drawio.lan drawio
+192.168.0.169   bukher.internal.yesod.work bukher.lan.planetbarr.com bukher.lan bukher
+192.168.0.170   makor.internal.yesod.work makor.lan.planetbarr.com makor.lan makor
+192.168.0.171   makor-runner-docker-1.internal.yesod.work makor-runner-docker-1.lan.planetbarr.com makor-runner-docker-1.lan makor-runner-docker-1
