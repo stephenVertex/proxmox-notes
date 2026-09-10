@@ -401,18 +401,80 @@ receive both via DHCP.
 `yesod-gate-dg5-ziz-b33d`: the primary refused, `192.168.20.10` answered
 `postgres` correctly, and the primary resumed on restart.
 
-**NTP.** Sefer now carries the same `allow`/`local stratum 10` directives and
-the two hosts are **symmetric chrony peers**, so they agree with each other
-rather than drifting independently. After the change both settled at stratum 3
-on the same reference (`ntps2-01.bji01.0150n.net`) with sub-millisecond
-offsets.
+**NTP — corrected 2026-09-10 23:5xZ, do not reintroduce peer symmetry.**
+Sefer was briefly configured as a **symmetric chrony peer** of Seykhl so that
+neither depended on the other. That was wrong for two reasons the fleet mayor
+caught:
 
-**Naming.** `dns1`/`ntp1` are Seykhl, `dns2`/`ntp2` are Sefer. The bare `dns`
-and `ntp` names deliberately still resolve to **Seykhl only** — the dg5
-inventory contract was validated against those, and a name that suddenly
-returns two addresses could change behaviour in anything that hashes or
-compares the resolved value. Use the numbered names to address a specific
-server.
+1. The gate birth attestor (`ops/gate/attest-host-time.py`) matches chrony's
+   **server** marker `^*` only. A symmetric peer renders as `=` and can never
+   match, so every gate and testdb birth on Sefer would fail with *"chrony did
+   not select exactly one seykhl network source"*.
+2. Far worse, with the Debian pool still present chrony **actually selected a
+   public internet server and left Seykhl unselected**, and it flapped.
+   Measured before the fix:
+
+   ```
+   ^* ntps2-01.bji01.0150n.net     2  ...   <- selected, PUBLIC internet
+   =+ seykhl.internal.yesod.work   3  ...   <- reviewed source, NOT selected
+   ```
+
+   Sefer's clock gates every birth, so it was being steered by a stranger.
+
+**The fix: Sefer follows Seykhl in client mode, and the alternative is absent
+rather than demoted.** `prefer` only biases selection — chrony can still pick a
+pool source when the preferred one is briefly unreachable, which is exactly the
+flapping above.
+
+```
+# sefer: /etc/chrony/conf.d/yesod-lan-server.conf
+server 192.168.20.202 iburst prefer
+# sefer: /etc/chrony/chrony.conf
+# pool 2.debian.pool.ntp.org iburst      <- commented out, backup kept
+```
+
+The matching `peer` line was also removed from Seykhl; leaving it would have
+kept a symmetric association alive from the other side. The chain is now
+unambiguous:
+
+```
+public pool -> seykhl (root, stratum 2) -> sefer (stratum 3) -> fleet
+```
+
+Verified: exactly one line of Sefer's `chronyc sources` matches the attestor's
+regex, and it is Seykhl. No `=` associations remain anywhere.
+
+**Sefer's chrony names Seykhl by literal IP, deliberately.** Time must not
+depend on DNS at boot, and DNS on that host now depends on its own dnsmasq
+starting — a name there would be a loop waiting to happen.
+
+**What this costs, stated plainly:** it converts two independent sources into
+one root plus a relay. That is accepted because **serving and following are
+different roles**. Sefer still answers `ntp2` for the fleet and still carries
+`local stratum 10`, so it keeps serving last-known time if Seykhl dies —
+verified, both respond to real NTP queries from a VLAN 20 client. But a host
+whose clock gates births should **fail closed**: with no upstream there is no
+`^*`, so births refuse rather than minting demons against an unreviewed clock.
+A public fallback that silently took over would defeat the purpose of attesting
+time at all — the same fail-closed argument as the
+`local=/lan.planetbarr.com/` guard.
+
+**Naming.** `dns1`/`ntp1` are Seykhl, `dns2`/`ntp2` are Sefer.
+
+> **`ntp.internal.yesod.work` MUST resolve to exactly ONE address.** This is a
+> hard constraint, not a preference. The birth attestor raises
+> `AttestationError("... must resolve uniquely to ...")` if the name returns
+> more than one address, so a round-robin there would break **every birth and
+> every attestation fleet-wide** — while looking like a DNS improvement.
+> Recorded here because it was nearly done: a multi-valued `ntp` was about to
+> be proposed so the second time source could be used without a code change,
+> and the mayor's constraint arrived first.
+>
+> The redundancy that matters lives at the *serving* layer, which `ntp1`/`ntp2`
+> already provide. The attested birth path is single-rooted by design.
+
+The bare `dns` name likewise resolves to Seykhl only, since the dg5 inventory
+was validated against it.
 
 **Both services are crash-safe as well as reboot-safe.** Debian ships dnsmasq
 and chrony with `Restart=no`, meaning a single failed bind at boot or any later
