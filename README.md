@@ -34,6 +34,10 @@ ssh -o BatchMode=yes root@192.168.20.10
 ssh -o BatchMode=yes root@192.168.20.202
 ```
 
+Since 2026-09-10 the LAN has a name server: dnsmasq on Seykhl, authoritative
+for `internal.yesod.work`, serving both VLANs. Prefer names over addresses in
+new configuration. See [LAN_DNS.md](LAN_DNS.md) and [NETWORK.md](NETWORK.md).
+
 ## Production and supporting services
 
 These are all on Sefer. Addresses are observed guest IPv4 addresses; database

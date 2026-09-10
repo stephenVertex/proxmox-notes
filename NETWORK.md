@@ -58,6 +58,26 @@ The complete observed guest addresses, bridges, and boot policies are in
 not be mistaken for router reservations; the router's lease/reservation table
 was not audited.
 
+## Name resolution
+
+**Added 2026-09-10.** The fleet now has a LAN name server: dnsmasq on Seykhl at
+`192.168.20.202`, authoritative for `internal.yesod.work`, serving VLAN 20 and
+— because trusted → VLAN 20 is open — the trusted LAN too. The ER7206's VLAN 20
+DHCP scope now hands out that resolver and the search domain.
+
+This replaces the previous situation, in which the router forwarded DNS but
+served no LAN names, and cross-VLAN resolution was impossible: mDNS `.local`
+never crosses a VLAN and MagicDNS only covers tailnet members. Static
+`/etc/hosts` pins should be retired in favour of names as hosts are touched.
+
+Note that `sefer` resolves to `192.168.20.10`, the VLAN 20 side, because that
+address is reachable from both segments; `sefer-trusted` is the direct 10 GbE
+address. This mirrors the bridge warning above — the two paths are not
+interchangeable.
+
+Full configuration, verification commands and the staged DHCP migration are in
+[LAN_DNS.md](LAN_DNS.md).
+
 ## Read-only verification
 
 ```bash
