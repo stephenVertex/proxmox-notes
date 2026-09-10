@@ -231,7 +231,60 @@ applies.
 DHCP at all — no `dhcp-range` is configured anywhere, and nothing listens on
 udp/67.
 
-## Phase 2 — staged, not active
+## Phase 2 — investigated 2026-09-10 and NOT DONE (proxmox-7ik closed)
+
+> **Decision: do not move DHCP off the router.** The config below stays staged
+> and documented because it costs nothing to keep, but the case for running it
+> did not survive investigation. Rationale first, then the mechanics in case a
+> future requirement revives it.
+
+### Why phase 2 was dropped
+
+Its headline benefit was that ephemeral guests would get DNS names
+automatically at lease time. Measured on 2026-09-10, that benefit has no
+consumer:
+
+| Claimed benefit | Reality |
+|---|---|
+| Ephemeral guests become resolvable by name | **Already true via mDNS inside VLAN 20.** From a dg5 demon, other demons and test databases resolve 4/4 by `.local`; the controller resolved 18/18 when it was on VLAN 20 |
+| Avoids avahi name conflicts on restart (a real historical problem) | **Fixed by the dg5 suffix convention, not by DNS.** `yesod-gate-dg5-ziz-b33d` carries a random suffix, so collisions are structurally unlikely. Zero conflicts or withdrawals in the avahi journals of the demons checked |
+| Router reservations become version-controlled text | **Moot.** Reservations for ephemeral hosts were retracted; the 19 legacy VLAN 20 rows are to be *deleted*, not migrated |
+| Clients get DNS, search domain and NTP by DHCP | **Already delivered** by three fields on the router (see above) |
+| No more router console trips for addressing | **Already true.** The only remaining router work is one-time deletions |
+
+And the one consumer that genuinely sits across a VLAN boundary — the refinery
+controller — is moving *onto* VLAN 20 by design. Its config contains zero
+literal `192.168.20.x` addresses and eight `.local` references, so mDNS serves
+it once it shares a segment with its demons. Nothing outside VLAN 20 needs to
+resolve a demon by name.
+
+### And the cost is real
+
+Moving DHCP to dnsmasq makes **DHCP a single point of failure on Seykhl**.
+dnsmasq cannot serve one pool redundantly from two hosts without splitting the
+range and giving up shared lease state.
+
+That matters more for this fleet than it would for pets. **These demons are
+cattle — destroyed and reborn routinely** — and a newborn guest needs DHCP to
+obtain any address at all. So if Seykhl were down, existing hosts would keep
+their leases but *no demon could be born*. Having just removed exactly that
+class of single point of failure for DNS and NTP, reintroducing it for DHCP is
+a net regression.
+
+Meanwhile the ER7206 is a purpose-built appliance at 249 days uptime, and the
+pool is nowhere near pressure — 17 of 100 addresses in use, so none of
+dnsmasq's finer allocation control is needed.
+
+### What would revive it
+
+- Something outside VLAN 20 needing to resolve ephemeral guests by name, which
+  mDNS structurally cannot serve.
+- Wanting DHCP reservations or per-host options that the ER7206 cannot express.
+- Retiring the router's DHCP for an unrelated reason.
+
+If any of those land, the staged config is ready and the mechanics below apply.
+
+### The staged config, if it is ever needed
 
 `/etc/yesod/dns/phase2-dhcp.conf.staged` moves VLAN 20 DHCP from the ER7206 to
 dnsmasq. It is deliberately **outside** `/etc/dnsmasq.d/` so it cannot load by

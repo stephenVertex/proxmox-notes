@@ -35,6 +35,16 @@ SSH_OPTS=(-o BatchMode=yes -o StrictHostKeyChecking=accept-new
 # but cannot answer is worse than one that is visibly down.
 PROBES=(seykhl sefer nas router ntp dns postgres doltsvr)
 
+# A CONSUMER on VLAN 20 that is not a gate host, used to test the path that
+# actually matters. Querying a resolver directly proves only that the resolver
+# answers; it does NOT prove a client is configured to ask it. That gap hid a
+# real hazard on 2026-09-10: the fleet mayor found lan.planetbarr.com carries a
+# public wildcard, so demons still pointed at the router were resolving service
+# names to a stranger's host (103.168.172.37) while every direct query looked
+# green. Resolve from the consumer, not from the resolver.
+CONSUMER_HOST=sefer          # hypervisor to reach the consumer through
+CONSUMER_CT=260              # idle dg4 test-db container on VLAN 20
+
 say() { printf '\n=== %s\n' "$*"; }
 
 check_host() {
@@ -76,6 +86,40 @@ check_host() {
   return $rc
 }
 
+# Resolve with NO explicit server, through whatever the client was actually
+# given by DHCP. This is the test that counts.
+check_consumer() {
+  local rc=0
+  say "consumer path (CT $CONSUMER_CT on $CONSUMER_HOST, no explicit server)"
+
+  ssh "${SSH_OPTS[@]}" "root@$CONSUMER_HOST" "pct exec $CONSUMER_CT -- sh -c '
+    printf \"  resolvers : %s\\n\" \"\$(awk \"/^nameserver/{printf \\\"%s \\\", \\\$2}\" /etc/resolv.conf)\"
+    printf \"  search    : %s\\n\" \"\$(awk \"/^search/{print \\\$2}\" /etc/resolv.conf)\"
+  '" || rc=1
+
+  local n ans
+  for n in ntp dns nas dhcp; do
+    ans=$(ssh "${SSH_OPTS[@]}" "root@$CONSUMER_HOST" \
+            "pct exec $CONSUMER_CT -- getent ahostsv4 $n.internal.yesod.work 2>/dev/null | head -1 | awk '{print \$1}'" || true)
+    if [[ -z $ans ]]; then
+      printf '  fqdn      : %-5s -> NOT FOUND (consumer cannot reach the resolver)\n' "$n"; rc=1
+    else
+      printf '  fqdn      : %-5s -> %s\n' "$n" "$ans"
+    fi
+  done
+
+  # The retired wildcarded zone must fail closed, never return an address.
+  ans=$(ssh "${SSH_OPTS[@]}" "root@$CONSUMER_HOST" \
+          "pct exec $CONSUMER_CT -- getent ahostsv4 ntp.lan.planetbarr.com 2>/dev/null | head -1 | awk '{print \$1}'" || true)
+  if [[ -n $ans ]]; then
+    printf '  wildcard  : ntp.lan.planetbarr.com -> %s  ** LEAKING TO A STRANGER **\n' "$ans"; rc=1
+  else
+    printf '  wildcard  : ntp.lan.planetbarr.com -> correctly fails closed\n'
+  fi
+
+  return $rc
+}
+
 deploy_host() {
   local name=$1 addr=$2 iface=$3
   say "deploying to $name ($addr)"
@@ -110,6 +154,7 @@ main() {
       read -r name addr iface <<<"$entry"
       check_host "$name" "$addr" || rc=1
     done
+    check_consumer || rc=1
     say "$([[ $rc -eq 0 ]] && echo 'ALL CHECKS PASSED' || echo 'CHECKS FAILED')"
     return $rc
   fi
@@ -125,6 +170,7 @@ main() {
     [[ $mode == all || $mode == "$name" ]] || continue
     check_host "$name" "$addr" || rc=1
   done
+  [[ $mode == all ]] && { check_consumer || rc=1; }
 
   say "$([[ $rc -eq 0 ]] && echo 'DEPLOY OK' || echo 'DEPLOY FAILED')"
   return $rc
