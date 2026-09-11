@@ -1,11 +1,14 @@
 # Bukher — RSS Ingestion Node
 
-**Last verified:** 2026-09-05. **Partially operational:** RSSHub returns 200
-on `100.77.145.88:1200`, but Miniflux is stopped (exit 128) and port 8080
-refuses connections. Docker records a startup failure binding
-`100.77.145.88:8080`: `cannot assign requested address`. The staggered-refresh
-timer is active but cannot refresh feeds while Miniflux is down. The VM remains
-on Sefer `vmbr0` at `192.168.0.169`. Follow-up: `proxmox-tdc`. The configured nightly VM backup is not a clean success: September 5 archive transfer completed but NAS pruning failed. See [BACKUPS.md](BACKUPS.md).
+**Last verified:** 2026-09-11. **Operational:** RSSHub returns 200 on
+`100.77.145.88:1200` and Miniflux serves on `100.77.145.88:8080` (healthcheck
+200). All 102 feeds poll with zero parsing errors; the staggered-refresh timer
+cycles normally. Restored 2026-09-11 via `docker compose up -d --force-recreate
+miniflux` (closes `proxmox-tdc`). Known fragility: Docker can start before
+`tailscale0` has assigned `100.77.145.88` at boot, causing Miniflux to die with
+exit 128 (`cannot assign requested address` binding `:8080`); if the VM reboots
+and Miniflux is down, recreate the container once Tailscale is up. The VM remains
+on Sefer `vmbr0` at `192.168.0.169`. The configured nightly VM backup is not a clean success: September 5 archive transfer completed but NAS pruning failed. See [BACKUPS.md](BACKUPS.md).
 
 ## Overview
 
