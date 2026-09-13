@@ -1,6 +1,7 @@
 # Proxmox Infrastructure Overview
 
-**Last verified:** 2026-09-05 against the live hosts and guests.
+**Last verified:** 2026-09-05 against the full live hosts and guests; GitLab
+runner fleet delta verified 2026-09-13.
 
 `sefer` and `seykhl` are both active, separate Proxmox hosts. Sefer hosts the
 production services and most execution infrastructure; Seykhl hosts nine g2
@@ -59,9 +60,16 @@ listener restrictions are documented per service.
 | 117 | SigNoz | `192.168.0.163` | [Observability](OBS_VULTR.md) |
 | 118 | Neo4j | `192.168.0.167` | [Neo4j](NEO4J.md) |
 | 119 | GitLab EE | `192.168.0.170` | [GitLab](GITLAB.md) |
-| 120 | GitLab Docker group runner | `192.168.0.171` | [GitLab Runner](GITLAB.md#gitlab-runner) |
+| 120 | GitLab Docker group runner manager 1 | `192.168.0.171` | [GitLab Runner](GITLAB.md#gitlab-runner) |
 | 121 | Semantic graph controller / pipeline PostgreSQL | `192.168.0.172` | [Semantic graph](YESOD_SEMANTIC_GRAPH.md) |
 | 124 | Production Dolt primary | `192.168.20.150` | [Dolt primary](DOLT_SERVER.md) |
+| 125 | GitLab Docker group runner manager 2 | `192.168.0.155` (DHCP at verification) | [GitLab Runner](GITLAB.md#gitlab-runner) |
+| 126 | GitLab Docker group runner manager 3 | `192.168.0.159` (DHCP at verification) | [GitLab Runner](GITLAB.md#gitlab-runner) |
+| 127 | GitLab Docker group runner manager 4 | `192.168.0.161` (DHCP at verification) | [GitLab Runner](GITLAB.md#gitlab-runner) |
+
+Sefer also has credential-free GitLab runner template 9120,
+`makor-runner-docker-template`. It is distinct from Yesod software-factory
+template 9000.
 
 [YESOD-RUNNER.md](YESOD-RUNNER.md) covers runner-3 (110), Ibur (130), Golem
 (131), Lamedvov (150), Tzadik (151), dispatch/refinery (152), the g1/g2 gate

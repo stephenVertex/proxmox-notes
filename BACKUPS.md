@@ -1,7 +1,8 @@
 # Backup configuration and live verification
 
 **Verified:** 2026-09-05. Sources: Sefer `/etc/pve/jobs.cfg`, both root
-crontabs, systemd timer/results, guest backup file metadata and Proxmox task logs.
+crontabs, systemd timer/results, guest backup file metadata and Proxmox task
+logs. GitLab runner coverage was rechecked after the 2026-09-13 fleet expansion.
 
 ## Sefer scheduled VM backups
 
@@ -38,7 +39,10 @@ at 14:03:41 Pacific and passed `zstd -t`; its job retains all archives.
 ## Coverage gaps after migration
 
 Sefer's current scheduled jobs omit production PostgreSQL 102, Dertog 104,
-LiteLLM 101, sb-edge 111 and the expanded runner/gate fleet.
+LiteLLM 101, sb-edge 111, GitLab runner VMs 125–127, GitLab runner template
+9120, and the expanded Yesod runner/gate fleet. VM 120 remains in
+`sefer-light-services`; the additional GitLab runners are reproducible linked
+clones whose credential-free base is template 9120.
 Production Dolt 124 was added in the September 5 repair to its own daily job.
 VM 100 in `sefer-light-services` is the isolated static Dolt seed, not the
 production write primary. All 19 running test/experiment PostgreSQL containers

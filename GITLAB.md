@@ -1,17 +1,21 @@
 # GitLab: `makor.meshcrawler.com`
 
-Live recheck: GitLab local health reports `GitLab OK`, public HTTPS returns
-200, cloudflared is active, and GitLab Runner ID 1 is online and accepts
-untagged jobs (`linux-amd64`, `docker`; concurrent capacity 2). Both VMs
-remain on Sefer `vmbr0` at `.170` and `.171`; the host has an additional
-VLAN address as described in [NETWORK.md](NETWORK.md). Native backup service
-completed successfully on September 5 at 01:31 Pacific. The configured nightly VM backup is not a clean success: September 5 archive transfer completed but NAS pruning failed. See [BACKUPS.md](BACKUPS.md).
+Runner-fleet recheck: GitLab Runner ID 1 is online through four distinct
+runner managers and accepts untagged jobs (`linux-amd64`, `docker`;
+`concurrent = 4` per manager, aggregate configured capacity 16). GitLab and
+all four runner VMs are on Sefer's trusted `vmbr0` network. The GitLab
+application, Tunnel, and backup checks remain last verified on September 5:
+local health reported `GitLab OK`, public HTTPS returned 200, cloudflared was
+active, and the native backup had completed successfully. The configured
+nightly VM backup was not a clean success because NAS pruning failed after
+archive transfer. See [BACKUPS.md](BACKUPS.md).
 
 **Status:** operational. The private `meshcrawler` group, `stevejb`
 administrator account, outbound email, GitLab API/CLI access, and Docker CI
 runner are all in use.
 
-**Last verified:** 2026-09-05
+**Last verified:** 2026-09-13 for the runner fleet; 2026-09-05 for GitLab,
+Tunnel, email, and backups
 
 ## Service summary
 
@@ -144,33 +148,62 @@ Still to complete before inviting untrusted users:
 
 | Component | Live configuration |
 |---|---|
-| Runner VM | VM 120, `makor-runner-docker-1`, Debian 13, `192.168.0.171` |
-| Allocation | 6 vCPU (`host`), 16 GiB fixed RAM, 120 GiB disk, `onboot: 1`, QEMU guest agent |
+| Runner VMs | VM 120 `makor-runner-docker-1`; VM 125 `makor-runner-docker-2`; VM 126 `makor-runner-docker-3`; VM 127 `makor-runner-docker-4` |
+| Addresses | VM 120: static `192.168.0.171`; VMs 125–127: DHCP addresses `192.168.0.155`, `.159`, and `.161` when verified |
+| Network | All four use Sefer `vmbr0`, the trusted untagged `192.168.0.0/24` network |
+| Allocation | Each VM has 6 vCPU (`host`), 16 GiB fixed RAM, a 120 GiB disk, `onboot: 1`, and a running QEMU guest agent |
 | Packages | Docker Engine 29.7.2; GitLab Runner 19.3.1-1 |
-| Scope | `meshcrawler` group runner, ID 1 |
+| Scope | `meshcrawler` group runner, ID 1, with four independently identified runner managers |
 | Tags | `linux-amd64`, `docker`; `run_untagged = true` (the runner also accepts untagged jobs from the trusted `meshcrawler` group) |
-| Capacity | `concurrent = 2` |
+| Capacity | `concurrent = 4` on every manager; aggregate configured maximum 16 concurrent jobs |
 | Executor | Docker, default image `alpine:3.23`, pull policy `if-not-present` |
 | Isolation | `privileged = false`; no host Docker socket or production credentials are mounted into jobs |
-| Firewall | UFW default-deny inbound; SSH from `192.168.0.0/24` only |
+| Template | VM 9120, `makor-runner-docker-template`; credential-free Debian 13 template with 6 vCPU, 16 GiB RAM, and a 120 GiB `vmdata` base disk |
+| Storage | VM 120 has its original full disk; VMs 125–127 are linked clones of template 9120, so preserve the template and its base disk |
+| Firewall | UFW default-deny inbound; VM 120 allows SSH from `192.168.0.0/24`; the new template and clones allow SSH administration from `192.168.0.0/24` and `192.168.20.0/24` |
 
-The runner uses Cloudflare DNS resolvers (`1.1.1.1`, `1.0.0.1`), because the
-LAN router had cached a negative result immediately after the new hostname was
-created. Runner registration, GitLab handshake, and an unprivileged Docker
-`alpine:3.23` smoke run have passed. The runner also picked up the first
-untagged project job successfully.
+The runners use Cloudflare DNS resolvers (`1.1.1.1`, `1.0.0.1`), because the
+LAN router had cached a negative result immediately after the GitLab hostname
+was created. Each manager has its own persistent `.runner_system_id`; the four
+identities were verified as distinct. They intentionally share Runner ID 1's
+authentication token. GitLab documents this as the supported way to reuse one
+runner configuration on multiple host machines. All four managers passed the
+GitLab verification handshake, and the new managers accepted live untagged
+jobs after registration.
+
+The DHCP addresses for VMs 125–127 are observations, not reservations. Query
+the QEMU guest agent before relying on them after a reboot or lease change.
+
+At the end of the fleet rollout, Sefer had about 42 GiB of available RAM and
+288 GiB available on `vmdata`. The 16-job aggregate is a scheduler ceiling,
+not a resource guarantee: all four guests can address 64 GiB in total, and
+their Docker jobs have no per-container memory limits. Monitor host memory and
+`vmdata` growth under sustained parallel load before treating 16 heavy jobs as
+safe continuous capacity.
+
+Template 9120 contains Docker, the pinned Alpine image, GitLab Runner, and no
+`config.toml`, runner authentication token, or runner system ID. Its build
+recipe is tracked in
+[`cloud-init/makor-runner-docker-template.vendor.yaml`](cloud-init/makor-runner-docker-template.vendor.yaml).
+Do not use VM 9000 `yesod-runner-template` for GitLab: it belongs to the Yesod
+software factory and is a different runner stack.
 
 Do not put a runner authentication token in a repository or CI variable. It is
-stored only in the runner's root-owned `/etc/gitlab-runner/config.toml`.
+stored only in each active manager's root-owned
+`/etc/gitlab-runner/config.toml`. The reusable template must remain
+credential-free.
 
 Create a separate protected deployment runner if pipelines later need LAN or
 production credentials. General build runners must not receive them.
 
 ## Backups, recovery, and operations
 
-The existing Proxmox job `sefer-light-services` backs up both GitLab VMs daily
-at 03:30 to `nas-backups` using zstd snapshots. Retention is 7 daily, 4
-weekly, and 3 monthly backups.
+The existing Proxmox job `sefer-light-services` backs up GitLab VM 119 and the
+original runner VM 120 daily at 03:30 to `nas-backups` using zstd snapshots.
+Retention is configured as 7 daily, 4 weekly, and 3 monthly backups. Runner
+VMs 125–127 and template 9120 are not in a scheduled Proxmox backup job. They
+are reproducible from the tracked build recipe and credential-free template;
+preserve template 9120 while its linked clones exist.
 
 In addition, `sefer` now creates GitLab-native recovery artifacts daily at
 01:30, leaving a two-hour buffer before the Proxmox snapshot. The root-owned
@@ -213,6 +246,9 @@ ssh stephen@192.168.0.170 'sudo gitlab-ctl status'
 ssh stephen@192.168.0.170 'curl -fsS http://127.0.0.1/-/health'
 ssh stephen@192.168.0.170 'sudo systemctl is-active cloudflared'
 ssh stephen@192.168.0.171 'sudo gitlab-runner verify'
+ssh stephen@192.168.0.155 'sudo gitlab-runner verify'
+ssh stephen@192.168.0.159 'sudo gitlab-runner verify'
+ssh stephen@192.168.0.161 'sudo gitlab-runner verify'
 ssh root@sefer 'systemctl status --no-pager gitlab-app-backup.timer'
 ssh root@sefer 'journalctl -u gitlab-app-backup.service -n 50 --no-pager'
 ```
@@ -229,8 +265,8 @@ snapshot aids rollback but does not replace a tested application restore.
   dedicated Tunnel; it does not expose GitLab's local listener directly.
 - Public metrics and health endpoints return 404 at the Tunnel; normal sign-in
   remains reachable.
-- The runner is online, verified by GitLab, and can run the pinned Alpine image
-  unprivileged.
+- All four runner managers are online, independently identified, verified by
+  GitLab, and configured to run the pinned Alpine image unprivileged.
 - Fastmail accepted GitLab's SMTP verification message sent from
   `gitlab@meshcrawler.com`.
 - Native application and configuration backups completed twice, were
@@ -241,11 +277,13 @@ snapshot aids rollback but does not replace a tested application restore.
   and 14 tests successfully on runner 1. The final `uv build` step failed
   because the project source distribution included its generated `.venv`; this
   is a project packaging configuration issue, not a GitLab or runner failure.
-- VMs 119 and 120 are in the existing Proxmox backup job.
+- VMs 119 and 120 are in the existing Proxmox backup job. Reproducible runner
+  VMs 125–127 and their credential-free template 9120 are not.
 
 ## Primary references
 
 - [GitLab Linux package installation](https://docs.gitlab.com/install/package/)
 - [GitLab backup and restore](https://docs.gitlab.com/administration/backup_restore/backup_gitlab/)
 - [GitLab Runner registration](https://docs.gitlab.com/runner/register/)
+- [GitLab Runner advanced configuration](https://docs.gitlab.com/runner/configuration/advanced-configuration/)
 - [Cloudflare Tunnel setup](https://developers.cloudflare.com/tunnel/setup/)

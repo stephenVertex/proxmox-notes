@@ -1,6 +1,8 @@
 # Live Proxmox inventory
 
-**Verified:** 2026-09-05, read-only from both hosts and running guests.
+**Verified:** 2026-09-05, read-only from both hosts and running guests. GitLab
+runner VMs 125–127 and template 9120 were added and verified 2026-09-13; the
+rest of this point-in-time inventory was not refreshed in that change.
 
 This is a point-in-time inventory, not a promise of application health. VMIDs
 are local to each standalone Proxmox host: always specify the host with the ID.
@@ -47,6 +49,9 @@ Autostart `no` includes omitted `onboot` (the default is disabled).
 | 122 | `doltsvr-rehearsal-20260824` | stopped | 4 | 24 | vmdata: 64G | none | — | no |
 | 123 | `doltsvr-fresh-seed-20260827` | stopped | 4 | 24 | vmdata: 64G | none | — | no |
 | 124 | `doltsvr` | running | 4 | 24 | local: 64G | vmbr1 | 192.168.20.150 | yes |
+| 125 | `makor-runner-docker-2` | running | 6 | 16 | vmdata: 120G linked clone | vmbr0 | 192.168.0.155 (DHCP) | yes |
+| 126 | `makor-runner-docker-3` | running | 6 | 16 | vmdata: 120G linked clone | vmbr0 | 192.168.0.159 (DHCP) | yes |
+| 127 | `makor-runner-docker-4` | running | 6 | 16 | vmdata: 120G linked clone | vmbr0 | 192.168.0.161 (DHCP) | yes |
 | 130 | `yesod-runner-g2-ibur` | running | 4 | 16 | vmdata: 160G | vmbr0 | 192.168.0.173 | no |
 | 131 | `yesod-gate-g1-golem` | running | 36 | 48 | vmdata: 160G | vmbr0 | 192.168.0.185 | no |
 | 150 | `yesod-runner-g1-lamedvov` | running | 4 | 16 | vmdata: 160G | vmbr0 | 192.168.0.189 | no |
@@ -74,6 +79,7 @@ Autostart `no` includes omitted `onboot` (the default is disabled).
 | 9000 | `yesod-runner-template` | template | 8 | 24 | vmdata: 64G | vmbr0 | — | no |
 | 9100 | `yesod-node-template` | template | 8 | 8 | vmdata: 64G | vmbr0 | — | no |
 | 9101 | `yesod-gate-g1-unborn` | template | 8 | 8 | vmdata: 64G | vmbr0 | — | no |
+| 9120 | `makor-runner-docker-template` | template | 6 | 16 | vmdata: 120G base | vmbr0 | — | no |
 
 ## sefer: containers
 
@@ -159,6 +165,11 @@ Autostart `no` includes omitted `onboot` (the default is disabled).
   configured Sefer VM backup job. Treat their data as disposable.
 - All configured Sefer VM disks use mirrored storage, but production VMs 102,
   104 and 124 use raw files under `local` on the boot pool, not `vmdata`.
+- GitLab runner VMs 125–127 use DHCP on the trusted network. Their listed
+  addresses are observations, not reservations, and may change. They are
+  linked clones of credential-free template 9120; preserve its base disk.
+- Template 9000 is for the Yesod software factory, not GitLab. The dedicated
+  GitLab Docker runner template is 9120.
 
 ## QEMU guest agent availability
 

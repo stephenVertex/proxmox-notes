@@ -1,0 +1,88 @@
+#cloud-config
+
+# Credential-free build recipe for the dedicated GitLab Docker runner template.
+# Proxmox supplies the hostname, SSH keys, and network configuration separately.
+
+write_files:
+  - path: /usr/local/sbin/prepare-makor-runner-template
+    owner: root:root
+    permissions: "0700"
+    content: |
+      #!/bin/bash
+      set -euo pipefail
+
+      export DEBIAN_FRONTEND=noninteractive
+
+      readonly docker_version='5:29.7.2-1~debian.13~trixie'
+      readonly containerd_version='2.3.3-1~debian.13~trixie'
+      readonly runner_version='19.3.1-1'
+      readonly gitlab_repo_script_sha256='c55bfee4743a3a04074d108f48fb3c65dd11c0327848309d16f728c80267ddc4'
+
+      apt-get update
+      apt-get install -y ca-certificates curl gnupg qemu-guest-agent ufw
+      systemctl enable --now qemu-guest-agent
+
+      install -m 0755 -d /etc/apt/keyrings
+      curl -fsSL https://download.docker.com/linux/debian/gpg \
+        -o /etc/apt/keyrings/docker.asc
+      chmod a+r /etc/apt/keyrings/docker.asc
+      cat >/etc/apt/sources.list.d/docker.sources <<'EOF'
+      Types: deb
+      URIs: https://download.docker.com/linux/debian
+      Suites: trixie
+      Components: stable
+      Architectures: amd64
+      Signed-By: /etc/apt/keyrings/docker.asc
+      EOF
+
+      curl -fsSL \
+        https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.deb.sh \
+        -o /tmp/gitlab-runner-repo.deb.sh
+      echo "${gitlab_repo_script_sha256}  /tmp/gitlab-runner-repo.deb.sh" \
+        | sha256sum --check --strict -
+      bash /tmp/gitlab-runner-repo.deb.sh
+
+      apt-get update
+      apt-get install -y \
+        docker-ce="${docker_version}" \
+        docker-ce-cli="${docker_version}" \
+        containerd.io="${containerd_version}" \
+        docker-buildx-plugin \
+        docker-compose-plugin
+      NO_DOCKER_PRUNE=1 apt-get install -y \
+        gitlab-runner="${runner_version}" \
+        gitlab-runner-helper-images="${runner_version}"
+
+      systemctl enable docker gitlab-runner
+      systemctl stop gitlab-runner
+      rm -f /etc/gitlab-runner/config.toml
+      rm -f /etc/gitlab-runner/.runner_system_id
+
+      ufw default deny incoming
+      ufw default allow outgoing
+      ufw allow from 192.168.0.0/24 to any port 22 proto tcp
+      ufw allow from 192.168.20.0/24 to any port 22 proto tcp
+      ufw --force enable
+
+      docker pull alpine:3.23
+      install -d -m 0755 /var/lib/gitlab-runner-template
+      dpkg-query -W \
+        docker-ce docker-ce-cli containerd.io \
+        gitlab-runner gitlab-runner-helper-images \
+        >/var/lib/gitlab-runner-template/package-versions.txt
+
+      apt-get clean
+      rm -rf /var/lib/apt/lists/*
+      rm -f /tmp/gitlab-runner-repo.deb.sh
+      fstrim -av || true
+      rm -f /etc/ssh/ssh_host_*
+      cloud-init clean --logs --machine-id
+
+runcmd:
+  - [/usr/local/sbin/prepare-makor-runner-template]
+
+power_state:
+  mode: poweroff
+  message: GitLab runner template preparation complete
+  timeout: 1800
+  condition: true

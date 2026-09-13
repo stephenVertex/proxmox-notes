@@ -1,8 +1,9 @@
 # Installed software versions
 
-**Verified:** 2026-09-05 from installed packages, running containers and version
-commands. This page records deployed versions; it makes no claim about the
-latest upstream release and does not authorize upgrades.
+**Verified:** 2026-09-05 from installed packages, running containers and
+version commands; GitLab runner fleet verified 2026-09-13. This page records
+deployed versions; it makes no claim about the latest upstream release and
+does not authorize upgrades.
 
 | Component | Host / guest | Observed version |
 |---|---|---|
@@ -18,8 +19,8 @@ latest upstream release and does not authorize upgrades.
 | LiteLLM database | Sefer VM 101 | `postgres:17-alpine` container |
 | LiteLLM proxy | Sefer VM 101 | `caddy:2.10-alpine` container |
 | GitLab EE | Sefer VM 119 | 19.3.1-ee.0 |
-| GitLab Runner | Sefer VM 120 | 19.3.1-1 |
-| Docker Engine | GitLab Runner, DocuSeal, draw.io, Bukher | 29.7.2 package |
+| GitLab Runner | Sefer VMs 120, 125–127; template 9120 | 19.3.1-1 |
+| Docker Engine | GitLab runners 120, 125–127; template 9120; DocuSeal, draw.io, Bukher | 29.7.2 package |
 | n8n | Sefer VM 107 | 2.8.4 |
 | Neo4j | Sefer VM 118 | `neo4j:2026.07.1` |
 | SigNoz | Sefer VM 117 | `signoz/signoz:v0.137.0` |
