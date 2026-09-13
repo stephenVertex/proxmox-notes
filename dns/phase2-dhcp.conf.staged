@@ -8,14 +8,28 @@
 # issues the lease. No inventory file, no zone edit, no reservation, and no
 # Proxmox API call -- the guest is the source of truth for its own name.
 #
-# ACTIVATION, in this order, in one window:
-#   1. Stephen DISABLES the ER7206's DHCP server for VLAN 20. Two DHCP servers
-#      on one L2 segment is worse than none. This must happen FIRST.
-#   2. cp /etc/yesod/dns/phase2-dhcp.conf.staged /etc/dnsmasq.d/yesod-lan-dhcp.conf
-#   3. dnsmasq --test && systemctl restart dnsmasq
-#   4. Verify: a guest renew yields the same address and its name resolves.
-# ROLLBACK: rm /etc/dnsmasq.d/yesod-lan-dhcp.conf, restart dnsmasq, re-enable
-# DHCP on the router. Existing leases keep working throughout.
+# ACTIVATION, in this order, in one window (driven by scripts/deploy-lan-dns.sh):
+#   0. scripts/deploy-lan-dns.sh --stage-dhcp
+#      Copies this file to seykhl:/etc/yesod/dns/ and runs dnsmasq --test only.
+#      Still INACTIVE (not in /etc/dnsmasq.d yet); DHCP is not served.
+#   1. Build the fresh lease seed from a current router snapshot (preserves IPs):
+#      python3 scripts/seed-vlan20-handover.py handover-leases.json \
+#              dns/phase2-dhcp.conf.staged > handover.leases
+#      Router-off must follow within ~5 min of this snapshot/seed.
+#   2. Stephen DISABLES the ER7206's DHCP server for VLAN 20. Two DHCP servers
+#      on one L2 segment is worse than none. This must happen FIRST (before activation).
+#   3. scripts/deploy-lan-dns.sh --activate-dhcp handover.leases router-off-confirmed
+#      seykhl-only: imports the seed to /var/lib/misc/dnsmasq.leases, installs this
+#      file as /etc/dnsmasq.d/20-yesod-lan-dhcp.conf, restarts dnsmasq, verifies a
+#      UDP/67 listener; auto-removes the config and restarts DNS-only if that fails.
+#   4. Verify: a guest renew/ACK yields the same address and its birth name resolves
+#      via BOTH resolvers and the controller's service-user path.
+# ROLLBACK: scripts/deploy-lan-dns.sh --disable-dhcp
+#   Removes /etc/dnsmasq.d/20-yesod-lan-dhcp.conf and restarts dnsmasq DNS-only while
+#   PRESERVING /var/lib/misc/dnsmasq.leases; confirms no UDP/67 listener; THEN Stephen
+#   re-enables DHCP on the router. If seykhl already ACKed/extended leases, reconcile
+#   those allocations into the router's bindings first -- a blind flip-back is not
+#   collision-safe. Existing leases keep working throughout.
 # ============================================================================
 
 # --- the ephemeral pool, unchanged from the router's policy
@@ -61,3 +75,7 @@ dhcp-host=BC:24:11:B6:A5:A4,192.168.20.167,neo4j
 dhcp-host=BC:24:11:B8:5D:94,192.168.20.172,yesod-semantic-graph
 # The controller. The one guest that genuinely earns a fixed address.
 dhcp-host=BC:24:11:CF:6E:EC,192.168.20.192,yesod-runner-g1-dispatch
+# sjbmbp: a laptop on a long router lease (.146, reservation half). Low priority
+# per Stephen -- preserved as a one-line known reservation so the handover does
+# not change its address; not a fleet member and needs no further investigation.
+dhcp-host=00:50:B6:B7:C1:0C,192.168.20.146,sjbmbp
