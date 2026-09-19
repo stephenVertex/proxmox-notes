@@ -55,14 +55,14 @@ def collect(node):
                 'status': 'template' if row.get('template') else row['status'],
                 'cpus': row.get('cpus', row.get('maxcpu', 0)),
                 'memory_bytes': row.get('maxmem', 0), 'memory_used_bytes': row.get('mem', 0),
-                'disk_bytes': disk, 'storage': storage, 'cpu': row.get('cpu', 0),
+                'disk_bytes': disk, 'storage': storage,
                 'uptime': row.get('uptime', 0), 'lock': row.get('lock'),
                 'tags': [tag for tag in row.get('tags', '').split(';') if tag],
             })
     status = data['status']
     return {
         'host': node, 'observed_at': datetime.datetime.now(datetime.timezone.utc).isoformat(),
-        'cpu': status.get('cpu'), 'cpu_count': status.get('cpuinfo', {}).get('cpus'),
+        'cpu_count': status.get('cpuinfo', {}).get('cpus'),
         'memory': status.get('memory', {}), 'uptime': status.get('uptime'),
         'storage': [{k: row.get(k) for k in ('storage', 'type', 'total', 'used', 'avail', 'active')}
                     for row in data['storage'] if row.get('active')],

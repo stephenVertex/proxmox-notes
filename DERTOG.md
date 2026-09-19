@@ -1,6 +1,7 @@
 # Dertog — Debian 13 Dashboard Server
 
-**Last verified:** 2026-09-05. Dertog has moved to Sefer VM 104 and VLAN
+**Last verified:** 2026-09-18 for the services index and two-host fleet view;
+the broader service audit below is dated September 5. Dertog has moved to Sefer VM 104 and VLAN
 address `192.168.20.138` (Tailscale `100.64.95.60`). Its stopped Seykhl copy
 still has autostart enabled; do not start both. nginx validates successfully,
 the two router config copies match, and the index returns HTTP 200. All
@@ -180,22 +181,85 @@ sudo tailscale serve status
 sudo nginx -t && sudo systemctl reload nginx
 ```
 
-### Cluster Services Index (port 8092 / HTTPS /)
+### Cluster Services and VM Fleet (port 8092 / HTTPS /)
 
-A self-hosted index page that lists all services running on the cluster, with links to accessible ones.
+A service directory with host/VM placement badges and a live inventory of
+both standalone Proxmox hosts. Select a placement badge to find that guest
+in the fleet. VM state is shown separately from application health; a running
+VM does not establish that its applications are healthy.
 
 - **HTTP URL**: `http://dertog:8092`
 - **HTTPS URL**: `https://dertog.tailb4b58.ts.net/` (via nginx → 8092)
-- **Server**: Python static server
+- **Fleet URL**: `https://dertog.tailb4b58.ts.net/#fleet`
+- **Server**: Python standard-library threaded HTTP server and background inventory collector
 - **Systemd unit**: `cluster-services.service` (user unit)
-- **Files**: `~/cluster-services/index.html`, `~/cluster-services-serve.py`
-- **Purpose**: Single entry point to discover all cluster services
+- **Source**: [web/cluster-services](web/cluster-services/), [host collector](scripts/proxmox-dashboard-read)
+- **Inventory endpoint**: `/_fleet.json` through the existing root proxy; `/api/` remains owned by sjbgtd
+
+The fleet defaults to running VMs on both hosts and supports host, state,
+VM/container and text filters. Stopped guests and templates are included in
+the inventory. RAM and disk columns show **configured capacity in GiB**, not
+guest free space or physical allocation. Disk capacity includes all configured
+data disks, excluding ISO and cloud-init devices. Host cards show running VM
+and container counts, RAM usage, and available primary Proxmox storage.
+
+Every 30 seconds Dertog polls Sefer (`192.168.20.10`) and Seykhl
+(`192.168.20.202`) concurrently. A failed refresh retains and marks the last
+successful inventory as stale; an initial failure shows unavailable rather
+than a zero count. Readings also expire after 90 seconds. Each guest is keyed
+by host, kind and VMID, since IDs overlap between these standalone hosts.
+
+Service labels live in `placements.json`, keyed by guest identity and expected
+name. Reusing an ID with a different name does not inherit the old service
+label. Generic runner, gate and test-database roles are derived from guest
+names; uncatalogued guests are explicitly labeled. Service-card placement
+attributes in `index.html` should be maintained alongside the catalog.
+
+**Read-only access:** the private key stays on Dertog at
+`~/.ssh/proxmox-dashboard`. Both Proxmox hosts restrict its public key to
+`from="192.168.20.138",restrict,command="/usr/local/sbin/proxmox-dashboard-read"`.
+The helper accepts only the literal command `inventory`, uses read-only
+`pvesh get` operations and local guest configuration reads, and rejects other
+commands. Host public keys are pinned in `proxmox_known_hosts`; no private key
+or Proxmox credential is checked in or served over HTTP.
+
+Public subdirectories under `~/cluster-services/` remain accessible, including
+the existing release symlinks for `factory-graph`, `graph-agent`,
+`investigations`, `lessons`, `planning-guidance`, `scope-briefings`,
+`semantic-graph`, and `semantic-overlay`. The root catalog, host pins, server
+source and directory listings are not public. Preserve those application
+symlinks when deploying the index.
 
 ```bash
 # Check status
 systemctl --user status cluster-services
+curl -fsS http://127.0.0.1:8092/_fleet.json
 
 # Restart
+systemctl --user restart cluster-services
+```
+
+**Deployment, September 18:** copy the five assets (`index.html`, `fleet.css`,
+`fleet.js`, `placements.json`, `proxmox_known_hosts`) from `web/cluster-services/`
+into `~/cluster-services/`, and its `cluster-services-serve.py` into
+`~/cluster-services-serve.py`. Install the host collector as mode 0755 at
+`/usr/local/sbin/proxmox-dashboard-read` on each host. Back up the live directory
+and backend before replacing files, restart only the `cluster-services` user
+unit, and confirm both hosts report `state: ok` in `/_fleet.json`. nginx and
+the other application units do not need changes.
+
+The deployment observed **35 running VMs and 38 running containers on Sefer**,
+and **13 running VMs on Seykhl** (186 and 38 total inventory entries,
+respectively). All eight existing static application routes returned HTTP 200.
+Backend tests cover duplicate IDs, ID reuse, stale/unavailable data, disk
+capacity and preservation of symlinked application routes. Browser checks cover
+filters, badge navigation, failure states, themes and mobile layout.
+
+Rollback copies are retained on Dertog:
+
+```bash
+cp -f ~/cluster-services.before-20260918-fleet/index.html ~/cluster-services/index.html
+cp -f ~/cluster-services-serve.py.before-20260918-fleet ~/cluster-services-serve.py
 systemctl --user restart cluster-services
 ```
 
@@ -305,8 +369,10 @@ curl -sS -N --max-time 5 -D - -o /dev/null \
 
 ## Deploy Files on dertog
 
-- `~/cluster-services/index.html` — Cluster services index page (version-controlled)
-- `~/cluster-services-serve.py` — Python static server for cluster-services
+- `~/cluster-services/index.html`, `fleet.css`, `fleet.js` — Services and fleet frontend
+- `~/cluster-services/placements.json`, `proxmox_known_hosts` — Service catalog and pinned host keys
+- `~/cluster-services-serve.py` — HTTP server and cached two-host inventory collector
+- `~/.ssh/proxmox-dashboard` — Restricted inventory identity, private to Dertog
 - `~/.config/systemd/user/cluster-services.service` — systemd user unit
 - `~/seykhl-health.py` — Seykhl health dashboard server (version-controlled)
 - `~/.config/systemd/user/seykhl-health.service` — systemd user unit

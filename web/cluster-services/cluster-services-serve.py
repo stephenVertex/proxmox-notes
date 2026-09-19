@@ -9,7 +9,7 @@ import os
 from pathlib import Path
 import subprocess
 import threading
-from urllib.parse import urlsplit
+from urllib.parse import unquote, urlsplit
 
 DIRECTORY = Path(os.environ.get('CLUSTER_SERVICES_DIRECTORY', '~/cluster-services')).expanduser()
 PORT = int(os.environ.get('CLUSTER_SERVICES_PORT', '8092'))
@@ -107,6 +107,23 @@ def make_handler(fleet, directory=DIRECTORY):
         def __init__(self, *args, **kwargs):
             super().__init__(*args, directory=str(directory), **kwargs)
 
+        def public_path(self):
+            path = unquote(urlsplit(self.path).path)
+            if path in ('/', '/index.html', '/fleet.js', '/fleet.css'):
+                return True
+            parts = [part for part in path.split('/') if part]
+            if not parts or any(part.startswith('.') or '\\' in part for part in parts):
+                return False
+            # Existing demo apps are public subdirectories, often symlinks to
+            # versioned releases. Keep their index pages and nested assets working
+            # without exposing the root catalog, host pins, or server source.
+            app = Path(directory) / parts[0]
+            return app.is_dir() and app.joinpath(*parts[1:]).resolve().is_relative_to(app.resolve())
+
+        def list_directory(self, path):
+            self.send_error(404)
+            return None
+
         def do_GET(self):
             if urlsplit(self.path).path == '/_fleet.json':
                 data = json.dumps(fleet.snapshot(), separators=(',', ':')).encode()
@@ -117,13 +134,13 @@ def make_handler(fleet, directory=DIRECTORY):
                 self.end_headers()
                 self.wfile.write(data)
                 return
-            if urlsplit(self.path).path not in ('/', '/index.html', '/fleet.js', '/fleet.css'):
+            if not self.public_path():
                 self.send_error(404)
                 return
             super().do_GET()
 
         def do_HEAD(self):
-            if urlsplit(self.path).path not in ('/', '/index.html', '/fleet.js', '/fleet.css'):
+            if not self.public_path():
                 self.send_error(404)
                 return
             super().do_HEAD()

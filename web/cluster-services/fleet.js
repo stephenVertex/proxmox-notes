@@ -62,7 +62,7 @@
       }
       card.append(numbers);
       if (host.observed_at) {
-        card.append(element('p', `CPU ${Number.isFinite(host.cpu) ? (host.cpu * 100).toFixed(0) + '%' : '—'} · RAM ${gib(host.memory?.used)} / ${gib(host.memory?.total)} GiB`, 'host-detail'));
+        card.append(element('p', `RAM ${gib(host.memory?.used)} / ${gib(host.memory?.total)} GiB`, 'host-detail'));
         const primary = host.storage?.find(s => s.storage === (host.host === 'sefer' ? 'vmdata' : 'local-lvm'));
         if (primary) card.append(element('p', `${primary.storage}: ${gib(primary.avail)} GiB available`, 'host-detail'));
         card.append(element('p', `Observed ${new Date(host.observed_at).toLocaleString()}${state === 'stale' ? ' · retained reading' : ''}`, 'host-detail'));

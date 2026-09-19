@@ -1,6 +1,7 @@
 # Dolt production server
 
-**Last verified:** 2026-09-05 from Sefer VM 124 and its running guest.
+**Last verified:** 2026-09-18 for hourly backups and an isolated restore of all
+34 databases on Sefer VM 124. VM configuration was audited September 5.
 
 ## Current deployment
 
@@ -62,8 +63,9 @@ would not protect against losing that physical host.
 
 ## Backups
 
-**Repaired 2026-09-05.** Production stays on Dolt 2.1.10. The hourly backup now
-uses Dolt-native snapshots, and Sefer also schedules a full VM124 backup.
+**Repaired 2026-09-05; NAS delivery recovery repaired 2026-09-18.** Production
+stays on Dolt 2.1.10. The hourly backup uses Dolt-native snapshots, and Sefer
+also schedules a full VM124 backup.
 
 | Layer | Schedule (Pacific) | Destination |
 |---|---|---|
@@ -101,6 +103,13 @@ For each run:
    and publish the final name plus a `.sha256` sidecar.
 6. Record `/var/lib/dolt-nas-backup/last-success` on Sefer, then acknowledge
    delivery and remove the guest archive. Retain failed transfers for retry.
+
+If a published NAS archive or checksum sidecar is corrupt, preserve it and
+deliver under `doltsvr-<timestamp>.sha256-<expected SHA-256>.tar.gz`. Reuse that
+object on retry only if its checksum matches; a corrupt recovery object gets
+a unique `.retry-...` filename. `last-success` records the actual NAS filename,
+which can differ from the guest spool name. Transfers are flushed with `fsync`
+before validation. A failed transfer leaves the guest original pending.
 
 Native snapshots preserve committed history, branches, tags and working sets.
 They are taken sequentially per database, not as one cross-database transaction.
@@ -208,6 +217,40 @@ the separate native restore exercise validates the database recovery path.
 The VM snapshot preceded the final backup-script revisions and cron retirement;
 if restoring that particular VM archive, reapply the current backup scripts
 and retired-cron changes from this runbook before returning it to service.
+
+### September 18 NAS delivery recovery and restore proof
+
+Hourly delivery was stuck retrying `doltsvr-20260914T120500Z.tar.gz`. The NAS
+copy had the correct length (2,127,489,875 bytes) but the wrong SHA-256; the
+retained guest original passed checksum and gzip validation. The old script
+rechecked that corrupt published file on every run and exited without a
+useful diagnostic. The repair preserves bad NAS objects, selects a fresh
+delivery name, and reports failures in the journal.
+
+The pending September 14 generation was recovered at 19:07 Pacific on
+September 18. A new generation then completed at 19:12 Pacific:
+
+```text
+/mnt/proxmox-backups/doltsvr/native/doltsvr-20260919T020859Z.tar.gz
+Bytes: 2164758676
+SHA-256: db25b2c6dce25779910924a8e83c4b5b8fa521aa786d40efac7d30688754ad97
+```
+
+At 19:29:48 Pacific the archive streamed back from the NAS had restored all
+**34 databases** into isolated scratch space. All repositories passed
+`dolt fsck` and SQL table-inventory queries; all **222 payload checksums**
+passed. The report is `/var/lib/dolt-nas-backup/restore-report-20260918.json`
+on Sefer and `/home/dolt-backups/last-restore-report.json` in VM124.
+Scratch and guest spool archives were cleaned up. `dolt-sql-server` remained
+active; the backup service reported `Result=success`, `ExecMainStatus=0`,
+with no pending generation and the hourly `:05` timer still enabled.
+
+The deployed script is `/usr/local/sbin/backup-dolt-to-nas`; the previous
+version is retained at
+`/var/lib/dolt-nas-backup/backup-dolt-to-nas.before-20260918`. Six integration
+tests exercise normal delivery, corrupt archives and sidecars, retry reuse,
+and failure without guest acknowledgement. NAS pruning/retention remains the
+separate `proxmox-cba` follow-up; this repair does not remove NAS objects.
 
 ### Retired broken workflow
 

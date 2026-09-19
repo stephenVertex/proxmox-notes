@@ -1,8 +1,11 @@
 import datetime
 import importlib.machinery
 import importlib.util
+import http.client
 import json
 from pathlib import Path
+import tempfile
+import threading
 import unittest
 from unittest.mock import patch
 
@@ -108,6 +111,50 @@ class DiskCapacityTests(unittest.TestCase):
 
     def test_missing_config_retains_reported_capacity(self):
         self.assertEqual(collector.configured_disks('', 1024), (1024, []))
+
+
+class StaticRoutesTests(unittest.TestCase):
+    def test_existing_release_symlinks_and_assets_remain_public(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp) / 'site'
+            root.mkdir()
+            (root / 'index.html').write_text('services')
+            (root / 'placements.json').write_text('private catalog')
+            release = Path(temp) / 'release'
+            (release / 'assets').mkdir(parents=True)
+            (release / 'index.html').write_text('existing demo')
+            (release / 'assets/app.js').write_text('existing asset')
+            (root / 'demo').symlink_to(release, target_is_directory=True)
+            (release / 'escape').symlink_to(root)
+            fleet = dashboard.Fleet({})
+            server = dashboard.http.server.ThreadingHTTPServer(
+                ('127.0.0.1', 0), dashboard.make_handler(fleet, root))
+            thread = threading.Thread(target=server.serve_forever, daemon=True)
+            thread.start()
+            try:
+                connection = http.client.HTTPConnection(*server.server_address)
+                for method, path, status, expected in [
+                    ('GET', '/', 200, b'services'),
+                    ('GET', '/demo/', 200, b'existing demo'),
+                    ('GET', '/demo/assets/app.js?v=1', 200, b'existing asset'),
+                    ('HEAD', '/demo/assets/app.js', 200, b''),
+                    ('GET', '/placements.json', 404, None),
+                    ('GET', '/demo/%2e%2e/placements.json', 404, None),
+                    ('GET', '/demo/escape/placements.json', 404, None),
+                    ('GET', '/demo/assets/', 404, None),
+                ]:
+                    with self.subTest(method=method, path=path):
+                        connection.request(method, path)
+                        response = connection.getresponse()
+                        body = response.read()
+                        self.assertEqual(response.status, status)
+                        if expected is not None:
+                            self.assertEqual(body, expected)
+                connection.close()
+            finally:
+                server.shutdown()
+                server.server_close()
+                thread.join()
 
 
 if __name__ == '__main__':

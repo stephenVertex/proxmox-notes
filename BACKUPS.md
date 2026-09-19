@@ -3,6 +3,8 @@
 **Verified:** 2026-09-05. Sources: Sefer `/etc/pve/jobs.cfg`, both root
 crontabs, systemd timer/results, guest backup file metadata and Proxmox task
 logs. GitLab runner coverage was rechecked after the 2026-09-13 fleet expansion.
+Dolt native delivery and restore were reverified on **2026-09-18** after
+repairing a corrupt NAS object that had blocked hourly delivery since September 14.
 
 ## Sefer scheduled VM backups
 
@@ -73,7 +75,7 @@ Coverage follow-up: `proxmox-uev`.
 | GitLab | `gitlab-app-backup.timer` at 01:30 Pacific; success, exit 0, finished 2026-09-05 01:31 | Restore rehearsal not repeated |
 | Semantic graph pipeline PostgreSQL | `yesod-semantic-graph-backup.timer` at 04:15 Pacific; success, exit 0; September 5 custom dump is 6,218,546 bytes | Separate from failed VM pruning |
 | Production PostgreSQL | Guest cron runs `/home/stephen/pg_backup.sh` hourly; 17:00 UTC September 5 dump files and globals exist | Stale host sync does not establish an off-VM copy |
-| Dolt | Hourly native backup on Sefer at :05, plus daily VM124 snapshot at 02:30 | 34 databases restored, fsck/SQL checks passed, 219 payload checksums verified September 5; append-only retention pending NAS policy; [runbook](DOLT_SERVER.md#backups) |
+| Dolt | Hourly native backup on Sefer at :05; fresh delivery succeeded September 18 at 19:12 Pacific. Daily VM124 snapshot remains scheduled at 02:30 | September 18: 34 databases restored, fsck/SQL checks passed, 222 payload checksums verified; corrupt NAS object preserved and delivery recovered under a fresh name. Append-only retention pending NAS policy; [runbook](DOLT_SERVER.md#backups) |
 
 A timestamp and nonzero file size are not a restore test. Earlier dated restore
 proofs remain historical evidence in the relevant service document.
