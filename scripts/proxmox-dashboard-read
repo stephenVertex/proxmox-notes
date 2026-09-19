@@ -1,0 +1,79 @@
+#!/usr/bin/env python3
+"""Fixed, read-only inventory command for Dertog's restricted SSH key."""
+import concurrent.futures
+import datetime
+import json
+import os
+from pathlib import Path
+import re
+import socket
+import subprocess
+
+
+def query(node, resource):
+    result = subprocess.run(
+        ['/usr/bin/pvesh', 'get', f'/nodes/{node}/{resource}', '--output-format', 'json'],
+        check=True, capture_output=True, text=True, timeout=15,
+    )
+    return json.loads(result.stdout)
+
+
+def configured_disks(config, fallback):
+    total, found = 0, False
+    storage = set()
+    for line in config.splitlines():
+        if not re.match(r'(?:scsi|sata|virtio|ide|rootfs|mp)\d*:', line):
+            continue
+        if 'media=cdrom' in line or 'cloudinit' in line:
+            continue
+        match = re.search(r'(?:,|\s)size=(\d+(?:\.\d+)?)([KMGT]?)', line)
+        if match:
+            found = True
+            total += float(match[1]) * 1024 ** (' KMGT'.index(match[2]) if match[2] else 0)
+        volume = re.match(r'\w+:\s*([^:,]+):', line)
+        if volume:
+            storage.add(volume[1])
+    return int(total) if found else fallback, sorted(storage)
+
+
+def collect(node):
+    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
+        futures = {name: pool.submit(query, node, name) for name in ('qemu', 'lxc', 'status', 'storage')}
+        data = {name: future.result() for name, future in futures.items()}
+    guests = []
+    for kind, folder in (('qemu', 'qemu-server'), ('lxc', 'lxc')):
+        for row in data[kind]:
+            vmid = int(row['vmid'])
+            try:
+                config = Path(f'/etc/pve/{folder}/{vmid}.conf').read_text().split('\n[')[0]
+            except FileNotFoundError:
+                config = ''
+            disk, storage = configured_disks(config, row.get('maxdisk', 0))
+            guests.append({
+                'key': f'{node}:{kind}:{vmid}', 'host': node, 'type': kind, 'vmid': vmid,
+                'name': row.get('name') or row.get('hostname') or str(vmid),
+                'status': 'template' if row.get('template') else row['status'],
+                'cpus': row.get('cpus', row.get('maxcpu', 0)),
+                'memory_bytes': row.get('maxmem', 0), 'memory_used_bytes': row.get('mem', 0),
+                'disk_bytes': disk, 'storage': storage, 'cpu': row.get('cpu', 0),
+                'uptime': row.get('uptime', 0), 'lock': row.get('lock'),
+                'tags': [tag for tag in row.get('tags', '').split(';') if tag],
+            })
+    status = data['status']
+    return {
+        'host': node, 'observed_at': datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        'cpu': status.get('cpu'), 'cpu_count': status.get('cpuinfo', {}).get('cpus'),
+        'memory': status.get('memory', {}), 'uptime': status.get('uptime'),
+        'storage': [{k: row.get(k) for k in ('storage', 'type', 'total', 'used', 'avail', 'active')}
+                    for row in data['storage'] if row.get('active')],
+        'guests': sorted(guests, key=lambda row: (row['vmid'], row['type'])),
+    }
+
+
+if __name__ == '__main__':
+    if os.environ.get('SSH_ORIGINAL_COMMAND', 'inventory') != 'inventory':
+        raise SystemExit('Only the inventory command is permitted')
+    node = socket.gethostname().split('.')[0]
+    if node not in ('sefer', 'seykhl'):
+        raise SystemExit('Unexpected Proxmox node')
+    print(json.dumps(collect(node), separators=(',', ':')))

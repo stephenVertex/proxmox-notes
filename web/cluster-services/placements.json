@@ -1,0 +1,22 @@
+{
+  "sefer:qemu:100": {"names": ["dolt-analytics-snapshot", "doltsvr-sefer"], "services": ["Dolt analytics snapshot"]},
+  "sefer:qemu:101": {"names": ["litellm-gateway"], "services": ["LiteLLM gateway"]},
+  "sefer:qemu:102": {"names": ["yesod-postgres-server"], "services": ["Production PostgreSQL"]},
+  "sefer:qemu:103": {"names": ["seykhl-actions-runner"], "services": ["GitHub Actions runners"]},
+  "sefer:qemu:104": {"names": ["dertog"], "services": ["Dertog dashboards", "Yesod API", "Clip Together", "SJBIS", "sjbgtd"]},
+  "sefer:qemu:105": {"names": ["aicoe-social-runner"], "services": ["Social media monitor"]},
+  "sefer:qemu:107": {"names": ["n8n-server"], "services": ["n8n automation"]},
+  "sefer:qemu:111": {"names": ["sb-edge"], "services": ["Supabase APIs", "Edge Runtime"]},
+  "sefer:qemu:113": {"names": ["docuseal"], "services": ["DocuSeal"]},
+  "sefer:qemu:114": {"names": ["drawio"], "services": ["draw.io"]},
+  "sefer:qemu:116": {"names": ["bukher"], "services": ["RSSHub", "Miniflux"]},
+  "sefer:qemu:117": {"names": ["obs-vultr"], "services": ["SigNoz observability"]},
+  "sefer:qemu:118": {"names": ["neo4j"], "services": ["Neo4j"]},
+  "sefer:qemu:119": {"names": ["makor"], "services": ["GitLab"]},
+  "sefer:qemu:121": {"names": ["yesod-semantic-graph"], "services": ["Semantic graph", "Pipeline PostgreSQL"]},
+  "sefer:qemu:124": {"names": ["doltsvr"], "services": ["Production Dolt"]},
+  "seykhl:qemu:100": {"names": ["doltsvr"], "services": ["Legacy Dolt copy"]},
+  "seykhl:qemu:101": {"names": ["jeffrey-dev"], "services": ["Development VM"]},
+  "seykhl:qemu:102": {"names": ["yesod-postgres-server"], "services": ["Legacy PostgreSQL copy"]},
+  "seykhl:qemu:104": {"names": ["dertog"], "services": ["Legacy Dertog copy"]}
+}

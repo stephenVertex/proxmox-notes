@@ -408,11 +408,13 @@
             font-weight: 600;
         }
     </style>
+    <link rel="stylesheet" href="/fleet.css">
+    <script defer src="/fleet.js"></script>
 </head>
 <body class="app">
     <div class="container">
         <h1>Cluster Services</h1>
-        <p class="subtitle">Self-hosted infrastructure on seykhl Proxmox cluster</p>
+        <p class="subtitle">Services and live guests across Sefer and Seykhl</p>
         <div class="secure-url">
             <span class="secure-lock">🔒</span>
             <a href="https://dertog.tailb4b58.ts.net/">https://dertog.tailb4b58.ts.net/</a>
@@ -431,6 +433,14 @@
             <div class="legend-item"><span class="legend-swatch cf"></span> Cloudflare Tunnel</div>
         </div>
         <p class="timestamp" id="timestamp"></p>
+        <div id="fleet-warning" class="fleet-warning" role="status" hidden></div>
+        <div id="host-summary" class="host-summary" aria-label="Proxmox hosts"></div>
+        <nav class="view-nav" aria-label="Dashboard views">
+            <a href="#services" aria-current="page">Services</a>
+            <a href="#fleet">VM fleet</a>
+        </nav>
+        <section id="services-view" aria-label="Service directory">
+        <p class="service-note">Each service shows its host and VM. Status describes the VM, not an application health check. Select a placement badge to find it in the fleet.</p>
 
         <div class="section-header">
             <h2>Web Applications</h2>
@@ -439,9 +449,9 @@
         <div class="grid">
             <div class="card web">
                 <h2>clip-together</h2>
-                <div class="service">
+                <div class="service" data-guest="sefer:qemu:104" data-guest-name="dertog">
                     <div class="service-name">
-                        <span class="status-indicator status-active"></span>
+                        <span class="status-indicator status-unknown"></span>
                         clip-together Frontend
                         <span class="badge web">Web</span>
                     </div>
@@ -457,7 +467,7 @@
                         </div>
                         <div class="link-row">
                             <span class="link-label">LAN</span>
-                            <a class="service-link lan" href="http://192.168.0.138:8091">192.168.0.138:8091</a>
+                            <a class="service-link lan" href="http://192.168.20.138:8091">192.168.20.138:8091</a>
                         </div>
                     </div>
                     <div class="service-meta">Built on seykhl-actions-runner, deployed to dertog (VM 104)</div>
@@ -466,9 +476,9 @@
 
             <div class="card web">
                 <h2>Yesod</h2>
-                <div class="service">
+                <div class="service" data-guest="sefer:qemu:104" data-guest-name="dertog">
                     <div class="service-name">
-                        <span class="status-indicator status-active"></span>
+                        <span class="status-indicator status-unknown"></span>
                         Yesod API Server
                         <span class="badge api">API</span>
                     </div>
@@ -484,14 +494,14 @@
                         </div>
                         <div class="link-row">
                             <span class="link-label">LAN</span>
-                            <a class="service-link lan" href="http://192.168.0.138:8090">192.168.0.138:8090</a>
+                            <a class="service-link lan" href="http://192.168.20.138:8090">192.168.20.138:8090</a>
                         </div>
                     </div>
                     <div class="service-meta">Python/uv, serves on port 8090</div>
                 </div>
-                <div class="service">
+                <div class="service" data-guest="sefer:qemu:104" data-guest-name="dertog">
                     <div class="service-name">
-                        <span class="status-indicator status-active"></span>
+                        <span class="status-indicator status-unknown"></span>
                         Yesod Live Viz WebSocket
                         <span class="badge api">WebSocket</span>
                     </div>
@@ -507,7 +517,7 @@
                         </div>
                         <div class="link-row">
                             <span class="link-label">LAN</span>
-                            <a class="service-link lan" href="http://192.168.0.138:8765">192.168.0.138:8765</a>
+                            <a class="service-link lan" href="http://192.168.20.138:8765">192.168.20.138:8765</a>
                         </div>
                     </div>
                     <div class="service-meta">WebSocket + watcher with 5s interval</div>
@@ -516,10 +526,16 @@
 
             <div class="card web">
                 <h2>Proxmox</h2>
-                <div class="service">
+                <div class="service" data-host="sefer">
+                    <div class="service-name"><span class="status-indicator status-unknown"></span>Sefer Proxmox Web UI <span class="badge web">Web</span></div>
+                    <div class="service-desc">Proxmox VE management interface on Sefer</div>
+                    <div class="service-links"><div class="link-row"><span class="link-label">LAN</span><a class="service-link lan" href="https://192.168.20.10:8006">192.168.20.10:8006</a></div></div>
+                </div>
+
+                <div class="service" data-host="seykhl">
                     <div class="service-name">
-                        <span class="status-indicator status-active"></span>
-                        Proxmox Web UI
+                        <span class="status-indicator status-unknown"></span>
+                        Seykhl Proxmox Web UI
                         <span class="badge web">Web</span>
                     </div>
                     <div class="service-desc">Proxmox VE management interface</div>
@@ -530,18 +546,18 @@
                         </div>
                         <div class="link-row">
                             <span class="link-label">LAN</span>
-                            <a class="service-link lan" href="https://192.168.0.202:8006">https://192.168.0.202:8006</a>
+                            <a class="service-link lan" href="https://192.168.20.202:8006">https://192.168.20.202:8006</a>
                         </div>
                     </div>
                     <div class="service-meta">HTTPS, requires root credentials</div>
                 </div>
-                <div class="service">
+                <div class="service" data-guest="sefer:qemu:104" data-guest-name="dertog">
                     <div class="service-name">
-                        <span class="status-indicator status-active"></span>
+                        <span class="status-indicator status-unknown"></span>
                         Seykhl Health Dashboard
                         <span class="badge web">Web</span>
                     </div>
-                    <div class="service-desc">Live cluster health and performance metrics</div>
+                    <div class="service-desc">Seykhl metrics, served from Dertog; use VM fleet above for both hosts</div>
                     <div class="service-links">
                         <div class="link-row">
                             <span class="link-label">HTTPS</span>
@@ -553,7 +569,7 @@
                         </div>
                         <div class="link-row">
                             <span class="link-label">LAN</span>
-                            <a class="service-link lan" href="http://192.168.0.138:8093">192.168.0.138:8093</a>
+                            <a class="service-link lan" href="http://192.168.20.138:8093">192.168.20.138:8093</a>
                         </div>
                     </div>
                     <div class="service-meta">Auto-refreshes every 30s</div>
@@ -562,9 +578,9 @@
 
             <div class="card api">
                 <h2>Databases</h2>
-                <div class="service">
+                <div class="service" data-guest="sefer:qemu:104" data-guest-name="dertog">
                     <div class="service-name">
-                        <span class="status-indicator status-active"></span>
+                        <span class="status-indicator status-unknown"></span>
                         Database Details
                         <span class="badge api">Details</span>
                     </div>
@@ -580,7 +596,7 @@
                         </div>
                         <div class="link-row">
                             <span class="link-label">LAN</span>
-                            <a class="service-link lan" href="http://192.168.0.138:8094">192.168.0.138:8094</a>
+                            <a class="service-link lan" href="http://192.168.20.138:8094">192.168.20.138:8094</a>
                         </div>
                     </div>
                     <div class="service-meta">yesod-postgres-server + doltsvr</div>
@@ -589,9 +605,9 @@
 
             <div class="card web">
                 <h2>n8n</h2>
-                <div class="service">
+                <div class="service" data-guest="sefer:qemu:107" data-guest-name="n8n-server">
                     <div class="service-name">
-                        <span class="status-indicator status-active"></span>
+                        <span class="status-indicator status-unknown"></span>
                         n8n Automation
                         <span class="badge web">Web</span>
                     </div>
@@ -612,9 +628,9 @@
 
             <div class="card web">
                 <h2>DocuSeal</h2>
-                <div class="service">
+                <div class="service" data-guest="sefer:qemu:113" data-guest-name="docuseal">
                     <div class="service-name">
-                        <span class="status-indicator status-active"></span>
+                        <span class="status-indicator status-unknown"></span>
                         DocuSeal Document Signing
                         <span class="badge web">Web</span>
                     </div>
@@ -639,9 +655,9 @@
 
             <div class="card web">
                 <h2>SJBIS</h2>
-                <div class="service">
+                <div class="service" data-guest="sefer:qemu:104" data-guest-name="dertog">
                     <div class="service-name">
-                        <span class="status-indicator status-active"></span>
+                        <span class="status-indicator status-unknown"></span>
                         SJBIS · Information Surfacer
                         <span class="badge web">Web</span>
                     </div>
@@ -657,7 +673,7 @@
                         </div>
                         <div class="link-row">
                             <span class="link-label">LAN</span>
-                            <a class="service-link lan" href="http://192.168.0.138:7878">192.168.0.138:7878</a>
+                            <a class="service-link lan" href="http://192.168.20.138:7878">192.168.20.138:7878</a>
                         </div>
                     </div>
                     <div class="service-meta">Process: /home/stephen/sjbis/sjbis daemon start --port 7878</div>
@@ -666,9 +682,9 @@
 
             <div class="card web">
                 <h2>sjbgtd</h2>
-                <div class="service">
+                <div class="service" data-guest="sefer:qemu:104" data-guest-name="dertog">
                     <div class="service-name">
-                        <span class="status-indicator status-active"></span>
+                        <span class="status-indicator status-unknown"></span>
                         Project Graph Viewer
                         <span class="badge web">Web</span>
                     </div>
@@ -681,9 +697,9 @@
                     </div>
                     <div class="service-meta">Shows whichever project was last pushed from sjbt (Active Project screen)</div>
                 </div>
-                <div class="service">
+                <div class="service" data-guest="sefer:qemu:104" data-guest-name="dertog">
                     <div class="service-name">
-                        <span class="status-indicator status-active"></span>
+                        <span class="status-indicator status-unknown"></span>
                         Template DAG Viewer + API
                         <span class="badge api">API</span>
                     </div>
@@ -700,9 +716,9 @@
                     </div>
                     <div class="service-meta">Process: python -m sidecar.template_api_server (localhost :8766, ~/sjbgtd)</div>
                 </div>
-                <div class="service">
+                <div class="service" data-guest="sefer:qemu:104" data-guest-name="dertog">
                     <div class="service-name">
-                        <span class="status-indicator status-active"></span>
+                        <span class="status-indicator status-unknown"></span>
                         State Server
                         <span class="badge api">WebSocket</span>
                     </div>
@@ -714,7 +730,7 @@
                         </div>
                         <div class="link-row">
                             <span class="link-label">LAN</span>
-                            <span class="service-link lan">ws://192.168.0.138:8767</span>
+                            <span class="service-link lan">ws://192.168.20.138:8767</span>
                         </div>
                     </div>
                     <div class="service-meta">Process: python -m sidecar.state_server (:8767, ~/sjbgtd) · TUI connects via ws://dertog:8767</div>
@@ -729,9 +745,9 @@
         <div class="grid">
             <div class="card api">
                 <h2>Supabase (sb-edge)</h2>
-                <div class="service">
+                <div class="service" data-guest="sefer:qemu:111" data-guest-name="sb-edge">
                     <div class="service-name">
-                        <span class="status-indicator status-active"></span>
+                        <span class="status-indicator status-unknown"></span>
                         Supabase Backend
                         <span class="badge api">API</span>
                     </div>
@@ -752,9 +768,9 @@
 
             <div class="card api">
                 <h2>Databases</h2>
-                <div class="service">
+                <div class="service" data-guest="sefer:qemu:102" data-guest-name="yesod-postgres-server">
                     <div class="service-name">
-                        <span class="status-indicator status-active"></span>
+                        <span class="status-indicator status-unknown"></span>
                         PostgreSQL (Yesod)
                         <span class="badge internal">Internal</span>
                     </div>
@@ -766,14 +782,14 @@
                         </div>
                         <div class="link-row">
                             <span class="link-label">LAN</span>
-                            <a class="service-link lan" href="http://192.168.0.155:5432">192.168.0.155:5432</a>
+                            <a class="service-link lan" href="http://192.168.20.155:5432">192.168.20.155:5432</a>
                         </div>
                     </div>
                     <div class="service-meta">VM 102 · Tailscale IP 100.115.10.68</div>
                 </div>
-                <div class="service">
+                <div class="service" data-guest="sefer:qemu:124" data-guest-name="doltsvr">
                     <div class="service-name">
-                        <span class="status-indicator status-active"></span>
+                        <span class="status-indicator status-unknown"></span>
                         Dolt SQL Server
                         <span class="badge internal">Internal</span>
                     </div>
@@ -785,18 +801,18 @@
                         </div>
                         <div class="link-row">
                             <span class="link-label">LAN</span>
-                            <a class="service-link lan" href="http://192.168.0.150:3306">192.168.0.150:3306</a>
+                            <a class="service-link lan" href="http://192.168.20.150:3306">192.168.20.150:3306</a>
                         </div>
                     </div>
-                    <div class="service-meta">VM 100 · Tailscale IP 100.101.145.38</div>
+                    <div class="service-meta">VM 124 · Tailscale IP 100.101.145.38</div>
                 </div>
             </div>
 
             <div class="card api">
                 <h2>Performance Monitor</h2>
-                <div class="service">
+                <div class="service" data-guest="sefer:qemu:104" data-guest-name="dertog">
                     <div class="service-name">
-                        <span class="status-indicator status-active"></span>
+                        <span class="status-indicator status-unknown"></span>
                         Performance Dashboard
                         <span class="badge web">Web</span>
                     </div>
@@ -812,7 +828,7 @@
                         </div>
                         <div class="link-row">
                             <span class="link-label">LAN</span>
-                            <a class="service-link lan" href="http://192.168.0.138:8080">192.168.0.138:8080</a>
+                            <a class="service-link lan" href="http://192.168.20.138:8080">192.168.20.138:8080</a>
                         </div>
                     </div>
                     <div class="service-meta">Python dashboard server</div>
@@ -827,19 +843,19 @@
         <div class="grid">
             <div class="card runner">
                 <h2>GitHub Actions</h2>
-                <div class="service">
+                <div class="service" data-guest="sefer:qemu:103" data-guest-name="seykhl-actions-runner">
                     <div class="service-name">
-                        <span class="status-indicator status-active"></span>
+                        <span class="status-indicator status-unknown"></span>
                         seykhl-actions-runner
                         <span class="badge internal">Runner</span>
                     </div>
                     <div class="service-desc">Repository-scoped GitHub Actions runners for Yesod, Clip Together, and Sjbis</div>
-                    <div class="service-meta">VM 103 · LAN 192.168.0.154</div>
+                    <div class="service-meta">VM 103 · LAN 192.168.20.154</div>
                     <div class="service-meta">Labels: yesod-ci · dertog-deploy · sjbis-ci</div>
                 </div>
-                <div class="service">
+                <div class="service" data-guest="sefer:qemu:102" data-guest-name="yesod-postgres-server">
                     <div class="service-name">
-                        <span class="status-indicator status-active"></span>
+                        <span class="status-indicator status-unknown"></span>
                         PostgreSQL (Yesod)
                         <span class="badge internal">Internal</span>
                     </div>
@@ -847,64 +863,78 @@
                     <div class="service-meta">yesod-postgres-server:5432 (VM 102)</div>
                     <div class="service-meta">Tailscale: 100.115.10.68</div>
                 </div>
-                <div class="service">
+                <div class="service" data-guest="seykhl:qemu:108" data-guest-name="yesod-runner-2">
                     <div class="service-name">
-                        <span class="status-indicator status-active"></span>
+                        <span class="status-indicator status-unknown"></span>
                         yesod-runner-2 (VM 108)
                         <span class="badge internal">Runner</span>
                     </div>
                     <div class="service-desc">Yesod agent dispatcher</div>
-                    <div class="service-meta">LAN 192.168.0.148 · models: opencode-kimi, opencode-claude</div>
+                    <div class="service-meta">Retained legacy dispatcher; live VM state shown above</div>
                 </div>
-                <div class="service">
+                <div class="service" data-guest="sefer:qemu:110" data-guest-name="yesod-runner-3">
                     <div class="service-name">
-                        <span class="status-indicator status-active"></span>
+                        <span class="status-indicator status-unknown"></span>
                         yesod-runner-3 (VM 110)
                         <span class="badge internal">Runner</span>
                     </div>
                     <div class="service-desc">Yesod agent dispatcher</div>
-                    <div class="service-meta">LAN 192.168.0.136 · models: opencode-qwen</div>
+                    <div class="service-meta">Retained dispatcher; live VM state shown above</div>
                 </div>
             </div>
 
             <div class="card runner">
                 <h2>Other Services</h2>
-                <div class="service">
+                <div class="service" data-guest="sefer:qemu:105" data-guest-name="aicoe-social-runner">
                     <div class="service-name">
-                        <span class="status-indicator status-active"></span>
+                        <span class="status-indicator status-unknown"></span>
                         aicoe-social-runner
                         <span class="badge internal">Service</span>
                     </div>
                     <div class="service-desc">Social media monitoring</div>
                     <div class="service-meta">VM 105 · LAN 192.168.0.147</div>
                 </div>
-                <div class="service">
+                <div class="service" data-guest="seykhl:qemu:101" data-guest-name="jeffrey-dev">
                     <div class="service-name">
-                        <span class="status-indicator status-active"></span>
+                        <span class="status-indicator status-unknown"></span>
                         jeffrey-dev
                         <span class="badge internal">Dev</span>
                     </div>
                     <div class="service-desc">Development VM</div>
-                    <div class="service-meta">VM 101 · LAN 192.168.0.132</div>
+                    <div class="service-meta">Development guest on Seykhl; live VM state shown above</div>
                 </div>
             </div>
         </div>
 
+<div class="section-header"><h2>Infrastructure services</h2><p>Gateways, development tools, and observability</p></div><div class="grid"><div class="card infra"><h2>LiteLLM gateway</h2><div class="service" data-guest="sefer:qemu:101" data-guest-name="litellm-gateway"><div class="service-name"><span class="status-indicator status-unknown"></span>LiteLLM gateway</div><div class="service-desc">Model gateway, broker, and dashboards</div></div></div><div class="card infra"><h2>GitLab</h2><div class="service" data-guest="sefer:qemu:119" data-guest-name="makor"><div class="service-name"><span class="status-indicator status-unknown"></span>GitLab</div><div class="service-desc">Git hosting and CI/CD</div><div class="service-links"><a class="service-link" href="https://makor.meshcrawler.com">https://makor.meshcrawler.com</a></div></div></div><div class="card infra"><h2>Neo4j</h2><div class="service" data-guest="sefer:qemu:118" data-guest-name="neo4j"><div class="service-name"><span class="status-indicator status-unknown"></span>Neo4j</div><div class="service-desc">Graph database and browser</div></div></div><div class="card infra"><h2>SigNoz</h2><div class="service" data-guest="sefer:qemu:117" data-guest-name="obs-vultr"><div class="service-name"><span class="status-indicator status-unknown"></span>SigNoz</div><div class="service-desc">Logs, traces, and metrics</div><div class="service-links"><a class="service-link" href="http://100.115.156.60:8080">http://100.115.156.60:8080</a></div></div></div><div class="card infra"><h2>draw.io</h2><div class="service" data-guest="sefer:qemu:114" data-guest-name="drawio"><div class="service-name"><span class="status-indicator status-unknown"></span>draw.io</div><div class="service-desc">Diagram editor</div><div class="service-links"><a class="service-link" href="https://drawio.meshcrawler.com">https://drawio.meshcrawler.com</a></div></div></div><div class="card infra"><h2>RSSHub / Miniflux</h2><div class="service" data-guest="sefer:qemu:116" data-guest-name="bukher"><div class="service-name"><span class="status-indicator status-unknown"></span>RSSHub / Miniflux</div><div class="service-desc">Feed generation and reading</div><div class="service-links"><a class="service-link" href="http://bukher.tailb4b58.ts.net:1200">http://bukher.tailb4b58.ts.net:1200</a></div></div></div><div class="card infra"><h2>Semantic graph</h2><div class="service" data-guest="sefer:qemu:121" data-guest-name="yesod-semantic-graph"><div class="service-name"><span class="status-indicator status-unknown"></span>Semantic graph</div><div class="service-desc">Graph controller and pipeline PostgreSQL</div></div></div></div>
+        </section>
+        <section id="fleet-view" aria-labelledby="fleet-heading" hidden>
+            <div class="fleet-heading"><h2 id="fleet-heading">VM fleet</h2><p id="fleet-count" aria-live="polite">Connecting…</p></div>
+            <p class="fleet-note">Every VM on both hosts, refreshed automatically. Running VMs are shown first; include stopped guests, templates, or containers with the filters.</p>
+            <div class="fleet-filters">
+                <label class="search-filter">Search<input id="fleet-search" type="search" placeholder="Name, VM ID, service, tag, or storage" autocomplete="off"></label>
+                <label>Host<select id="fleet-host"><option value="all">Both hosts</option><option value="sefer">Sefer</option><option value="seykhl">Seykhl</option></select></label>
+                <label>State<select id="fleet-state"><option value="running">Running</option><option value="all">All states</option><option value="stopped">Stopped</option><option value="template">Templates</option></select></label>
+                <label>Kind<select id="fleet-kind"><option value="qemu">VMs</option><option value="lxc">Containers</option><option value="all">All guests</option></select></label>
+                <button id="fleet-refresh" class="refresh-button" type="button">Refresh</button>
+            </div>
+            <div class="fleet-table-wrap" role="region" aria-label="Guest inventory" tabindex="0">
+                <table class="fleet-table">
+                    <thead><tr><th scope="col">Host</th><th scope="col">ID</th><th scope="col">Name / tags</th><th scope="col">State</th><th scope="col">Services / role</th><th scope="col" class="number">vCPU</th><th scope="col" class="number">RAM GiB</th><th scope="col" class="number">Disk GiB</th></tr></thead>
+                    <tbody id="fleet-body"></tbody>
+                </table>
+            </div>
+            <p class="fleet-note">RAM and disk are configured capacities. Thin-provisioned disk capacity is not physical usage or guest free space. Service labels describe placement; generic runner and gate roles follow guest names. Host + kind + ID uniquely identifies a guest.</p>
+        </section>
         <div class="footer">
-            <p>Cluster Services Index | Self-hosted on dertog (192.168.0.138) | Proxmox cluster: seykhl (192.168.0.202)</p>
-            <p>Generated: <span id="footer-time"></span></p>
+            <p>Cluster Services Index · Dertog on Sefer VM 104 · Sefer and Seykhl are independent Proxmox hosts</p>
+            <p>Inventory timestamps come from the hosts. Application links are maintained in the service directory.</p>
         </div>
     </div>
 
     <script>
-        function updateTimestamp() {
-            const now = new Date();
-            document.getElementById('timestamp').textContent = 'Last updated: ' + now.toLocaleString();
-            document.getElementById('footer-time').textContent = now.toLocaleString();
-        }
-        updateTimestamp();
 
-        document.querySelectorAll('.service-link:not(.none)').forEach(link => {
+        document.querySelectorAll('a.service-link:not(.none)').forEach(link => {
             const btn = document.createElement('button');
             btn.className = 'copy-btn';
             btn.textContent = 'copy';
