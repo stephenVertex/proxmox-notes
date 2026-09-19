@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Runs on Sefer. NAS generations are append-only; NAS retention is separate.
-set -euo pipefail
+set -Eeuo pipefail
+trap 'rc=$?; echo "Dolt NAS backup failed at line $LINENO (exit $rc); pending generation retained for retry" >&2; exit "$rc"' ERR
 umask 077
 export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 readonly nas_mount=/mnt/proxmox-backups
@@ -36,25 +37,63 @@ fi
 [[ "$filename" =~ ^doltsvr-[0-9]{8}T[0-9]{6}Z\.tar\.gz$ ]]
 expected=$(remote sha256 "$filename")
 [[ "$expected" =~ ^[a-f0-9]{64}$ ]]
-# Unique attempt names allow retries even when NAS WORM disallows overwrites.
-if [[ -f "$destination/$filename" ]]; then
-    actual=$(sha256sum "$destination/$filename" | awk '{print $1}')
-    [[ "$actual" == "$expected" ]]
-else
-    partial="$destination/.$filename.$(date +%s%N).partial"
+# A completed-looking NAS object can be corrupt after an interrupted SMB write.
+# Never overwrite it: NAS retention can prohibit replacement, and retaining the
+# evidence is useful. Prefer a deterministic recovery name so retries reuse an
+# already verified delivery. A unique third name handles a corrupt recovery too.
+stem=${filename%.tar.gz}
+delivered=
+verified=false
+for candidate in "$filename" "$stem.sha256-$expected.tar.gz" \
+        "$stem.retry-$(date -u +%Y%m%dT%H%M%S)-$(date +%s%N).tar.gz"; do
+    if [[ ! -e "$destination/$candidate" && ! -e "$destination/$candidate.sha256" ]]; then
+        delivered=$candidate
+        break
+    fi
+    if [[ -f "$destination/$candidate" ]]; then
+        actual=$(sha256sum "$destination/$candidate" | awk '{print $1}')
+        if [[ "$actual" == "$expected" ]]; then
+            if [[ ! -e "$destination/$candidate.sha256" ]] || \
+                    [[ $(cat "$destination/$candidate.sha256") == "$expected  $candidate" ]]; then
+                delivered=$candidate
+                verified=true
+                break
+            fi
+        fi
+    fi
+    echo "WARNING: NAS archive or checksum is invalid; preserving $candidate and selecting a new delivery name" >&2
+done
+[[ -n "$delivered" ]] || { echo 'No unused NAS delivery name available' >&2; exit 1; }
+if [[ "$verified" == false ]]; then
+    partial="$destination/.$delivered.$(date +%s%N).partial"
+    echo "Transferring $filename to NAS as $delivered" >&2
     remote read "$filename" > "$partial"
+    # Ask the filesystem to commit the completed transfer before readback.
+    python3 - "$partial" <<'PY'
+import os
+import sys
+with open(sys.argv[1], 'rb') as stream:
+    os.fsync(stream.fileno())
+PY
     actual=$(sha256sum "$partial" | awk '{print $1}')
-    [[ "$actual" == "$expected" ]]
+    [[ "$actual" == "$expected" ]] || {
+        echo "NAS transfer checksum mismatch for $partial; guest archive retained" >&2
+        exit 1
+    }
     gzip -t "$partial"
-    mv -n "$partial" "$destination/$filename"
-    [[ $(sha256sum "$destination/$filename" | awk '{print $1}') == "$expected" ]]
+    mv -n "$partial" "$destination/$delivered"
+    [[ $(sha256sum "$destination/$delivered" | awk '{print $1}') == "$expected" ]] || {
+        echo "Published NAS archive checksum mismatch for $delivered; guest archive retained" >&2
+        exit 1
+    }
 fi
-if [[ ! -f "$destination/$filename.sha256" ]]; then
-    printf '%s  %s\n' "$expected" "$filename" > "$destination/$filename.sha256"
+if [[ ! -f "$destination/$delivered.sha256" ]]; then
+    printf '%s  %s\n' "$expected" "$delivered" > "$destination/$delivered.sha256"
 fi
+[[ $(cat "$destination/$delivered.sha256") == "$expected  $delivered" ]]
 # Mark delivery before cleanup, so lost ack replies do not cause endless retries.
-printf '%s %s %s\n' "$(date -u +%FT%TZ)" "$expected" "$filename" > "$state/last-success.tmp"
+printf '%s %s %s\n' "$(date -u +%FT%TZ)" "$expected" "$delivered" > "$state/last-success.tmp"
 mv -f "$state/last-success.tmp" "$state/last-success"
 rm -f "$state/pending"
 remote ack "$filename" || echo 'WARNING: NAS verified; guest cleanup failed' >&2
-echo "Verified NAS backup: $destination/$filename sha256=$expected"
+echo "Verified NAS backup: $destination/$delivered sha256=$expected"
