@@ -1,14 +1,23 @@
 # Proxmox Infrastructure Overview
 
 **Last verified:** 2026-09-05 against the full live hosts and guests; GitLab
-runner fleet delta verified 2026-09-13.
+runner fleet delta verified 2026-09-13; data-cleaning base VMs and scoped router
+cleanup verified 2026-09-19. Older counts and resource tables retain their
+September 5 snapshot scope.
 
 `sefer` and `seykhl` are both active, separate Proxmox hosts. Sefer hosts the
 production services and most execution infrastructure; Seykhl hosts nine g2
-gate VMs and retains stopped legacy guests. The complete current inventory is
-in [INVENTORY.md](INVENTORY.md), with network details in [NETWORK.md](NETWORK.md).
+gate VMs and retains stopped legacy guests. Four data-cleaning base VMs were
+added on Seykhl on September 19. The full September 5 inventory is in
+[INVENTORY.md](INVENTORY.md), with dated updates and network details in
+[NETWORK.md](NETWORK.md).
 The editable [network diagram](yesod-network.drawio) includes the current
 physical layout on its single **current** tab.
+
+The [September 19 router report](ROUTER_BINDINGS.md) records the corrected
+data-cleaning VM bindings, removed camera/controller bindings, remaining ARP
+and ACL rules, and address-allocation checks. Sefer's trusted-LAN connection
+remains intentional for fast access to the NAS, Homestar.
 
 ![Current physical network diagram showing device locations, cabling, VLAN 20, and Eero repeaters](yesod-network.png)
 
@@ -35,9 +44,10 @@ ssh -o BatchMode=yes root@192.168.20.10
 ssh -o BatchMode=yes root@192.168.20.202
 ```
 
-Since 2026-09-10 the LAN has a name server: dnsmasq on Seykhl, authoritative
-for `internal.yesod.work`, serving both VLANs. Prefer names over addresses in
-new configuration. See [LAN_DNS.md](LAN_DNS.md) and [NETWORK.md](NETWORK.md).
+LAN DNS runs on Seykhl and Sefer, authoritative for `internal.yesod.work`,
+serving both VLANs. Since September 13, Seykhl also serves VLAN 20 DHCP;
+the router's Yesod DHCP server is disabled. Prefer names over addresses in new
+configuration. See [LAN_DNS.md](LAN_DNS.md) and [NETWORK.md](NETWORK.md).
 
 ## Production and supporting services
 
@@ -133,6 +143,8 @@ Additional observations:
 Current service pages and the live inventory supersede old build logs. Dated
 provisioning records and long-term plans retain historical commands under
 explicit notices; they do not authorize starting old copies. External DNS,
-billing, router reservations and application data correctness were not
-re-audited as part of the host/service inventory. Installed version observations
+billing and application data correctness were not re-audited as part of the
+host/service inventory. The separate [September 19 router audit](ROUTER_BINDINGS.md)
+records binding changes and reservation observations with its own limits.
+Installed version observations
 are in [VERSION_UPGRADES.md](VERSION_UPGRADES.md).

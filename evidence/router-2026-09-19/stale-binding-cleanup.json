@@ -1,0 +1,344 @@
+{
+  "verified_at": "2026-09-19T22:13:08.148Z",
+  "device": "TP-Link ER7206",
+  "scope": "User-requested removal of the three previously identified stale camera/controller ARP bindings",
+  "before_at": "2026-09-19T22:04:50.861Z",
+  "removed": [
+    {
+      "ip": "192.168.0.118",
+      "mac": "EC-71-DB-BF-D6-71",
+      "interface": "LAN",
+      "description": "Garage Cam RLC-510a",
+      "status": "Enabled"
+    },
+    {
+      "ip": "192.168.0.192",
+      "mac": "BC-24-11-CF-6E-EC",
+      "interface": "LAN",
+      "description": "yesod-runner-g1-dispatch controller (Sefer VM152)",
+      "status": "Enabled"
+    },
+    {
+      "ip": "192.168.20.192",
+      "mac": "BC-24-11-CF-6E-EC",
+      "interface": "LAN",
+      "description": "yesod-runner-g1-dispatch controller (Sefer VM152)",
+      "status": "Enabled"
+    }
+  ],
+  "remaining_binding_count": 31,
+  "remaining_bindings_unchanged": true,
+  "remaining_bindings": [
+    {
+      "ip": "192.168.0.137",
+      "mac": "BC-24-11-5E-D5-A8",
+      "interface": "LAN",
+      "description": "sb-edge",
+      "status": "Enabled"
+    },
+    {
+      "ip": "192.168.0.218",
+      "mac": "B8-CA-3A-63-0D-40",
+      "interface": "LAN",
+      "description": "Sefer 10gbe",
+      "status": "Enabled"
+    },
+    {
+      "ip": "192.168.0.172",
+      "mac": "BC-24-11-B8-5D-94",
+      "interface": "LAN",
+      "description": "Reserved-172",
+      "status": "Enabled"
+    },
+    {
+      "ip": "192.168.20.154",
+      "mac": "BC-24-11-6C-CF-B7",
+      "interface": "LAN",
+      "description": "seykhl-actions-runner (Yesod VLAN 20)",
+      "status": "Enabled"
+    },
+    {
+      "ip": "192.168.20.172",
+      "mac": "BC-24-11-B8-5D-94",
+      "interface": "LAN",
+      "description": "yesod-semantic-graph (Yesod VLAN 20, VM121)",
+      "status": "Enabled"
+    },
+    {
+      "ip": "192.168.20.167",
+      "mac": "BC-24-11-B6-A5-A4",
+      "interface": "LAN",
+      "description": "neo4j (Yesod VLAN 20, VM118)",
+      "status": "Enabled"
+    },
+    {
+      "ip": "192.168.20.173",
+      "mac": "BC-24-11-38-A5-B3",
+      "interface": "LAN",
+      "description": "yesod-runner-g2-ibur (Yesod VLAN 20, VM130)",
+      "status": "Enabled"
+    },
+    {
+      "ip": "192.168.20.136",
+      "mac": "BC-24-11-68-88-B3",
+      "interface": "LAN",
+      "description": "yesod-runner-3 (Yesod VLAN 20, VM110)",
+      "status": "Enabled"
+    },
+    {
+      "ip": "192.168.20.180",
+      "mac": "02-BD-C1-00-07-00",
+      "interface": "Yesod",
+      "description": "dataclean-postgres (Seykhl VM700)",
+      "status": "Enabled"
+    },
+    {
+      "ip": "192.168.20.189",
+      "mac": "BC-24-11-51-27-B3",
+      "interface": "Yesod",
+      "description": "lamedvov (Sefer VM150)",
+      "status": "Enabled"
+    },
+    {
+      "ip": "192.168.20.157",
+      "mac": "BC-24-11-85-BD-D3",
+      "interface": "Yesod",
+      "description": "litellm-gateway (Sefer VM101)",
+      "status": "Enabled"
+    },
+    {
+      "ip": "192.168.20.163",
+      "mac": "BC-24-11-C5-6C-AA",
+      "interface": "Yesod",
+      "description": "obs-vultr SigNoz (Sefer VM117)",
+      "status": "Enabled"
+    },
+    {
+      "ip": "192.168.20.185",
+      "mac": "BC-24-11-87-26-9C",
+      "interface": "LAN",
+      "description": "yesod-gate-g1-golem (Sefer VM131)",
+      "status": "Enabled"
+    },
+    {
+      "ip": "192.168.20.178",
+      "mac": "BC-24-11-ED-E9-BF",
+      "interface": "LAN",
+      "description": "yesod-gate-g1-samael (Sefer VM231)",
+      "status": "Enabled"
+    },
+    {
+      "ip": "192.168.20.176",
+      "mac": "BC-24-11-5B-1C-FD",
+      "interface": "LAN",
+      "description": "yesod-gate-g1-dybbuk (Sefer VM232)",
+      "status": "Enabled"
+    },
+    {
+      "ip": "192.168.20.181",
+      "mac": "02-BD-C1-00-07-01",
+      "interface": "Yesod",
+      "description": "dataclean-minio (Seykhl VM701)",
+      "status": "Enabled"
+    },
+    {
+      "ip": "192.168.20.196",
+      "mac": "BC-24-11-13-77-FB",
+      "interface": "LAN",
+      "description": "yesod-gate-g1-lilith (Sefer VM234)",
+      "status": "Enabled"
+    },
+    {
+      "ip": "192.168.20.175",
+      "mac": "BC-24-11-10-7D-E4",
+      "interface": "LAN",
+      "description": "yesod-gate-g1-azazel (Sefer VM235)",
+      "status": "Enabled"
+    },
+    {
+      "ip": "192.168.20.194",
+      "mac": "BC-24-11-CE-54-2C",
+      "interface": "LAN",
+      "description": "yesod-gate-g1-estrie (Sefer VM236)",
+      "status": "Enabled"
+    },
+    {
+      "ip": "192.168.20.188",
+      "mac": "BC-24-11-92-2A-C8",
+      "interface": "LAN",
+      "description": "yesod-gate-g1-broxa (Sefer VM237)",
+      "status": "Enabled"
+    },
+    {
+      "ip": "192.168.20.179",
+      "mac": "BC-24-11-44-1A-53",
+      "interface": "LAN",
+      "description": "yesod-gate-g1-mazik (Sefer VM238)",
+      "status": "Enabled"
+    },
+    {
+      "ip": "192.168.20.184",
+      "mac": "BC-24-11-06-85-8D",
+      "interface": "LAN",
+      "description": "test-db-g1-golem (Sefer CT220)",
+      "status": "Enabled"
+    },
+    {
+      "ip": "192.168.20.190",
+      "mac": "BC-24-11-E1-15-43",
+      "interface": "LAN",
+      "description": "test-db-g1-samael (Sefer CT241)",
+      "status": "Enabled"
+    },
+    {
+      "ip": "192.168.20.195",
+      "mac": "BC-24-11-FB-FB-1A",
+      "interface": "LAN",
+      "description": "test-db-g1-dybbuk (Sefer CT242)",
+      "status": "Enabled"
+    },
+    {
+      "ip": "192.168.20.197",
+      "mac": "BC-24-11-31-A3-91",
+      "interface": "LAN",
+      "description": "test-db-g1-ashmedai (Sefer CT243)",
+      "status": "Enabled"
+    },
+    {
+      "ip": "192.168.20.183",
+      "mac": "02-BD-C1-00-07-03",
+      "interface": "Yesod",
+      "description": "dataclean-api (Seykhl VM703)",
+      "status": "Enabled"
+    },
+    {
+      "ip": "192.168.20.187",
+      "mac": "BC-24-11-EA-E6-DF",
+      "interface": "LAN",
+      "description": "test-db-g1-azazel (Sefer CT245)",
+      "status": "Enabled"
+    },
+    {
+      "ip": "192.168.20.121",
+      "mac": "BC-24-11-57-96-70",
+      "interface": "LAN",
+      "description": "test-db-g1-estrie (Sefer CT246)",
+      "status": "Enabled"
+    },
+    {
+      "ip": "192.168.20.124",
+      "mac": "BC-24-11-22-64-E3",
+      "interface": "LAN",
+      "description": "test-db-g1-broxa (Sefer CT247)",
+      "status": "Enabled"
+    },
+    {
+      "ip": "192.168.20.127",
+      "mac": "BC-24-11-D2-8A-9B",
+      "interface": "LAN",
+      "description": "test-db-g1-mazik (Sefer CT248)",
+      "status": "Enabled"
+    },
+    {
+      "ip": "192.168.40.118",
+      "mac": "EC-71-DB-BF-D6-71",
+      "interface": "LAN",
+      "description": "---",
+      "status": "Enabled"
+    }
+  ],
+  "general_arp_settings": {
+    "enable": true,
+    "imb_pass": false,
+    "garp": false,
+    "log_enable": false
+  },
+  "general_settings_unchanged": true,
+  "dhcp_reservations_unchanged": true,
+  "dhcp_reservation_count": 53,
+  "dhcp_reservations_checked_at": "2026-09-19T22:13:06.546Z",
+  "acl_unchanged": true,
+  "acl": [
+    {
+      "order": "1",
+      "name": "Yesod_NAS_RPCBIND",
+      "action": "Allow",
+      "service": "RPCBIND",
+      "direction": "ALL",
+      "source": "IPGROUP_YESOD",
+      "destination": "IPGROUP_NAS",
+      "schedule": "Any"
+    },
+    {
+      "order": "2",
+      "name": "Yesod_NAS_MOUNTD",
+      "action": "Allow",
+      "service": "MOUNTD",
+      "direction": "ALL",
+      "source": "IPGROUP_YESOD",
+      "destination": "IPGROUP_NAS",
+      "schedule": "Any"
+    },
+    {
+      "order": "3",
+      "name": "Yesod_NAS_NFS",
+      "action": "Allow",
+      "service": "NFS",
+      "direction": "ALL",
+      "source": "IPGROUP_YESOD",
+      "destination": "IPGROUP_NAS",
+      "schedule": "Any"
+    },
+    {
+      "order": "4",
+      "name": "Yesod_NAS_ICMP",
+      "action": "Allow",
+      "service": "ICMP_ALL",
+      "direction": "ALL",
+      "source": "IPGROUP_YESOD",
+      "destination": "IPGROUP_NAS",
+      "schedule": "Any"
+    },
+    {
+      "order": "5",
+      "name": "Yesod_TAILSCALE_41641",
+      "action": "Allow",
+      "service": "TAILSCALE",
+      "direction": "ALL",
+      "source": "IPGROUP_YESOD",
+      "destination": "IPGROUP_LAN",
+      "schedule": "Any"
+    },
+    {
+      "order": "6",
+      "name": "Yesod_DENY_TRUSTED_NEW",
+      "action": "Block",
+      "service": "ALL",
+      "direction": "ALL",
+      "source": "IPGROUP_YESOD",
+      "destination": "IPGROUP_LAN",
+      "schedule": "Any"
+    }
+  ],
+  "validation": {
+    "192.168.0.192": {
+      "ping_sent": 2,
+      "ping_received": 2,
+      "learned_mac": "02-59-05-00-01-75",
+      "learned_interface": "LAN"
+    },
+    "192.168.20.192": {
+      "ping_sent": 2,
+      "ping_received": 2
+    },
+    "192.168.40.118": {
+      "ping_sent": 2,
+      "ping_received": 2
+    }
+  },
+  "limits": [
+    "Phone was reported working at .119; reassignment to .118 was not forced or tested.",
+    "Remaining bindings are an inventory, not a full correctness audit.",
+    "DHCP reservations for the retired controller MAC remain to prevent automatic address reuse; reconcile ownership through the controller service-address lifecycle."
+  ]
+}

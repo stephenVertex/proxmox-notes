@@ -1,0 +1,89 @@
+{
+  "checked_at": "2026-09-19T21:57:36.324433+00:00",
+  "device": "TP-Link ER7206",
+  "diagnosis": "Confirmed ARP defense drops caused by stale IP-MAC bindings for new VM addresses.",
+  "before_snapshot_at": "2026-09-19T21:48:10.140Z",
+  "after_snapshot_at": "2026-09-19T21:55:13.804Z",
+  "changes": [
+    {
+      "ip": "192.168.20.180",
+      "before": {
+        "row_id": "11",
+        "ip": "192.168.20.180",
+        "mac": "BC-24-11-B2-54-E4",
+        "interface": "LAN",
+        "description": "yesod-runner-g1-tzadik (Yesod VLAN 20, VM151)",
+        "status": "Enabled"
+      },
+      "after": {
+        "row_id": "11",
+        "ip": "192.168.20.180",
+        "mac": "02-BD-C1-00-07-00",
+        "interface": "Yesod",
+        "description": "dataclean-postgres (Seykhl VM700)",
+        "status": "Enabled"
+      },
+      "matching_log_entries": 30,
+      "sample_log_entry": "2026-09-19 13:39:39 firewall[0]: <5> 05111101 [OMADA][osg:F0-09-0D-CA-FF-C8] detected ARP conflict and dropped 3 packets. (Packet=192.168.20.180:02-BD-C1-00-07-00, Bind-Rule=192.168.20.180:BC-24-11-B2-54-E4)"
+    },
+    {
+      "ip": "192.168.20.181",
+      "before": {
+        "row_id": "18",
+        "ip": "192.168.20.181",
+        "mac": "BC-24-11-F7-DB-CE",
+        "interface": "LAN",
+        "description": "yesod-gate-g1-ashmedai (Sefer VM233)",
+        "status": "Enabled"
+      },
+      "after": {
+        "row_id": "18",
+        "ip": "192.168.20.181",
+        "mac": "02-BD-C1-00-07-01",
+        "interface": "Yesod",
+        "description": "dataclean-minio (Seykhl VM701)",
+        "status": "Enabled"
+      },
+      "matching_log_entries": 30,
+      "sample_log_entry": "2026-09-19 13:39:44 firewall[0]: <5> 05111101 [OMADA][osg:F0-09-0D-CA-FF-C8] detected ARP conflict and dropped 2 packets. (Packet=192.168.20.181:02-BD-C1-00-07-01, Bind-Rule=192.168.20.181:BC-24-11-F7-DB-CE)"
+    },
+    {
+      "ip": "192.168.20.183",
+      "before": {
+        "row_id": "28",
+        "ip": "192.168.20.183",
+        "mac": "BC-24-11-FF-BA-09",
+        "interface": "LAN",
+        "description": "test-db-g1-lilith (Sefer CT244)",
+        "status": "Enabled"
+      },
+      "after": {
+        "row_id": "28",
+        "ip": "192.168.20.183",
+        "mac": "02-BD-C1-00-07-03",
+        "interface": "Yesod",
+        "description": "dataclean-api (Seykhl VM703)",
+        "status": "Enabled"
+      },
+      "matching_log_entries": 34,
+      "sample_log_entry": "2026-09-19 13:39:50 firewall[0]: <5> 05111101 [OMADA][osg:F0-09-0D-CA-FF-C8] detected ARP conflict and dropped 1 packets. (Packet=192.168.20.183:02-BD-C1-00-07-03, Bind-Rule=192.168.20.183:BC-24-11-FF-BA-09)"
+    }
+  ],
+  "other_binding_rows_unchanged": 31,
+  "general_settings_before": {
+    "enable": true,
+    "imb_pass": false,
+    "garp": false,
+    "log_enable": false
+  },
+  "general_settings_after": {
+    "enable": true,
+    "imb_pass": false,
+    "garp": false,
+    "log_enable": false
+  },
+  "full_log_sha256": "20613e38ee26faf22dd31a30cd536a3b0467c0a462230487623ef4488655c338",
+  "log_timestamps": "As displayed by router; timezone not independently verified.",
+  "validation": "Each corrected VM returned HTTP 200 from the Debian HTTPS endpoint immediately after correction. Full reboot acceptance is recorded separately in base-vms.json.",
+  "router_dhcp_vlan20": "Disabled, confirmed on Network > LAN; active reservations are on Seykhl dnsmasq. Historical router DHCP reservations were not edited."
+}

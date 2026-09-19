@@ -1,8 +1,14 @@
 # Host and guest networks
 
-**Last verified:** 2026-09-05 from host interfaces, routing tables, VM bridge
+**Full network audit:** 2026-09-05 from host interfaces, routing tables, VM bridge
 configuration, and guest addresses. Physical connection roles were confirmed
 by Stephen during the audit.
+
+**Scoped update, 2026-09-19:** four data-cleaning base VMs on Seykhl passed
+network checks before and after reboot. Three obsolete VM ARP bindings were
+corrected and three camera/controller bindings removed from the ER7206. See
+[router repairs, remaining rules and allocation guidance](ROUTER_BINDINGS.md).
+The host and older guest tables below retain their September 5 audit scope.
 
 ## Proxmox host access
 
@@ -15,6 +21,12 @@ by Stephen during the audit.
 Both hosts participate in `192.168.20.0/24`. Sefer has two active physical
 connections and retains its direct 10 GbE address. It has not moved exclusively
 to VLAN 20. Seykhl no longer has `192.168.0.202` assigned.
+
+Sefer's trusted-LAN connection is intentional: Stephen reconfirmed on September
+19 that it provides fast access to the NAS, Homestar. The retained router rule
+labelled `Sefer 10gbe` at `.0.218` has not been reconciled with the `.0.100`
+address observed in the host audit; it does not establish a second live address
+or justify removing the trusted connection.
 
 Use `https://192.168.20.10:8006` for Sefer and
 `https://192.168.20.202:8006` for Seykhl. Sefer's direct-side UI remains at
@@ -30,7 +42,7 @@ The live bridge configuration has no Linux VLAN subinterface or guest `tag=20`
 setting. VLAN placement is provided by the physical switch/router ports.
 Sefer's two bridges must not be treated as interchangeable.
 
-## Guest placement
+## Guest placement (September 5 snapshot)
 
 | Network | Host bridge | Current workloads |
 |---|---|---|
@@ -53,17 +65,20 @@ and SSH entries using the previous LAN addresses need updating on each client.
 The administrator Mac's three SSH aliases still pointed to the old addresses
 when inspected; this documentation audit did not edit workstation networking.
 
-The complete observed guest addresses, bridges, and boot policies are in
+The September 5 observed guest addresses, bridges, and boot policies are in
 [INVENTORY.md](INVENTORY.md). DHCP addresses and stale cloud-init values must
-not be mistaken for router reservations; the router's lease/reservation table
-was not audited.
+not be mistaken for router reservations. The September 19
+[router audit](ROUTER_BINDINGS.md) records the later scoped inspection of
+bindings, leases and reservations, including historical entries still present.
 
 ## Name resolution
 
-**Added 2026-09-10.** The fleet now has a LAN name server: dnsmasq on Seykhl at
-`192.168.20.202`, authoritative for `internal.yesod.work`, serving VLAN 20 and
-— because trusted → VLAN 20 is open — the trusted LAN too. The ER7206's VLAN 20
-DHCP scope now hands out that resolver and the search domain.
+**Updated 2026-09-19.** LAN DNS runs on Seykhl at `192.168.20.202` and Sefer
+at `192.168.20.10`, authoritative for `internal.yesod.work`, serving VLAN 20
+and the trusted LAN. VLAN 20 DHCP moved to Seykhl dnsmasq on September 13;
+Sefer remains DNS-only and the ER7206's Yesod DHCP server is disabled.
+Seykhl supplies the resolver and search-domain options. Router ARP bindings
+still apply independently of its DHCP setting.
 
 This replaces the previous situation, in which the router forwarded DNS but
 served no LAN names, and cross-VLAN resolution was impossible: mDNS `.local`
@@ -75,7 +90,7 @@ address is reachable from both segments; `sefer-trusted` is the direct 10 GbE
 address. This mirrors the bridge warning above — the two paths are not
 interchangeable.
 
-Full configuration, verification commands and the staged DHCP migration are in
+Full configuration, verification commands and DHCP handover history are in
 [LAN_DNS.md](LAN_DNS.md).
 
 ## Read-only verification

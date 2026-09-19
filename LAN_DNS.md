@@ -1,8 +1,9 @@
 # LAN DNS and DHCP (dnsmasq on Seykhl + Sefer)
 
-**Last verified:** 2026-09-10 from the running services on both hosts, the
+**Original DNS verification:** 2026-09-10 from the running services on both hosts, the
 ER7206 web UI, live resolution tests executed on gate demons on both VLANs, and
-a failover test with the primary resolver stopped.
+a failover test with the primary resolver stopped. Scoped DHCP, new-VM and
+router-binding updates are recorded in the September 19 section below.
 
 > **Interim by design.** This service exists because the fleet had no LAN name
 > resolution and a names-only contract began to fail closed. It is expected to
@@ -20,7 +21,7 @@ handover supersedes the historical staged-only statements below. Do not enable
 a second DHCP server on the router. The pool is still `.20`–`.119`. The repository
 source retains the historical filename `dns/phase2-dhcp.conf.staged`.
 
-Bead `btdcv1-26f.1` adds four durable data-cleaning VMs on Seykhl:
+Completed bead `btdcv1-26f.1` added four durable data-cleaning base VMs on Seykhl:
 
 | VM | Name | Address | MAC |
 | --- | --- | --- | --- |
@@ -41,7 +42,29 @@ The historical `dhcp` DNS alias still points to the router; that alias is not
 proof of which machine currently serves leases.
 
 Deployment scripts, image checksum, disk inventory, and reboot verification are
-in [the data-cleaning project](https://github.com/stephenVertex/braintrust-dataclean-expert-test-alpha/tree/main/infra).
+in [the data-cleaning project at 88def23](https://github.com/stephenVertex/braintrust-dataclean-expert-test-alpha/tree/88def23/infra).
+All four base VMs passed acceptance before and after reboot; applications are
+not installed and their extra data disks remain blank.
+
+### Router bindings are separate from DHCP
+
+Stale ER7206 ARP bindings blocked `.20.180`, `.20.181` and `.20.183` even with
+router DHCP disabled on Yesod. Those three bindings now use the new VM MACs,
+labels and Yesod interface. The later cleanup removed the obsolete camera
+binding at `.0.118` and old-controller bindings at `.0.192` and `.20.192`.
+All 31 remaining bindings, six ACL entries and 53 DHCP reservations were
+preserved. ARP defense remains enabled; binding-only allowlisting is off.
+
+Historical router reservations for the new VM addresses remain inactive.
+The old-controller reservations remain to guard the service addresses against
+automatic reuse; follow-up bead `proxmox-bog` tracks ownership reconciliation.
+Do not re-enable the router's Yesod DHCP server using its old reservation table.
+
+Before allocating an address, check active DHCP leases/reservations, DNS,
+live and stopped guest ownership on both hosts, and the router's IP-MAC
+Binding, ARP List and Address Reservation tables. A silent duplicate-address
+probe cannot rule out stale router policy. See [ROUTER_BINDINGS.md](ROUTER_BINDINGS.md)
+for exact changes, current rules, controller addresses and verification limits.
 
 ## Why this exists
 
@@ -93,7 +116,7 @@ all).
 | Per-host interfaces | `/etc/dnsmasq.d/11-yesod-lan-iface.conf` |
 | Host inventory | `/etc/yesod/dns/infra.hosts` (identical on both, checksum-verified) |
 | Bind mode | `bind-dynamic`, restricted by `interface=`; **never** `tailscale0` |
-| Phase 2 (staged, inactive, Seykhl only) | `/etc/yesod/dns/phase2-dhcp.conf.staged` |
+| Active VLAN 20 DHCP (Seykhl only, since September 13) | `/etc/dnsmasq.d/20-yesod-lan-dhcp.conf`; repo source `dns/phase2-dhcp.conf.staged` |
 | Resolvconf suppression | `IGNORE_RESOLVCONF=yes` in `/etc/default/dnsmasq` |
 | Log | `/var/log/dnsmasq.log` |
 | Unit state | `enabled`, `active`, `Restart=on-failure` on both |
@@ -202,7 +225,11 @@ when the direct side is specifically wanted. This is the same trap as Sefer's
 two bridges in [NETWORK.md](NETWORK.md) — the two paths are not
 interchangeable.
 
-## Router configuration (ER7206)
+## Router configuration (ER7206, September 10 history)
+
+The following records the original DNS-option change. Since September 13,
+the router's Yesod DHCP server has been disabled and Seykhl serves the scope;
+these historical settings and rollback notes are not the current DHCP runbook.
 
 Changed 2026-09-10 under `Network → LAN → Network List → Yesod (VLAN 20) → Edit`.
 Values before the change: all four optional fields were **empty**, which is why
@@ -258,11 +285,15 @@ Verified on `yesod-gate-dg5-ziz-b33d`: netplan `dhcp4: true` under
 systemd-networkd with no `SendHostname` override, so the default (send it)
 applies.
 
-**This requires dnsmasq to own DHCP, which is phase 2.** Phase 1 serves no
-DHCP at all — no `dhcp-range` is configured anywhere, and nothing listens on
-udp/67.
+This requires dnsmasq to own DHCP, which became active on Seykhl on September
+13. The original September 10 phase 1 was DNS-only. Sefer remains DNS-only.
 
 ## Phase 2 — investigated 2026-09-10 and NOT DONE (proxmox-7ik closed)
+
+**Historical decision, superseded by the September 13 handover.** The following
+rationale, staged settings and activation/rollback commands describe the
+September 10 proposal. Use the current-state section for the active file and
+DHCP owner; do not repeat this old activation sequence on the live system.
 
 > **Decision: do not move DHCP off the router.** The config below stays staged
 > and documented because it costs nothing to keep, but the case for running it
@@ -363,7 +394,7 @@ Service and inventory, per host (`192.168.20.202` Seykhl, `192.168.20.10` Sefer)
 
 ```bash
 ssh -o BatchMode=yes root@192.168.20.202 'systemctl is-active dnsmasq; systemctl is-enabled dnsmasq'
-ssh -o BatchMode=yes root@192.168.20.202 'ss -lunp | grep -w 53; ss -lunp | grep -w 67 || echo "no DHCP served (expected in phase 1)"'
+ssh -o BatchMode=yes root@192.168.20.202 'ss -lunp | grep -w 53; ss -lunp | grep -w 67'
 ssh -o BatchMode=yes root@192.168.20.202 'dnsmasq --test; tail -5 /var/log/dnsmasq.log'
 ```
 
@@ -384,13 +415,14 @@ binary; tcp/53 was open the whole time.
 ssh -o BatchMode=yes stephen@<demon> 'for n in ntp dns nas seykhl sefer postgres; do host -W2 "$n" 192.168.20.202; done'
 ```
 
-Client pick-up, after a renewal:
+Historical September 10 client pick-up check, after a renewal:
 
 ```bash
 ssh -o BatchMode=yes root@sefer 'pct exec 260 -- sh -c "grep -v ^# /etc/resolv.conf; getent hosts ntp"'
 ```
 
-Expected:
+Historical example (the router fallback shown here was subsequently replaced
+by Sefer at `192.168.20.10`; current clients should receive both real resolvers):
 
 ```
 domain internal.yesod.work
@@ -524,9 +556,11 @@ startup, so a bridge coming up a moment late at boot meant a permanent failure.
 - **The inventory is hand-curated.** It lives in the repo at `dns/infra.hosts`
   and is deployed to both hosts, so the two cannot drift from each other — but
   it can still drift from reality as guests move. See below.
-- **`yesod-runner-g1-dispatch` is absent on purpose.** It is mid-cutover
-  between `192.168.0.192` and `192.168.20.192`; a confidently wrong record is
-  worse than a missing one. Add `192.168.20.192` once the move sticks.
+- **Controller ownership still needs reconciliation.** The `.20.192`
+  log-relay/controller DNS record is present as of September 19. Current VM175
+  owns both `.20.192` and the trusted compatibility alias `.0.192`; old VM152
+  DHCP reservations remain. See [the router report](ROUTER_BINDINGS.md) and
+  follow-up bead `proxmox-bog` before changing these service-address records.
 - **The g1 demons** resolve through this server but still take `192.168.0.1`
   from the trusted DHCP scope. They are being retired, so this is not worth a
   router edit.
@@ -554,6 +588,7 @@ Until then this document and the two files on Seykhl are the source of truth.
 ## See also
 
 - [NETWORK.md](NETWORK.md) — host and guest networks, the two-bridge trap
+- [ROUTER_BINDINGS.md](ROUTER_BINDINGS.md) - September 19 ARP repairs, retained rules and allocation checks
 - [INVENTORY.md](INVENTORY.md) — observed guest addresses, bridges, boot policy
 - [TAILSCALE_PLAN.md](TAILSCALE_PLAN.md) — MagicDNS and the tailnet
 - [DOMAINS.md](DOMAINS.md) — domains Stephen owns
