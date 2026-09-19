@@ -198,16 +198,40 @@ VM does not establish that its applications are healthy.
 
 The fleet defaults to running VMs on both hosts and supports host, state,
 VM/container and text filters. Stopped guests and templates are included in
-the inventory. RAM and disk columns show **configured capacity in GiB**, not
+the inventory. Every column has a sortable header, with numeric ordering for
+CPU, VMID, RAM and disk; the selected sort persists across refreshes and filters.
+RAM and disk columns show **configured capacity in GiB**, not
 guest free space or physical allocation. Disk capacity includes all configured
 data disks, excluding ISO and cloud-init devices. Host cards show running VM
 and container counts, RAM usage, and available primary Proxmox storage.
 
-Every 30 seconds Dertog polls Sefer (`192.168.20.10`) and Seykhl
+Every 10 seconds Dertog polls Sefer (`192.168.20.10`) and Seykhl
 (`192.168.20.202`) concurrently. A failed refresh retains and marks the last
 successful inventory as stale; an initial failure shows unavailable rather
 than a zero count. Readings also expire after 90 seconds. Each guest is keyed
 by host, kind and VMID, since IDs overlap between these standalone hosts.
+
+**CPU load:** the meter immediately left of vCPU shows the mean of distinct
+native CPU samples from the last 60 seconds. The latest sample and its age
+are shown underneath. Green is below 60%, yellow is 60% to below 85%, and red
+is 85% or higher. 100% uses all allocated vCPUs. Proxmox can report slightly
+above 100% due to virtualization overhead; the numeric label preserves that
+reading while the bar stops at its full width.
+
+The restricted helper reads `/cluster/metrics/export` with `local-only=1`,
+`history=1`, and a start time 60 seconds ago. This is Proxmox's existing
+`pvestatd` cache, sampled roughly every 10 seconds, and includes original
+timestamps. The backend does not need to build a new history after restarting.
+Samples before the current guest boot, invalid readings and duplicate
+timestamps are excluded. A short initial window is labeled "Warming up".
+Missing/stopped guest readings are shown as unavailable, and CPU samples older
+than 30 seconds or from an unreachable host become grey and are labeled stale.
+Stale/missing CPU values sort after current values in both directions.
+
+The browser polls `/_fleet.json` every five seconds; it never opens SSH or
+starts a collection itself. All open browsers share Dertog's background cache.
+The collection loop targets a ten-second cadence without overlapping runs.
+No credentials or monitoring software are installed inside the guests.
 
 Service labels live in `placements.json`, keyed by guest identity and expected
 name. Reusing an ID with a different name does not inherit the old service
@@ -255,13 +279,38 @@ Backend tests cover duplicate IDs, ID reuse, stale/unavailable data, disk
 capacity and preservation of symlinked application routes. Browser checks cover
 filters, badge navigation, failure states, themes and mobile layout.
 
-Rollback copies are retained on Dertog:
+**CPU meter update, September 18:** added timestamped one-minute CPU windows
+and sortable columns. `tests/test_fleet_dashboard.py` checks window expiry,
+deduplication, restarts, invalid/missing metrics, and stale samples even when
+inventory refresh succeeds. `tests/fleet_cpu_browser.cjs` checks actual sample
+advancement on both hosts, all nine sortable columns, green/yellow/red levels,
+stale readings, automatic page updates, keyboard sorting, themes and mobile
+width. Run it with Playwright on `NODE_PATH` and an optional
+`PLAYWRIGHT_CHROMIUM_EXECUTABLE` browser path:
 
 ```bash
-cp -f ~/cluster-services.before-20260918-fleet/index.html ~/cluster-services/index.html
-cp -f ~/cluster-services-serve.py.before-20260918-fleet ~/cluster-services-serve.py
+node tests/fleet_cpu_browser.cjs https://dertog.tailb4b58.ts.net/
+```
+
+The pre-CPU dashboard directory and backend are preserved on Dertog as
+`~/cluster-services.before-20260918-cpu` and
+`~/cluster-services-serve.py.before-20260918-cpu`. The previous collector is
+`/usr/local/sbin/proxmox-dashboard-read.before-20260918-cpu` on both hosts.
+
+To roll back the CPU update on Dertog:
+
+```bash
+for asset in index.html fleet.js fleet.css; do
+    cp -f ~/cluster-services.before-20260918-cpu/"$asset" ~/cluster-services/"$asset"
+done
+cp -f ~/cluster-services-serve.py.before-20260918-cpu ~/cluster-services-serve.py
 systemctl --user restart cluster-services
 ```
+
+The older `.before-20260918-fleet` directory/backend also remain available if
+the entire fleet feature needs reverting. The CPU helper's additional data is
+backward compatible with the pre-CPU backend; restore the saved helper on both
+hosts as well to remove the CPU collection query.
 
 ### Yesod API Server (port 8090 / HTTPS /yesod/)
 

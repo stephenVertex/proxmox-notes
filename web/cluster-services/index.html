@@ -920,10 +920,21 @@
             </div>
             <div class="fleet-table-wrap" role="region" aria-label="Guest inventory" tabindex="0">
                 <table class="fleet-table">
-                    <thead><tr><th scope="col">Host</th><th scope="col">ID</th><th scope="col">Name / tags</th><th scope="col">State</th><th scope="col">Services / role</th><th scope="col" class="number">vCPU</th><th scope="col" class="number">RAM GiB</th><th scope="col" class="number">Disk GiB</th></tr></thead>
+                    <thead><tr>
+                        <th scope="col" aria-sort="ascending"><button class="sort-button" data-sort="host">Host<span class="sort-arrow" aria-hidden="true">↑</span></button></th>
+                        <th scope="col"><button class="sort-button" data-sort="vmid">ID<span class="sort-arrow" aria-hidden="true">↕</span></button></th>
+                        <th scope="col"><button class="sort-button" data-sort="name">Name / tags<span class="sort-arrow" aria-hidden="true">↕</span></button></th>
+                        <th scope="col"><button class="sort-button" data-sort="status">State<span class="sort-arrow" aria-hidden="true">↕</span></button></th>
+                        <th scope="col"><button class="sort-button" data-sort="services">Services / role<span class="sort-arrow" aria-hidden="true">↕</span></button></th>
+                        <th scope="col"><button class="sort-button" data-sort="cpu">CPU load · 1m<span class="sort-arrow" aria-hidden="true">↕</span></button></th>
+                        <th scope="col" class="number"><button class="sort-button" data-sort="cpus">vCPU<span class="sort-arrow" aria-hidden="true">↕</span></button></th>
+                        <th scope="col" class="number"><button class="sort-button" data-sort="memory_bytes">RAM GiB<span class="sort-arrow" aria-hidden="true">↕</span></button></th>
+                        <th scope="col" class="number"><button class="sort-button" data-sort="disk_bytes">Disk GiB<span class="sort-arrow" aria-hidden="true">↕</span></button></th>
+                    </tr></thead>
                     <tbody id="fleet-body"></tbody>
                 </table>
             </div>
+            <p class="fleet-note">CPU bars show a rolling one-minute average, with the latest sample below. 100% means all allocated vCPUs are busy. Click any column heading to sort. <span class="cpu-legend"><span>Below 60%</span><span class="medium">60–85%</span><span class="high">85% and above</span></span></p>
             <p class="fleet-note">RAM and disk are configured capacities. Thin-provisioned disk capacity is not physical usage or guest free space. Service labels describe placement; generic runner and gate roles follow guest names. Host + kind + ID uniquely identifies a guest.</p>
         </section>
         <div class="footer">

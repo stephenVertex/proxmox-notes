@@ -3,6 +3,8 @@
   let snapshot = null;
   let busy = false;
   let connectionError = false;
+  let sortKey = 'host';
+  let sortDirection = 1;
   const $ = id => document.getElementById(id);
   const title = text => text.charAt(0).toUpperCase() + text.slice(1);
   const gib = bytes => Number.isFinite(bytes) ? (bytes / 2 ** 30).toLocaleString(undefined, {maximumFractionDigits: 1}) : '—';
@@ -20,6 +22,52 @@
     return host.state;
   };
   const guests = () => (snapshot?.hosts || []).flatMap(host => host.guests.map(guest => ({...guest, freshness: hostState(host)})));
+  const percent = fraction => `${(fraction * 100).toFixed(1)}%`;
+  const cpuFresh = guest => guest.freshness === 'ok' && guest.cpu && guest.cpu.state !== 'stale' &&
+    Date.now() / 1000 - guest.cpu.sampled_at >= 0 &&
+    Date.now() / 1000 - guest.cpu.sampled_at <= (snapshot?.cpu_stale_seconds || 30);
+  const sortValue = guest => {
+    if (sortKey === 'cpu') return cpuFresh(guest) ? guest.cpu.average : null;
+    if (sortKey === 'services') return guest.services.join(', ') || null;
+    return guest[sortKey] ?? null;
+  };
+  function compareGuests(a, b) {
+    const left = sortValue(a), right = sortValue(b);
+    // Unknown/stale CPU values stay below current readings in either direction.
+    if (left === null && right !== null) return 1;
+    if (right === null && left !== null) return -1;
+    const difference = left === null ? 0 : typeof left === 'number' && typeof right === 'number'
+      ? left - right : String(left).localeCompare(String(right), undefined, {numeric: true, sensitivity: 'base'});
+    return difference * sortDirection || a.host.localeCompare(b.host) || a.vmid - b.vmid || a.type.localeCompare(b.type);
+  }
+
+  function cpuCell(guest) {
+    const cell = element('td', undefined, 'cpu-cell');
+    const cpu = guest.cpu;
+    if (!cpu || !Number.isFinite(cpu.average) || !Number.isFinite(cpu.current)) {
+      cell.append(element('span', '—'), element('div', guest.status === 'running' ? 'No recent sample' : 'Not running', 'guest-subline'));
+      return cell;
+    }
+    const fresh = cpuFresh(guest);
+    const level = !fresh ? 'stale' : cpu.average >= .85 ? 'high' : cpu.average >= .6 ? 'medium' : 'low';
+    cell.dataset.level = level;
+    const label = element('div', undefined, 'cpu-label');
+    label.append(element('strong', percent(cpu.average)), element('span', !fresh ? 'Stale' : cpu.sample_count < 5 ? 'Warming up' : '1m avg'));
+    const meter = element('div', undefined, `cpu-meter ${level}`);
+    meter.setAttribute('role', 'meter');
+    meter.setAttribute('aria-label', `${guest.name} CPU usage, rolling one-minute average`);
+    meter.setAttribute('aria-valuemin', '0');
+    meter.setAttribute('aria-valuemax', '100');
+    meter.setAttribute('aria-valuenow', Math.min(100, cpu.average * 100).toFixed(1));
+    meter.setAttribute('aria-valuetext', `${percent(cpu.average)}${fresh ? '' : ', stale reading'}`);
+    meter.title = `Average of ${cpu.sample_count} distinct Proxmox samples in the last minute. 100% uses all allocated vCPUs.`;
+    const fill = element('span', undefined, 'cpu-fill');
+    fill.style.width = `${Math.min(100, cpu.average * 100)}%`;
+    meter.append(fill);
+    const age = Math.max(0, Math.round(Date.now() / 1000 - cpu.sampled_at));
+    cell.append(label, meter, element('div', `${fresh ? 'Now' : 'Last'} ${percent(cpu.current)} · ${age}s ago`, 'guest-subline'));
+    return cell;
+  }
 
   function switchView() {
     const fleet = location.hash === '#fleet';
@@ -75,7 +123,7 @@
       ? 'The dashboard could not refresh. Retained readings are marked stale; they do not confirm current VM state.'
       : problems.map(host => `${title(host.host)} inventory is ${hostState(host)}. ${host.observed_at ? 'Showing its last successful reading.' : 'Its guests are not yet included.'}`).join(' ');
     const times = hosts.filter(h => h.observed_at).map(h => Date.parse(h.observed_at));
-    $('timestamp').textContent = times.length ? `Inventory observed ${new Date(Math.min(...times)).toLocaleString()} · refreshes every 30 seconds` : 'Connecting to Sefer and Seykhl…';
+    $('timestamp').textContent = times.length ? `Inventory observed ${new Date(Math.min(...times)).toLocaleString()} · collected every ${snapshot?.refresh_seconds || 10}s · page updates every 5s` : 'Connecting to Sefer and Seykhl…';
   }
 
   function renderPlacements() {
@@ -127,7 +175,12 @@
     const host = $('fleet-host').value, kind = $('fleet-kind').value, state = $('fleet-state').value;
     const rows = guests().filter(g => (host === 'all' || g.host === host) && (kind === 'all' || g.type === kind) &&
       (state === 'all' || g.status === state) && (!query || [g.name, g.vmid, g.host, ...g.services, ...g.tags, ...g.storage].join(' ').toLowerCase().includes(query)))
-      .sort((a, b) => a.host.localeCompare(b.host) || a.vmid - b.vmid || a.type.localeCompare(b.type));
+      .sort(compareGuests);
+    document.querySelectorAll('.sort-button').forEach(button => {
+      const active = button.dataset.sort === sortKey;
+      button.closest('th').setAttribute('aria-sort', active ? (sortDirection === 1 ? 'ascending' : 'descending') : 'none');
+      button.querySelector('.sort-arrow').textContent = active ? (sortDirection === 1 ? '↑' : '↓') : '↕';
+    });
     body.replaceChildren();
     for (const guest of rows) {
       const row = element('tr'); row.dataset.key = guest.key;
@@ -143,14 +196,14 @@
       else services.append(element('span', 'Not catalogued', 'guest-subline'));
       const disk = element('td', gib(guest.disk_bytes), 'number');
       disk.append(element('div', guest.storage.join(', '), 'guest-subline'));
-      row.append(hostCell, idCell, name, status, services, element('td', guest.cpus, 'number'), element('td', gib(guest.memory_bytes), 'number'), disk);
+      row.append(hostCell, idCell, name, status, services, cpuCell(guest), element('td', guest.cpus, 'number'), element('td', gib(guest.memory_bytes), 'number'), disk);
       body.append(row);
     }
     if (!rows.length) {
       const waiting = !snapshot || snapshot.hosts.some(h => hostState(h) === 'loading');
       const unavailable = snapshot && snapshot.hosts.every(h => !h.observed_at);
       const row = element('tr'), cell = element('td', waiting ? 'Waiting for host inventory…' : unavailable ? 'Host inventory is unavailable. Try refreshing shortly.' : 'No guests match these filters.', 'fleet-empty');
-      cell.colSpan = 8; row.append(cell); body.append(row);
+      cell.colSpan = 9; row.append(cell); body.append(row);
     }
     const label = kind === 'qemu' ? 'VMs' : kind === 'lxc' ? 'containers' : 'guests';
     const incomplete = snapshot?.hosts.some(h => hostState(h) !== 'ok');
@@ -174,9 +227,15 @@
   }
 
   ['fleet-host', 'fleet-kind', 'fleet-state'].forEach(id => $(id).addEventListener('change', renderTable));
+  document.querySelectorAll('.sort-button').forEach(button => button.addEventListener('click', () => {
+    const key = button.dataset.sort;
+    sortDirection = key === sortKey ? -sortDirection : ['cpu', 'cpus', 'memory_bytes', 'disk_bytes'].includes(key) ? -1 : 1;
+    sortKey = key;
+    renderTable();
+  }));
   $('fleet-search').addEventListener('input', renderTable);
   $('fleet-refresh').addEventListener('click', refresh);
   window.addEventListener('hashchange', switchView);
   switchView(); renderHosts(); renderPlacements(); renderTable(); refresh();
-  setInterval(refresh, 30000);
+  setInterval(refresh, 5000);
 })();

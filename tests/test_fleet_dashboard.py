@@ -113,6 +113,63 @@ class DiskCapacityTests(unittest.TestCase):
         self.assertEqual(collector.configured_disks('', 1024), (1024, []))
 
 
+class CpuWindowTests(unittest.TestCase):
+    def test_timestamped_window_expires_samples_and_ignores_duplicate_generations(self):
+        metrics = {'data': [
+            {'id': 'qemu/101', 'metric': 'cpu_current', 'timestamp': stamp, 'value': value}
+            for stamp, value in [(939, .9), (940, .9), (950, .2), (960, .4), (960, .4), (1001, .8)]
+        ]}
+        row = {'vmid': 101, 'status': 'running', 'uptime': 1000}
+        cpu = collector.cpu_window(collector.cpu_samples(metrics), 'qemu', row, 1000)
+        self.assertAlmostEqual(cpu['average'], .3)
+        self.assertEqual(cpu['current'], .4)
+        self.assertEqual(cpu['sample_count'], 2)
+        self.assertEqual(cpu['sampled_at'], 960)
+        self.assertIsNone(collector.cpu_window(collector.cpu_samples(metrics), 'qemu', row, 1100))
+
+    def test_new_boot_does_not_inherit_old_cpu_and_inactive_guests_have_no_usage(self):
+        samples = {'qemu/101': {970: .9, 990: .1}, 'lxc/101': {990: .8}}
+        row = {'vmid': 101, 'status': 'running', 'uptime': 15}
+        self.assertEqual(collector.cpu_window(samples, 'qemu', row, 1000)['average'], .1)
+        self.assertEqual(collector.cpu_window(samples, 'lxc', row, 1000)['average'], .8)
+        self.assertIsNone(collector.cpu_window(samples, 'qemu', {**row, 'status': 'stopped'}, 1000))
+        self.assertIsNone(collector.cpu_window(samples, 'qemu', {**row, 'template': 1}, 1000))
+
+    def test_invalid_metrics_are_missing_but_zero_and_overhead_above_100_percent_are_valid(self):
+        metrics = {'data': [
+            {'id': 'qemu/101', 'metric': 'cpu_current', 'timestamp': stamp, 'value': value}
+            for stamp, value in [(950, None), (960, float('nan')), (970, -1), (980, 0), (990, 1.03)]
+        ]}
+        row = {'vmid': 101, 'status': 'running', 'uptime': 1000}
+        cpu = collector.cpu_window(collector.cpu_samples(metrics), 'qemu', row, 1000)
+        self.assertEqual(cpu['sample_count'], 2)
+        self.assertEqual(cpu['average'], .515)
+        self.assertEqual(cpu['current'], 1.03)
+
+    def test_frozen_cpu_samples_expire_even_when_inventory_refresh_succeeds(self):
+        def fetch(host, address):
+            data = host_data(host)
+            data['guests'][0]['cpu'] = {'current': .5, 'average': .4, 'sample_count': 6,
+                'sampled_at': datetime.datetime.now(datetime.timezone.utc).timestamp() - 40}
+            return data
+        fleet = dashboard.Fleet({}, fetch)
+        fleet.refresh()
+        result = fleet.snapshot()
+        self.assertTrue(result['complete'])
+        self.assertEqual(result['hosts'][0]['guests'][0]['cpu']['state'], 'stale')
+
+    def test_cpu_endpoint_failure_preserves_guest_inventory(self):
+        def query(node, resource):
+            if resource == 'metrics':
+                raise TimeoutError('metrics unavailable')
+            return {'qemu': [{'vmid': 101, 'status': 'running', 'uptime': 1000}],
+                    'lxc': [], 'status': {}, 'storage': []}[resource]
+        with patch.object(collector, 'query', side_effect=query), patch.object(collector.Path, 'read_text', return_value=''):
+            data = collector.collect('sefer')
+        self.assertEqual(len(data['guests']), 1)
+        self.assertIsNone(data['guests'][0]['cpu'])
+
+
 class StaticRoutesTests(unittest.TestCase):
     def test_existing_release_symlinks_and_assets_remain_public(self):
         with tempfile.TemporaryDirectory() as temp:

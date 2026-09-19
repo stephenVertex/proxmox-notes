@@ -41,6 +41,22 @@
 .fleet-table-wrap { overflow-x: auto; border: 1px solid var(--panel-line); border-radius: 9px; background: var(--panel); }
 .fleet-table { width: 100%; border-collapse: collapse; font-size: .82rem; text-align: left; }
 .fleet-table th { padding: 12px 10px; color: var(--text-dim); background: var(--panel2); white-space: nowrap; font-size: .72rem; font-weight: 600; }
+.sort-button { background: none; border: 0; padding: 4px 0; color: inherit; font: inherit; cursor: pointer; white-space: nowrap; }
+.sort-button:hover, th[aria-sort="ascending"], th[aria-sort="descending"] { color: var(--text); }
+.sort-arrow { display: inline-block; width: 1em; margin-left: 3px; color: var(--text-dim); }
+.cpu-cell { min-width: 155px; font-variant-numeric: tabular-nums; }
+.cpu-label { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.cpu-label span { color: var(--text-dim); font-size: .68rem; white-space: nowrap; }
+.cpu-meter { height: 9px; margin-top: 6px; background: var(--panel2); border: 1px solid var(--panel-line); border-radius: 5px; overflow: hidden; }
+.cpu-fill { display: block; height: 100%; border-radius: 4px; background: #3ddc84; }
+.cpu-meter.medium .cpu-fill { background: #f5c542; }
+.cpu-meter.high .cpu-fill { background: #f06464; }
+.cpu-meter.stale .cpu-fill { background: var(--c-muted); }
+.cpu-cell[data-level="stale"] .cpu-label strong { color: var(--text-dim); }
+.cpu-legend { display: inline-flex; flex-wrap: wrap; gap: 12px; }
+.cpu-legend span::before { content: ''; display: inline-block; width: 8px; height: 8px; margin-right: 5px; border-radius: 2px; background: #3ddc84; }
+.cpu-legend .medium::before { background: #f5c542; }
+.cpu-legend .high::before { background: #f06464; }
 .fleet-table td { padding: 13px 10px; border-top: 1px solid var(--line); vertical-align: top; }
 .fleet-table tr:hover td { background: var(--mono-bg); }
 .fleet-table .guest-name { font-weight: 600; overflow-wrap: anywhere; min-width: 200px; max-width: 290px; }
@@ -59,6 +75,6 @@
   .secure-url a { overflow-wrap: anywhere; min-width: 0; }
   .fleet-filters label:not(.search-filter) { flex: 1; min-width: 100px; }
   .fleet-filters .search-filter { flex-basis: 100%; }
-  .fleet-table { min-width: 950px; }
+  .fleet-table { min-width: 1120px; }
   h1 { font-size: 2rem; }
 }

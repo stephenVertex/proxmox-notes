@@ -9,13 +9,15 @@ import os
 from pathlib import Path
 import subprocess
 import threading
+import time
 from urllib.parse import unquote, urlsplit
 
 DIRECTORY = Path(os.environ.get('CLUSTER_SERVICES_DIRECTORY', '~/cluster-services')).expanduser()
 PORT = int(os.environ.get('CLUSTER_SERVICES_PORT', '8092'))
 HOSTS = {'sefer': '192.168.20.10', 'seykhl': '192.168.20.202'}
-REFRESH_SECONDS = 30
+REFRESH_SECONDS = 10
 STALE_SECONDS = 90
+CPU_STALE_SECONDS = 30
 KEY = Path('~/.ssh/proxmox-dashboard').expanduser()
 
 
@@ -92,13 +94,19 @@ class Fleet:
                 if age > STALE_SECONDS and host['state'] == 'ok':
                     host['state'] = 'stale'
                     host['error'] = 'This host inventory has not refreshed recently.'
+            for guest in host['guests']:
+                if guest.get('cpu'):
+                    guest['cpu']['state'] = 'ok' if (host['state'] == 'ok' and
+                        0 <= now.timestamp() - guest['cpu']['sampled_at'] <= CPU_STALE_SECONDS) else 'stale'
         return {'hosts': hosts, 'complete': all(host['state'] == 'ok' for host in hosts),
-                'refresh_seconds': REFRESH_SECONDS, 'stale_seconds': STALE_SECONDS}
+                'refresh_seconds': REFRESH_SECONDS, 'stale_seconds': STALE_SECONDS,
+                'cpu_window_seconds': 60, 'cpu_stale_seconds': CPU_STALE_SECONDS}
 
     def run(self):
         while True:
+            started = time.monotonic()
             self.refresh()
-            self.wakeup.wait(REFRESH_SECONDS)
+            self.wakeup.wait(max(1, REFRESH_SECONDS - (time.monotonic() - started)))
             self.wakeup.clear()
 
 

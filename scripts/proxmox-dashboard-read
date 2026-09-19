@@ -3,19 +3,55 @@
 import concurrent.futures
 import datetime
 import json
+import math
 import os
 from pathlib import Path
 import re
 import socket
 import subprocess
+import time
+
+CPU_WINDOW_SECONDS = 60
 
 
 def query(node, resource):
+    if resource == 'metrics':
+        arguments = ['/cluster/metrics/export', '--local-only', '1', '--history', '1',
+                     '--start-time', str(int(time.time()) - CPU_WINDOW_SECONDS)]
+    else:
+        arguments = [f'/nodes/{node}/{resource}']
     result = subprocess.run(
-        ['/usr/bin/pvesh', 'get', f'/nodes/{node}/{resource}', '--output-format', 'json'],
+        ['/usr/bin/pvesh', 'get', *arguments, '--output-format', 'json'],
         check=True, capture_output=True, text=True, timeout=15,
     )
     return json.loads(result.stdout)
+
+
+def cpu_samples(metrics):
+    samples = {}
+    for metric in metrics.get('data', []):
+        if metric.get('metric') != 'cpu_current':
+            continue
+        timestamp, value = metric.get('timestamp'), metric.get('value')
+        if not all(isinstance(v, (int, float)) and not isinstance(v, bool)
+                   and math.isfinite(v) for v in (timestamp, value)) or value < 0:
+            continue
+        # Deduplicate cached generations by their original sample timestamp.
+        samples.setdefault(metric['id'], {})[timestamp] = value
+    return samples
+
+
+def cpu_window(samples, kind, row, now):
+    if row['status'] != 'running' or row.get('template'):
+        return None
+    # Do not mix pre-restart samples into a new VM's moving window.
+    cutoff = max(now - CPU_WINDOW_SECONDS, now - row.get('uptime', 0))
+    recent = sorted((stamp, value) for stamp, value in samples.get(f'{kind}/{row["vmid"]}', {}).items()
+                    if cutoff < stamp <= now)
+    if not recent:
+        return None
+    return {'current': recent[-1][1], 'average': sum(v for _, v in recent) / len(recent),
+            'sampled_at': recent[-1][0], 'sample_count': len(recent)}
 
 
 def configured_disks(config, fallback):
@@ -37,9 +73,16 @@ def configured_disks(config, fallback):
 
 
 def collect(node):
-    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as pool:
         futures = {name: pool.submit(query, node, name) for name in ('qemu', 'lxc', 'status', 'storage')}
+        metrics = pool.submit(query, node, 'metrics')
         data = {name: future.result() for name, future in futures.items()}
+        try:
+            samples = cpu_samples(metrics.result())
+        except Exception:
+            # CPU metrics are optional: keep the inventory available on failure.
+            samples = {}
+    now = time.time()
     guests = []
     for kind, folder in (('qemu', 'qemu-server'), ('lxc', 'lxc')):
         for row in data[kind]:
@@ -56,6 +99,7 @@ def collect(node):
                 'cpus': row.get('cpus', row.get('maxcpu', 0)),
                 'memory_bytes': row.get('maxmem', 0), 'memory_used_bytes': row.get('mem', 0),
                 'disk_bytes': disk, 'storage': storage,
+                'cpu': cpu_window(samples, kind, row, now),
                 'uptime': row.get('uptime', 0), 'lock': row.get('lock'),
                 'tags': [tag for tag in row.get('tags', '').split(';') if tag],
             })
