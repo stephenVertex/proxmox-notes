@@ -67,3 +67,15 @@
 192.168.0.169   bukher.internal.yesod.work bukher.lan bukher
 192.168.0.170   makor.internal.yesod.work makor.lan makor
 192.168.0.171   makor-runner-docker-1.internal.yesod.work makor-runner-docker-1.lan makor-runner-docker-1
+
+# 2026-09-18 yes-6kl4s.33: retained controller log-relay SERVICE address (owned by the live controller as a /32,
+# see ops/yesod-birth/controller-service-addresses.py). Long-lived and stably addressed, so it belongs here.
+# The yesod-runner-g1-dispatch aliases heal the 15 hand-installed fleet collectors (demons 189-197, runners 169-174)
+# that were rendered against VM152's DHCP-lease name; drop those aliases once .4 re-images/rebirths bake the literal address.
+192.168.20.192  log-relay.internal.yesod.work log-relay.lan log-relay yesod-runner-g1-dispatch.internal.yesod.work yesod-runner-g1-dispatch
+
+# Braintrust data cleaning v1, seykhl VMs 700-703 (btdcv1-26f.1).
+192.168.20.180  dataclean-postgres.internal.yesod.work dataclean-postgres
+192.168.20.181  dataclean-minio.internal.yesod.work dataclean-minio
+192.168.20.182  dataclean-dagster.internal.yesod.work dataclean-dagster
+192.168.20.183  dataclean-api.internal.yesod.work dataclean-api

@@ -12,6 +12,37 @@ a failover test with the primary resolver stopped.
 > temporary source of truth, not the permanent design. See
 > [Folding into yesod](#folding-into-yesod).
 
+## Current state verified 2026-09-19
+
+VLAN 20 DHCP is now **active on Seykhl**, using
+`/etc/dnsmasq.d/20-yesod-lan-dhcp.conf`; Sefer remains DNS-only. The September 13
+handover supersedes the historical staged-only statements below. Do not enable
+a second DHCP server on the router. The pool is still `.20`–`.119`. The repository
+source retains the historical filename `dns/phase2-dhcp.conf.staged`.
+
+Bead `btdcv1-26f.1` adds four durable data-cleaning VMs on Seykhl:
+
+| VM | Name | Address | MAC |
+| --- | --- | --- | --- |
+| 700 | dataclean-postgres | 192.168.20.180 | 02:BD:C1:00:07:00 |
+| 701 | dataclean-minio | 192.168.20.181 | 02:BD:C1:00:07:01 |
+| 702 | dataclean-dagster | 192.168.20.182 | 02:BD:C1:00:07:02 |
+| 703 | dataclean-api | 192.168.20.183 | 02:BD:C1:00:07:03 |
+
+They use static guest addresses plus matching reservations, and names under
+`internal.yesod.work` in `dns/infra.hosts` on both resolvers. The live `.192`
+log-relay/controller record was preserved and reconciled into the repository.
+
+The DHCP update preserved existing entries and the lease file, backed up the old
+configuration, added only these four reservations, and passed `dnsmasq --test`.
+`scripts/deploy-lan-dns.sh seykhl` and then `sefer` deployed DNS and reloaded the
+services. This is maintenance of the active service, not `--activate-dhcp`.
+The historical `dhcp` DNS alias still points to the router; that alias is not
+proof of which machine currently serves leases.
+
+Deployment scripts, image checksum, disk inventory, and reboot verification are
+in [the data-cleaning project](https://github.com/stephenVertex/braintrust-dataclean-expert-test-alpha/tree/main/infra).
+
 ## Why this exists
 
 The fleet relied on three name mechanisms, none of which covers the whole

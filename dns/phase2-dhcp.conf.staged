@@ -79,3 +79,9 @@ dhcp-host=BC:24:11:CF:6E:EC,192.168.20.192,yesod-runner-g1-dispatch
 # per Stephen -- preserved as a one-line known reservation so the handover does
 # not change its address; not a fleet member and needs no further investigation.
 dhcp-host=00:50:B6:B7:C1:0C,192.168.20.146,sjbmbp
+
+# Braintrust data cleaning v1: durable static guests outside the dynamic pool.
+dhcp-host=02:BD:C1:00:07:00,192.168.20.180,dataclean-postgres
+dhcp-host=02:BD:C1:00:07:01,192.168.20.181,dataclean-minio
+dhcp-host=02:BD:C1:00:07:02,192.168.20.182,dataclean-dagster
+dhcp-host=02:BD:C1:00:07:03,192.168.20.183,dataclean-api
