@@ -220,4 +220,3 @@ This is an inventory of retained rules, not a claim that every historical entry 
 | 192.168.20.124 | BC-24-11-22-64-E3 | LAN | test-db-g1-broxa (Sefer CT247) |
 | 192.168.20.127 | BC-24-11-D2-8A-9B | LAN | test-db-g1-mazik (Sefer CT248) |
 | 192.168.40.118 | EC-71-DB-BF-D6-71 | LAN | --- |
-
