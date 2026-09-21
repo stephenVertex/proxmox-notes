@@ -15,6 +15,11 @@ router-binding updates are recorded in the September 19 section below.
 
 ## Current state verified 2026-09-19
 
+September 20 addition: `pypi.internal.yesod.work` (`pypi.lan`, `pypi`) points
+to Seykhl at `192.168.20.202` on both resolvers. The [PyPI cache](PYPI_CACHE.md)
+listens on port 3141. Only the host inventories were updated and reloaded;
+DHCP configuration and leases were preserved.
+
 VLAN 20 DHCP is now **active on Seykhl**, using
 `/etc/dnsmasq.d/20-yesod-lan-dhcp.conf`; Sefer remains DNS-only. The September 13
 handover supersedes the historical staged-only statements below. Do not enable

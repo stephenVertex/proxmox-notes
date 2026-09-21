@@ -1,0 +1,36 @@
+[Unit]
+Description=Shared PyPI download cache for Yesod runners
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+DynamicUser=yes
+RuntimeDirectory=pypi-cache
+CacheDirectory=pypi-cache
+CacheDirectoryMode=0750
+ExecStartPre=/usr/sbin/nginx -t -c /etc/pypi-cache/nginx.conf
+ExecStart=/usr/sbin/nginx -c /etc/pypi-cache/nginx.conf -g "daemon off;"
+ExecReload=/bin/kill -HUP $MAINPID
+KillSignal=SIGQUIT
+TimeoutStopSec=30
+Restart=on-failure
+RestartSec=3
+MemoryMax=512M
+CPUQuota=200%
+Nice=5
+NoNewPrivileges=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+CapabilityBoundingSet=
+LockPersonality=yes
+UMask=0027
+
+[Install]
+WantedBy=multi-user.target

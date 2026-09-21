@@ -2,6 +2,15 @@
 
 **Last verified:** 2026-09-05, from both Proxmox hosts and running guests.
 
+## Shared package cache (2026-09-20)
+
+[Seykhl's PyPI cache](PYPI_CACHE.md) is available at
+`http://pypi.internal.yesod.work:3141/simple/` for opt-in online pip/uv installs.
+The runbook includes environment variables and a sourceable client file.
+Runner configuration and defaults have not been changed. Existing frozen locks
+and baked offline gate environments require separate consideration; they do
+not automatically start using a different package index.
+
 ## Current placement
 
 The fleet now spans Sefer and Seykhl. The old three-runner description is

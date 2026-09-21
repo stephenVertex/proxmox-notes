@@ -51,7 +51,11 @@ configuration. See [LAN_DNS.md](LAN_DNS.md) and [NETWORK.md](NETWORK.md).
 
 ## Production and supporting services
 
-These are all on Sefer. Addresses are observed guest IPv4 addresses; database
+The [shared PyPI cache](PYPI_CACHE.md), added September 20, runs directly on
+**Seykhl** at `http://pypi.internal.yesod.work:3141/simple/`. Runners can opt in
+with pip/uv environment variables; existing runner defaults are unchanged.
+
+The guest services in this table are on Sefer. Addresses are observed IPv4 addresses; database
 listener restrictions are documented per service.
 
 | VM | Service | Guest IPv4 | Documentation |

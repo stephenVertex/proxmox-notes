@@ -36,6 +36,7 @@
 # --- service endpoint names (ys-yes-81xu) -- the dg5 inventory declares endpoints BY NAME and forbids literal_ip_addresses, so each shared service needs a name, including this resolver
 192.168.20.202  dns.internal.yesod.work dns.lan dns ns resolver
 192.168.20.202  ntp.internal.yesod.work ntp.lan ntp
+192.168.20.202  pypi.internal.yesod.work pypi.lan pypi
 192.168.20.1    dhcp.internal.yesod.work dhcp.lan dhcp
 # Explicit per-server names for the redundant pair, added 2026-09-10 when
 # sefer became the second resolver and second time source.
