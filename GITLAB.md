@@ -11,7 +11,8 @@ completed successfully on September 5 at 01:31 Pacific. The configured nightly V
 administrator account, outbound email, GitLab API/CLI access, and Docker CI
 runner are all in use.
 
-**Last verified:** 2026-09-05
+**Last verified:** 2026-09-22 for Tailscale, Git SSH, and local/public health;
+2026-09-05 for the remaining deployment checks
 
 ## Service summary
 
@@ -49,8 +50,8 @@ separate VM to administer.
 | Tunnel service | `cloudflared` 2026.8.2, enabled as a system service |
 | DNS | Proxied CNAME to `ffdf5860-2735-4fe8-89b0-e0ad6c5582e5.cfargotunnel.com` |
 | GitLab listener | Bundled NGINX on `127.0.0.1:80` only; Cloudflare terminates public TLS |
-| Firewall | UFW default-deny inbound; SSH from `192.168.0.0/24` only |
-| Tailscale | Not installed; it is optional for later private administration |
+| Firewall | UFW default-deny inbound; SSH from `192.168.0.0/24` and on `tailscale0`; UDP 41641 on `eth0` |
+| Tailscale | 1.102.4; `makor.tailb4b58.ts.net`; `100.126.58.74`; enabled at boot |
 
 The VM address is statically provisioned through cloud-init. A router DHCP
 reservation or exclusion has not yet been recorded, so do not assign
@@ -105,7 +106,66 @@ Use a personal access token with `api` and `write_repository` scopes when the
 CLI requests one. `glab` stores the token in the macOS keychain. Do not put
 tokens, runner authentication tokens, or SMTP credentials in a repository,
 CI variable, or shell history. Clone and push repositories using their
-Git-over-HTTPS URLs because GitLab's public SSH listener is not exposed.
+Git-over-HTTPS URLs, or use private Git-over-SSH while connected to the tailnet.
+
+## Private Git SSH over Tailscale
+
+Makor joined `tailb4b58.ts.net` on 2026-09-22. Its addresses are
+`100.126.58.74` and `fd7a:115c:a1e0::b22e:3a4b`, with MagicDNS name
+`makor.tailb4b58.ts.net`. The existing OpenSSH service on TCP 22 authenticates
+GitLab users with their registered public keys. The separate Tailscale SSH
+feature is disabled. Public HTTPS continues through Cloudflare Tunnel.
+
+Stephen's Mac uses this SSH alias:
+
+```sshconfig
+Host makor-git
+    HostName makor.tailb4b58.ts.net
+    HostKeyAlias 192.168.0.170
+    User git
+    IdentityFile ~/.ssh/id_ed25519
+    IdentitiesOnly yes
+```
+
+`HostKeyAlias` preserves the VM's host keys already trusted under its LAN
+address. The existing macOS keychain/agent options remain configured.
+On another tailnet client, use the full hostname and a key registered with
+GitLab; GitLab's public hostname does not carry SSH through Cloudflare.
+
+```bash
+ssh -T makor-git
+git clone git@makor-git:meshcrawler/proxmox-notes.git
+# From another configured tailnet client:
+git clone git@makor.tailb4b58.ts.net:meshcrawler/proxmox-notes.git
+```
+
+Tailscale was installed from its stable Debian `trixie` APT repository and
+authenticated through the administrator's browser. The saved settings are:
+
+```bash
+tailscale up --hostname=makor --accept-dns=false --ssh=false --netfilter-mode=off
+```
+
+The VM keeps its existing DNS configuration and advertises no subnet or exit
+node routes. `netfilter-mode=off` deliberately leaves filtering to UFW:
+Tailscale's automatic interface ACCEPT rule would otherwise bypass UFW and
+expose other listeners. The added rules are:
+
+```bash
+ufw allow in on tailscale0 to any port 22 proto tcp comment 'Git SSH over Tailscale'
+ufw allow in on eth0 to any port 41641 proto udp comment 'Tailscale WireGuard'
+```
+
+Verification on 2026-09-22: SSH returned `Welcome to GitLab, @stevejb!`, and
+`git ls-remote` retrieved the private repository HEAD through `makor-git`.
+GitLab local health returned `GitLab OK`, and public sign-in HTTPS returned
+200. TCP 22 was reachable over the tailnet; TCP 80, 8060, and 9094 timed out.
+`tailscaled` is active and enabled at boot. The enrolled node key has
+the tailnet's default expiry, currently 2027-03-21; manage renewal or disable
+expiry for this server through the Tailscale admin console.
+
+To withdraw the private route, run `tailscale down` on makor and change the
+Mac alias's `HostName` back to `192.168.0.170` for LAN SSH access.
 
 ## Dual-remote migration
 
@@ -114,11 +174,11 @@ service is being proven. The existing `origin` remote remains GitHub; the
 secondary remote is named `gitlab` and points at
 `git@makor-git:meshcrawler/proxmox-notes.git`.
 
-On Stephen's administrator Mac, `makor-git` is an SSH configuration alias for
-the LAN address `192.168.0.170`. GitLab has the Mac's `id_ed25519` public key
-registered for `stevejb`. This direct SSH path works only on the home LAN; it
-does not expose an SSH listener through Cloudflare. Use the standard
-Git-over-HTTPS clone URL when away from the LAN.
+On Stephen's administrator Mac, `makor-git` now targets
+`makor.tailb4b58.ts.net`. GitLab has the Mac's `id_ed25519` public key
+registered for `stevejb`. Existing remotes using this alias work wherever
+the Mac is connected to the tailnet. Git-over-HTTPS remains available through
+the public Cloudflare hostname.
 
 Push new work to both while this transition is active:
 
