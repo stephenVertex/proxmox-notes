@@ -116,10 +116,10 @@ Makor joined `tailb4b58.ts.net` on 2026-09-22. Its addresses are
 GitLab users with their registered public keys. The separate Tailscale SSH
 feature is disabled. Public HTTPS continues through Cloudflare Tunnel.
 
-Stephen's Mac uses this SSH alias:
+Stephen's Mac applies the same SSH settings to the full hostname and the alias:
 
 ```sshconfig
-Host makor-git
+Host makor-git makor.tailb4b58.ts.net
     HostName makor.tailb4b58.ts.net
     HostKeyAlias 192.168.0.170
     User git
@@ -133,10 +133,10 @@ On another tailnet client, use the full hostname and a key registered with
 GitLab; GitLab's public hostname does not carry SSH through Cloudflare.
 
 ```bash
-ssh -T makor-git
-git clone git@makor-git:meshcrawler/proxmox-notes.git
-# From another configured tailnet client:
+ssh -T git@makor.tailb4b58.ts.net
 git clone git@makor.tailb4b58.ts.net:meshcrawler/proxmox-notes.git
+# The existing alias remains compatible:
+git clone git@makor-git:meshcrawler/proxmox-notes.git
 ```
 
 Tailscale was installed from its stable Debian `trixie` APT repository and
@@ -172,7 +172,12 @@ Mac alias's `HostName` back to `192.168.0.170` for LAN SSH access.
 `proxmox-notes` is mirrored to both GitHub and GitLab while the self-hosted
 service is being proven. The existing `origin` remote remains GitHub; the
 secondary remote is named `gitlab` and points at
-`git@makor-git:meshcrawler/proxmox-notes.git`.
+`git@makor.tailb4b58.ts.net:meshcrawler/proxmox-notes.git`.
+
+The yesod process `makor-gitlab-remote-access` uses this explicit Tailscale
+hostname for Git SSH. Its API/CLI steps always set
+`GITLAB_HOST=makor.meshcrawler.com`: the SSH remote hostname must not be used
+to infer the HTTPS/API endpoint.
 
 On Stephen's administrator Mac, `makor-git` now targets
 `makor.tailb4b58.ts.net`. GitLab has the Mac's `id_ed25519` public key
